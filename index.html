@@ -1,198 +1,143 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>CRM - Registro de Vendas</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>CRM - Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <style>
+        /* ===== RESET / BASE ===== */
+        * { box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { margin: 0; background: #f4f6f8; color: #333; display: flex; justify-content: center; align-items: center; height: 100vh; }
 
-<style>
-*{box-sizing:border-box;font-family:Arial}
-body{margin:0;background:#f4f6f8}
-.container{max-width:1100px;margin:auto;padding:16px;display:grid;gap:24px}
-@media(min-width:768px){.container{grid-template-columns:1fr 1fr}}
+        .container { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); width: 100%; max-width: 400px; }
+        h1 { text-align: center; margin-bottom: 24px; }
 
-form,#listaVendas{background:white;padding:20px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
-label{font-weight:bold;display:block;margin-top:12px}
-input,textarea,select{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:1px solid #ccc}
-textarea{min-height:70px}
-button{margin-top:20px;width:100%;padding:14px;background:#1976d2;color:white;border:none;border-radius:10px;font-size:16px}
-.card{background:#fafafa;padding:12px;border-radius:10px;margin-top:10px}
-.btn-excluir{background:#e53935;margin-top:10px}
-</style>
+        label { display: block; margin-top: 12px; font-weight: bold; }
+        input { width: 100%; padding: 12px; margin-top: 6px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; }
+        button { width: 100%; padding: 14px; margin-top: 20px; font-size: 18px; background: #1976d2; color: white; border: none; border-radius: 10px; cursor: pointer; }
+        button:active { background: #125aa0; }
+        .link { display: block; text-align: center; margin-top: 12px; color: #1976d2; cursor: pointer; text-decoration: underline; }
+    </style>
 </head>
-
 <body>
 
 <div class="container">
+    <h1>CRM Vendas</h1>
 
-<form id="formVenda">
-<h2>Registro de Venda</h2>
+    <div id="loginForm">
+        <label>Email</label>
+        <input type="email" id="emailLogin" placeholder="seu@email.com">
 
-<label>Nº do Pedido</label>
-<input id="pedido" disabled>
+        <label>Senha</label>
+        <input type="password" id="senhaLogin" placeholder="******">
 
-<label>Data do Pedido</label>
-<input type="date" id="dataPedido" required>
+        <button id="btnLogin">Entrar</button>
+        <span class="link" id="abrirCadastro">Criar conta</span>
+        <span class="link" id="esqueciSenha">Esqueci minha senha</span>
+    </div>
 
-<label>Data da Entrega</label>
-<input type="date" id="dataEntrega" required>
+    <div id="cadastroForm" style="display:none;">
+        <label>Email</label>
+        <input type="email" id="emailCadastro" placeholder="seu@email.com">
 
-<label>Modelo do Sofá</label>
-<textarea id="modelo" required></textarea>
+        <label>Senha</label>
+        <input type="password" id="senhaCadastro" placeholder="******">
 
-<label>Cor</label>
-<input id="cor" required>
-
-<label>Valor do Sofá</label>
-<input id="valorSofa" required>
-
-<label>Frete</label>
-<input id="frete">
-
-<label>Montagem</label>
-<input type="checkbox" id="montagem">
-
-<label>Valor Montagem</label>
-<input id="valorMontagem">
-
-<label>Total</label>
-<input id="total" disabled>
-
-<label>Cliente</label>
-<input id="nomeCliente" required>
-
-<button type="submit">Salvar Venda</button>
-</form>
-
-<div>
-<h2>Minhas Vendas</h2>
-<div id="listaVendas"></div>
+        <button id="btnCriarConta">Criar Conta</button>
+        <span class="link" id="voltarLogin">Voltar ao login</span>
+    </div>
 </div>
 
-</div>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-
-<script>
-firebase.initializeApp({
-  apiKey: "AIzaSyBlBNN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
-  authDomain: "crm-vendas-43b6b.firebaseapp.com",
-  projectId: "crm-vendas-43b6b"
-});
-
-const auth = firebase.auth();
-
-/* ===============================
-   🔐 CONTROLE DE ACESSO CORRETO
-================================ */
-auth.onAuthStateChanged(user => {
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
-
-  // Usuário autenticado
-  iniciarSistema(user);
-});
-
-/* ===============================
-   🚀 SISTEMA DE VENDAS
-================================ */
-function iniciarSistema(user) {
-
-  const form = document.getElementById("formVenda");
-  const lista = document.getElementById("listaVendas");
-
-  let vendas = JSON.parse(localStorage.getItem("vendas")) || [];
-
-  function gerarNumeroPedido() {
-    const proximo = (Number(localStorage.getItem("ultimoPedido")) || 0) + 1;
-    document.getElementById("pedido").value = proximo;
-  }
-
-  function calcularTotal() {
-    const valor = limparMoeda(valorSofa.value);
-    const freteValor = limparMoeda(frete.value);
-    const montagemValor = montagem.checked ? limparMoeda(valorMontagem.value) : 0;
-    const soma = valor + freteValor + montagemValor;
-
-    total.value = soma.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL"
-    });
-  }
-
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
-
-    const numeroPedido =
-      (Number(localStorage.getItem("ultimoPedido")) || 0) + 1;
-
-    localStorage.setItem("ultimoPedido", numeroPedido);
-
-    const venda = {
-      pedido: numeroPedido,
-      vendedorEmail: user.email, // 🔥 CHAVE DO CONTROLE
-      dataPedido: dataPedido.value,
-      dataEntrega: dataEntrega.value,
-      montagem: montagem.checked,
-      produto: {
-        modelo: modelo.value,
-        cor: cor.value,
-        valor: limparMoeda(valorSofa.value),
-        frete: limparMoeda(frete.value),
-        valorMontagem: montagem.checked ? limparMoeda(valorMontagem.value) : 0,
-        total: limparMoeda(total.value)
-      },
-      pagamento: pagamento.value,
-      cliente: {
-        nome: nomeCliente.value,
-        contato: contato.value,
-        cep: cep.value,
-        rua: rua.value,
-        numero: numero.value,
-        cidade: cidade.value,
-        bairro: bairro.value
-      }
+    // Config Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
+      authDomain: "crm-vendas-43b6b.firebaseapp.com",
+      projectId: "crm-vendas-43b6b",
+      storageBucket: "crm-vendas-43b6b.firebasestorage.app",
+      messagingSenderId: "645002761099",
+      appId: "1:645002761099:web:f194f70c351d1074ac158e"
     };
 
-    vendas.push(venda);
-    localStorage.setItem("vendas", JSON.stringify(vendas));
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-    form.reset();
-    gerarNumeroPedido();
-    renderizarVendas();
-  });
+    // Elementos
+    const loginForm = document.getElementById("loginForm");
+    const cadastroForm = document.getElementById("cadastroForm");
 
-  function renderizarVendas() {
-    lista.innerHTML = "";
+    const emailLogin = document.getElementById("emailLogin");
+    const senhaLogin = document.getElementById("senhaLogin");
+    const btnLogin = document.getElementById("btnLogin");
 
-    vendas
-      .filter(v => v.vendedorEmail === user.email)
-      .forEach(venda => {
-        const div = document.createElement("div");
-        div.className = "card";
+    const emailCadastro = document.getElementById("emailCadastro");
+    const senhaCadastro = document.getElementById("senhaCadastro");
+    const btnCriarConta = document.getElementById("btnCriarConta");
 
-        div.innerHTML = `
-          <h3>Pedido Nº ${venda.pedido}</h3>
-          <p><strong>Cliente:</strong> ${venda.cliente.nome}</p>
-          <p><strong>Total:</strong> R$ ${venda.produto.total.toFixed(2)}</p>
-        `;
+    const abrirCadastro = document.getElementById("abrirCadastro");
+    const voltarLogin = document.getElementById("voltarLogin");
+    const esqueciSenha = document.getElementById("esqueciSenha");
 
-        lista.appendChild(div);
-      });
-  }
+    // Mostrar cadastro
+    abrirCadastro.addEventListener("click", () => {
+        loginForm.style.display = "none";
+        cadastroForm.style.display = "block";
+    });
 
-  gerarNumeroPedido();
-  renderizarVendas();
-}
+    voltarLogin.addEventListener("click", () => {
+        cadastroForm.style.display = "none";
+        loginForm.style.display = "block";
+    });
+
+    // Criar conta
+    btnCriarConta.addEventListener("click", async () => {
+        const email = emailCadastro.value;
+        const senha = senhaCadastro.value;
+        if (!email || !senha) return alert("Preencha email e senha");
+
+        try {
+            await createUserWithEmailAndPassword(auth, email, senha);
+            alert("Conta criada com sucesso!");
+            cadastroForm.style.display = "none";
+            loginForm.style.display = "block";
+            emailCadastro.value = "";
+            senhaCadastro.value = "";
+        } catch (error) {
+            alert(error.message);
+        }
+    });
+
+    // Login
+    btnLogin.addEventListener("click", async () => {
+        const email = emailLogin.value;
+        const senha = senhaLogin.value;
+        if (!email || !senha) return alert("Preencha email e senha");
+
+        try {
+            await signInWithEmailAndPassword(auth, email, senha);
+            window.location.href = "index.html";
+        } catch (error) {
+            alert("Email ou senha inválidos");
+        }
+    });
+
+    // Redefinir senha
+    esqueciSenha.addEventListener("click", async () => {
+        const email = prompt("Digite seu email para redefinir a senha:");
+        if (!email) return;
+
+        try {
+            await sendPasswordResetEmail(auth, email);
+            alert("Email de redefinição enviado!");
+        } catch (error) {
+            alert(error.message);
+        }
+    });
 </script>
 
 </body>
 </html>
-
