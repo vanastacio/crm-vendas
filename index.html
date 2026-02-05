@@ -75,91 +75,124 @@ button{margin-top:20px;width:100%;padding:14px;background:#1976d2;color:white;bo
 
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
 <script>
-// 🔥 FIREBASE
 firebase.initializeApp({
   apiKey: "AIzaSyBlBNN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
   authDomain: "crm-vendas-43b6b.firebaseapp.com",
   projectId: "crm-vendas-43b6b"
 });
+
 const auth = firebase.auth();
 
-let usuarioLogado = null;
-let vendas = JSON.parse(localStorage.getItem("vendas")) || [];
-
-// 🔐 PROTEÇÃO
-auth.onAuthStateChanged(user=>{
-  if(!user){
-    location.href="login.html";
-  }else{
-    usuarioLogado = user;
-    gerarPedido();
-    renderizarVendas();
+/* ===============================
+   🔐 CONTROLE DE ACESSO CORRETO
+================================ */
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
   }
+
+  // Usuário autenticado
+  iniciarSistema(user);
 });
 
-// 🔢 PEDIDO
-function gerarPedido(){
-  const prox = (Number(localStorage.getItem("ultimoPedido"))||0)+1;
-  pedido.value = prox;
-}
+/* ===============================
+   🚀 SISTEMA DE VENDAS
+================================ */
+function iniciarSistema(user) {
 
-// 💰 MOEDA
-function limpar(v){return Number(v.replace(/\D/g,""))/100||0}
-function formatar(i){
-  i.value = limpar(i.value).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
-}
+  const form = document.getElementById("formVenda");
+  const lista = document.getElementById("listaVendas");
 
-// 🧮 TOTAL
-function calcular(){
-  const soma =
-    limpar(valorSofa.value)+
-    limpar(frete.value)+
-    (montagem.checked?limpar(valorMontagem.value):0);
+  let vendas = JSON.parse(localStorage.getItem("vendas")) || [];
 
-  total.value = soma.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-}
+  function gerarNumeroPedido() {
+    const proximo = (Number(localStorage.getItem("ultimoPedido")) || 0) + 1;
+    document.getElementById("pedido").value = proximo;
+  }
 
-[valorSofa,frete,valorMontagem].forEach(i=>{
-  i.addEventListener("input",()=>{formatar(i);calcular()});
-});
-montagem.onchange=calcular;
+  function calcularTotal() {
+    const valor = limparMoeda(valorSofa.value);
+    const freteValor = limparMoeda(frete.value);
+    const montagemValor = montagem.checked ? limparMoeda(valorMontagem.value) : 0;
+    const soma = valor + freteValor + montagemValor;
 
-// 💾 SALVAR
-formVenda.onsubmit=e=>{
-  e.preventDefault();
+    total.value = soma.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    });
+  }
 
-  const numero = Number(localStorage.getItem("ultimoPedido"))+1||1;
-  localStorage.setItem("ultimoPedido",numero);
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
 
-  vendas.push({
-    pedido:numero,
-    usuarioId:usuarioLogado.uid,
-    cliente:nomeCliente.value,
-    produto:modelo.value,
-    total:limpar(total.value)
+    const numeroPedido =
+      (Number(localStorage.getItem("ultimoPedido")) || 0) + 1;
+
+    localStorage.setItem("ultimoPedido", numeroPedido);
+
+    const venda = {
+      pedido: numeroPedido,
+      vendedorEmail: user.email, // 🔥 CHAVE DO CONTROLE
+      dataPedido: dataPedido.value,
+      dataEntrega: dataEntrega.value,
+      montagem: montagem.checked,
+      produto: {
+        modelo: modelo.value,
+        cor: cor.value,
+        valor: limparMoeda(valorSofa.value),
+        frete: limparMoeda(frete.value),
+        valorMontagem: montagem.checked ? limparMoeda(valorMontagem.value) : 0,
+        total: limparMoeda(total.value)
+      },
+      pagamento: pagamento.value,
+      cliente: {
+        nome: nomeCliente.value,
+        contato: contato.value,
+        cep: cep.value,
+        rua: rua.value,
+        numero: numero.value,
+        cidade: cidade.value,
+        bairro: bairro.value
+      }
+    };
+
+    vendas.push(venda);
+    localStorage.setItem("vendas", JSON.stringify(vendas));
+
+    form.reset();
+    gerarNumeroPedido();
+    renderizarVendas();
   });
 
-  localStorage.setItem("vendas",JSON.stringify(vendas));
-  formVenda.reset();
-  gerarPedido();
-  renderizarVendas();
-};
+  function renderizarVendas() {
+    lista.innerHTML = "";
 
-// 📋 LISTAR SOMENTE DO USUÁRIO
-function renderizarVendas(){
-  listaVendas.innerHTML="";
-  vendas.filter(v=>v.usuarioId===usuarioLogado.uid)
-    .forEach(v=>{
-      listaVendas.innerHTML+=`
-        <div class="card">
-          <b>Pedido #${v.pedido}</b><br>
-          Cliente: ${v.cliente}<br>
-          Total: ${v.total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
-        </div>`;
-    });
+    vendas
+      .filter(v => v.vendedorEmail === user.email)
+      .forEach(venda => {
+        const div = document.createElement("div");
+        div.className = "card";
+
+        div.innerHTML = `
+          <h3>Pedido Nº ${venda.pedido}</h3>
+          <p><strong>Cliente:</strong> ${venda.cliente.nome}</p>
+          <p><strong>Total:</strong> R$ ${venda.produto.total.toFixed(2)}</p>
+        `;
+
+        lista.appendChild(div);
+      });
+  }
+
+  gerarNumeroPedido();
+  renderizarVendas();
 }
 </script>
 
 </body>
 </html>
+
