@@ -1,27 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Cadastrar - CRM Vendas</title>
+<title>CRM - Cadastro</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body{margin:0;font-family:Arial;background:#f4f6f8;color:#333}
-.container{max-width:400px;margin:auto;padding:16px;}
-h1{margin-bottom:16px;text-align:center;}
-input,button{width:100%;padding:12px;margin:8px 0;border-radius:8px;font-size:16px;}
+body { margin:0; font-family:Arial; background:#f4f6f8; color:#333; }
+.container { max-width:400px; margin:auto; padding:16px; }
+h1,h2{margin:0 0 10px;}
+label,input,button{width:100%;margin:6px 0;padding:12px;font-size:16px;border-radius:8px;}
 button{background:#1976d2;color:white;border:none;cursor:pointer;}
 button:active{background:#125aa0;}
-a{color:#1976d2;text-decoration:none;}
-a:hover{text-decoration:underline;}
+.error{color:red;font-size:14px;margin:4px 0;}
+.link{margin-top:10px;text-align:center;}
+.link a{color:#1976d2;text-decoration:none;}
 </style>
 </head>
 <body>
 <div class="container">
 <h1>Criar Conta</h1>
-<input type="email" id="email" placeholder="Email" required>
-<input type="password" id="senha" placeholder="Senha" required>
-<button id="btnCadastrar">Cadastrar</button>
-<p><a href="login.html">Voltar para login</a></p>
+<div class="error" id="cadError"></div>
+<label>Email</label><input type="email" id="cadEmail" required>
+<label>Senha</label><input type="password" id="cadSenha" required>
+<button id="btnCriarConta">Criar Conta</button>
+<div class="link">
+  <a href="login.html">Voltar ao login</a>
+</div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -30,7 +36,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
   authDomain: "crm-vendas-43b6b.firebaseapp.com",
   projectId: "crm-vendas-43b6b",
-  storageBucket: "crm-vendas-43b6b.firebasestorage.app",
+  storageBucket: "crm-vendas-43b6b.appspot.com",
   messagingSenderId: "645002761099",
   appId: "1:645002761099:web:f194f70c351d1074ac158e"
 };
@@ -38,18 +44,21 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-document.getElementById("btnCadastrar").addEventListener("click",async()=>{
-    const email = document.getElementById("email").value;
-    const senha = document.getElementById("senha").value;
-    try{
-        await createUserWithEmailAndPassword(auth,email,senha);
+const cadEmail = document.getElementById("cadEmail");
+const cadSenha = document.getElementById("cadSenha");
+const btnCriarConta = document.getElementById("btnCriarConta");
+const cadError = document.getElementById("cadError");
+
+btnCriarConta.addEventListener("click", async () => {
+    cadError.textContent = "";
+    try {
+        await createUserWithEmailAndPassword(auth, cadEmail.value, cadSenha.value);
         alert("Conta criada com sucesso!");
-        window.location.href="login.html";
-    }catch(err){
-        alert(err.message);
+        window.location.href = "login.html";
+    } catch(e) {
+        cadError.textContent = e.message;
     }
 });
 </script>
-</div>
 </body>
 </html>
