@@ -1,60 +1,64 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>CRM - Login</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <style>
-        /* ===== RESET / BASE ===== */
-        * { box-sizing: border-box; font-family: Arial, sans-serif; }
-        body { margin: 0; background: #f4f6f8; color: #333; display: flex; justify-content: center; align-items: center; height: 100vh; }
-
-        .container { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); width: 100%; max-width: 400px; }
-        h1 { text-align: center; margin-bottom: 24px; }
-
-        label { display: block; margin-top: 12px; font-weight: bold; }
-        input { width: 100%; padding: 12px; margin-top: 6px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; }
-        button { width: 100%; padding: 14px; margin-top: 20px; font-size: 18px; background: #1976d2; color: white; border: none; border-radius: 10px; cursor: pointer; }
-        button:active { background: #125aa0; }
-        .link { display: block; text-align: center; margin-top: 12px; color: #1976d2; cursor: pointer; text-decoration: underline; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM - Login</title>
+<style>
+    body { font-family: Arial, sans-serif; background: #f4f6f8; margin:0; }
+    .container { max-width: 400px; margin: 50px auto; background:white; padding: 20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+    h1 { text-align:center; margin-bottom:20px; }
+    label { display:block; margin-top:12px; font-weight:bold; }
+    input { width:100%; padding:10px; margin-top:6px; border-radius:8px; border:1px solid #ccc; }
+    button { width:100%; padding:12px; margin-top:20px; border:none; border-radius:10px; background:#1976d2; color:white; font-size:16px; cursor:pointer; }
+    button:active { background:#125aa0; }
+    .link { text-align:center; margin-top:12px; font-size:14px; }
+    .link a { color:#1976d2; cursor:pointer; text-decoration:none; }
+</style>
 </head>
 <body>
 
 <div class="container">
-    <h1>CRM Vendas</h1>
+    <h1>Login CRM</h1>
 
-    <div id="loginForm">
+    <div id="form-login">
         <label>Email</label>
-        <input type="email" id="emailLogin" placeholder="seu@email.com">
+        <input type="email" id="emailLogin">
 
         <label>Senha</label>
-        <input type="password" id="senhaLogin" placeholder="******">
+        <input type="password" id="senhaLogin">
 
-        <button id="btnLogin">Entrar</button>
-        <span class="link" id="abrirCadastro">Criar conta</span>
-        <span class="link" id="esqueciSenha">Esqueci minha senha</span>
+        <button onclick="login()">Entrar</button>
+
+        <div class="link">
+            <a onclick="mostrarCriarConta()">Criar conta</a> | 
+            <a onclick="resetSenha()">Esqueci a senha</a>
+        </div>
     </div>
 
-    <div id="cadastroForm" style="display:none;">
+    <div id="form-criar-conta" style="display:none;">
         <label>Email</label>
-        <input type="email" id="emailCadastro" placeholder="seu@email.com">
+        <input type="email" id="emailCadastro">
 
         <label>Senha</label>
-        <input type="password" id="senhaCadastro" placeholder="******">
+        <input type="password" id="senhaCadastro">
 
-        <button id="btnCriarConta">Criar Conta</button>
-        <span class="link" id="voltarLogin">Voltar ao login</span>
+        <button onclick="criarConta()">Criar Conta</button>
+
+        <div class="link">
+            <a onclick="mostrarLogin()">Voltar para login</a>
+        </div>
     </div>
+
 </div>
 
+<!-- Firebase SDK Modular -->
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    // Config Firebase
- const firebaseConfig = {
+// Config do Firebase
+const firebaseConfig = {
   apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
   authDomain: "crm-vendas-43b6b.firebaseapp.com",
   projectId: "crm-vendas-43b6b",
@@ -63,82 +67,65 @@
   appId: "1:645002761099:web:f194f70c351d1074ac158e"
 };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
 
-    // Elementos
-    const loginForm = document.getElementById("loginForm");
-    const cadastroForm = document.getElementById("cadastroForm");
+// Persistência de login
+setPersistence(auth, browserLocalPersistence);
 
-    const emailLogin = document.getElementById("emailLogin");
-    const senhaLogin = document.getElementById("senhaLogin");
-    const btnLogin = document.getElementById("btnLogin");
+// Redireciona se já estiver logado
+onAuthStateChanged(auth, (user) => {
+    if(user){
+        window.location.href = "index.html";
+    }
+});
 
-    const emailCadastro = document.getElementById("emailCadastro");
-    const senhaCadastro = document.getElementById("senhaCadastro");
-    const btnCriarConta = document.getElementById("btnCriarConta");
+// Funções de interface
+window.mostrarCriarConta = () => {
+    document.getElementById("form-login").style.display = "none";
+    document.getElementById("form-criar-conta").style.display = "block";
+};
 
-    const abrirCadastro = document.getElementById("abrirCadastro");
-    const voltarLogin = document.getElementById("voltarLogin");
-    const esqueciSenha = document.getElementById("esqueciSenha");
+window.mostrarLogin = () => {
+    document.getElementById("form-login").style.display = "block";
+    document.getElementById("form-criar-conta").style.display = "none";
+};
 
-    // Mostrar cadastro
-    abrirCadastro.addEventListener("click", () => {
-        loginForm.style.display = "none";
-        cadastroForm.style.display = "block";
-    });
+// Criar conta
+window.criarConta = () => {
+    const email = document.getElementById("emailCadastro").value;
+    const senha = document.getElementById("senhaCadastro").value;
 
-    voltarLogin.addEventListener("click", () => {
-        cadastroForm.style.display = "none";
-        loginForm.style.display = "block";
-    });
+    createUserWithEmailAndPassword(auth, email, senha)
+    .then(() => {
+        alert("Conta criada com sucesso! Agora faça login.");
+        mostrarLogin();
+    })
+    .catch(err => alert("Erro: " + err.message));
+};
 
-    // Criar conta
-    btnCriarConta.addEventListener("click", async () => {
-        const email = emailCadastro.value;
-        const senha = senhaCadastro.value;
-        if (!email || !senha) return alert("Preencha email e senha");
+// Login
+window.login = () => {
+    const email = document.getElementById("emailLogin").value;
+    const senha = document.getElementById("senhaLogin").value;
 
-        try {
-            await createUserWithEmailAndPassword(auth, email, senha);
-            alert("Conta criada com sucesso!");
-            cadastroForm.style.display = "none";
-            loginForm.style.display = "block";
-            emailCadastro.value = "";
-            senhaCadastro.value = "";
-        } catch (error) {
-            alert(error.message);
-        }
-    });
+    signInWithEmailAndPassword(auth, email, senha)
+    .then(() => {
+        window.location.href = "index.html";
+    })
+    .catch(err => alert("Erro: " + err.message));
+};
 
-    // Login
-    btnLogin.addEventListener("click", async () => {
-        const email = emailLogin.value;
-        const senha = senhaLogin.value;
-        if (!email || !senha) return alert("Preencha email e senha");
-
-        try {
-            await signInWithEmailAndPassword(auth, email, senha);
-            window.location.href = "index.html";
-        } catch (error) {
-            alert("Email ou senha inválidos");
-        }
-    });
-
-    // Redefinir senha
-    esqueciSenha.addEventListener("click", async () => {
-        const email = prompt("Digite seu email para redefinir a senha:");
-        if (!email) return;
-
-        try {
-            await sendPasswordResetEmail(auth, email);
-            alert("Email de redefinição enviado!");
-        } catch (error) {
-            alert(error.message);
-        }
-    });
+// Redefinir senha
+window.resetSenha = () => {
+    const email = prompt("Digite seu email cadastrado:");
+    if(email){
+        sendPasswordResetEmail(auth, email)
+        .then(() => alert("Email de redefinição enviado com sucesso!"))
+        .catch(err => alert("Erro: " + err.message));
+    }
+};
 </script>
 
 </body>
 </html>
-
