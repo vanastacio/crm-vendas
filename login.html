@@ -1,131 +1,89 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CRM - Login</title>
-<style>
-    body { font-family: Arial, sans-serif; background: #f4f6f8; margin:0; }
-    .container { max-width: 400px; margin: 50px auto; background:white; padding: 20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.1);}
-    h1 { text-align:center; margin-bottom:20px; }
-    label { display:block; margin-top:12px; font-weight:bold; }
-    input { width:100%; padding:10px; margin-top:6px; border-radius:8px; border:1px solid #ccc; }
-    button { width:100%; padding:12px; margin-top:20px; border:none; border-radius:10px; background:#1976d2; color:white; font-size:16px; cursor:pointer; }
-    button:active { background:#125aa0; }
-    .link { text-align:center; margin-top:12px; font-size:14px; }
-    .link a { color:#1976d2; cursor:pointer; text-decoration:none; }
-</style>
+    <meta charset="UTF-8">
+    <title>CRM - Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: Arial; background:#f4f6f8; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
+        .container { background:white; padding:24px; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.1); width:100%; max-width:400px; }
+        h1 { text-align:center; margin-bottom:24px; }
+        input { width:100%; padding:12px; margin:6px 0; border-radius:8px; border:1px solid #ccc; font-size:16px; }
+        button { width:100%; padding:14px; margin-top:12px; font-size:16px; border:none; border-radius:10px; background:#1976d2; color:white; cursor:pointer; }
+        button:active { background:#125aa0; }
+        .link { text-align:center; margin-top:12px; cursor:pointer; color:#1976d2; text-decoration:underline; }
+        #mensagem { margin-top:10px; color:red; text-align:center; font-size:14px; }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <h1>CRM - Login</h1>
 
-<div class="container">
-    <h1>Login CRM</h1>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="senha" placeholder="Senha" required>
+        <button id="btnLogin">Entrar</button>
 
-    <div id="form-login">
-        <label>Email</label>
-        <input type="email" id="emailLogin">
-
-        <label>Senha</label>
-        <input type="password" id="senhaLogin">
-
-        <button onclick="login()">Entrar</button>
-
-        <div class="link">
-            <a onclick="mostrarCriarConta()">Criar conta</a> | 
-            <a onclick="resetSenha()">Esqueci a senha</a>
-        </div>
+        <div class="link" id="criarContaLink">Criar conta</div>
+        <div class="link" id="esqueciSenha">Esqueci a senha</div>
+        <div id="mensagem"></div>
     </div>
 
-    <div id="form-criar-conta" style="display:none;">
-        <label>Email</label>
-        <input type="email" id="emailCadastro">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        <label>Senha</label>
-        <input type="password" id="senhaCadastro">
+        const firebaseConfig = {
+            apiKey: "SUA_API_KEY",
+            authDomain: "SEU_AUTHDOMAIN",
+            projectId: "SEU_PROJECT_ID",
+            storageBucket: "SEU_BUCKET",
+            messagingSenderId: "SEU_MESSAGING_ID",
+            appId: "SEU_APP_ID"
+        };
 
-        <button onclick="criarConta()">Criar Conta</button>
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
 
-        <div class="link">
-            <a onclick="mostrarLogin()">Voltar para login</a>
-        </div>
-    </div>
+        const emailInput = document.getElementById("email");
+        const senhaInput = document.getElementById("senha");
+        const mensagem = document.getElementById("mensagem");
 
-</div>
+        // Redireciona se já estiver logado
+        onAuthStateChanged(auth, (user) => {
+            if (user) window.location.href = "index.html";
+        });
 
-<!-- Firebase SDK Modular -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        document.getElementById("btnLogin").addEventListener("click", async () => {
+            mensagem.textContent = "";
+            try {
+                await signInWithEmailAndPassword(auth, emailInput.value, senhaInput.value);
+                window.location.href = "index.html";
+            } catch (err) {
+                mensagem.textContent = err.message;
+            }
+        });
 
-// Config do Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
-  authDomain: "crm-vendas-43b6b.firebaseapp.com",
-  projectId: "crm-vendas-43b6b",
-  storageBucket: "crm-vendas-43b6b.firebasestorage.app",
-  messagingSenderId: "645002761099",
-  appId: "1:645002761099:web:f194f70c351d1074ac158e"
-};
+        document.getElementById("criarContaLink").addEventListener("click", async () => {
+            mensagem.textContent = "";
+            try {
+                await createUserWithEmailAndPassword(auth, emailInput.value, senhaInput.value);
+                mensagem.style.color = "green";
+                mensagem.textContent = "Conta criada com sucesso!";
+            } catch (err) {
+                mensagem.textContent = err.message;
+            }
+        });
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth();
-
-// Persistência de login
-setPersistence(auth, browserLocalPersistence);
-
-// Redireciona se já estiver logado
-onAuthStateChanged(auth, (user) => {
-    if(user){
-        window.location.href = "index.html";
-    }
-});
-
-// Funções de interface
-window.mostrarCriarConta = () => {
-    document.getElementById("form-login").style.display = "none";
-    document.getElementById("form-criar-conta").style.display = "block";
-};
-
-window.mostrarLogin = () => {
-    document.getElementById("form-login").style.display = "block";
-    document.getElementById("form-criar-conta").style.display = "none";
-};
-
-// Criar conta
-window.criarConta = () => {
-    const email = document.getElementById("emailCadastro").value;
-    const senha = document.getElementById("senhaCadastro").value;
-
-    createUserWithEmailAndPassword(auth, email, senha)
-    .then(() => {
-        alert("Conta criada com sucesso! Agora faça login.");
-        mostrarLogin();
-    })
-    .catch(err => alert("Erro: " + err.message));
-};
-
-// Login
-window.login = () => {
-    const email = document.getElementById("emailLogin").value;
-    const senha = document.getElementById("senhaLogin").value;
-
-    signInWithEmailAndPassword(auth, email, senha)
-    .then(() => {
-        window.location.href = "index.html";
-    })
-    .catch(err => alert("Erro: " + err.message));
-};
-
-// Redefinir senha
-window.resetSenha = () => {
-    const email = prompt("Digite seu email cadastrado:");
-    if(email){
-        sendPasswordResetEmail(auth, email)
-        .then(() => alert("Email de redefinição enviado com sucesso!"))
-        .catch(err => alert("Erro: " + err.message));
-    }
-};
-</script>
-
+        document.getElementById("esqueciSenha").addEventListener("click", async () => {
+            mensagem.textContent = "";
+            try {
+                await sendPasswordResetEmail(auth, emailInput.value);
+                mensagem.style.color = "green";
+                mensagem.textContent = "Email de redefinição enviado!";
+            } catch (err) {
+                mensagem.textContent = err.message;
+            }
+        });
+    </script>
 </body>
 </html>
