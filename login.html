@@ -1,27 +1,34 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Login - CRM Vendas</title>
+<title>CRM - Login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body{margin:0;font-family:Arial;background:#f4f6f8;color:#333}
-.container{max-width:400px;margin:auto;padding:16px;}
-h1{margin-bottom:16px;text-align:center;}
-input,button{width:100%;padding:12px;margin:8px 0;border-radius:8px;font-size:16px;}
+body { margin:0; font-family:Arial; background:#f4f6f8; color:#333; }
+.container { max-width:400px; margin:auto; padding:16px; }
+h1,h2{margin:0 0 10px;}
+label,input,button{width:100%;margin:6px 0;padding:12px;font-size:16px;border-radius:8px;}
 button{background:#1976d2;color:white;border:none;cursor:pointer;}
 button:active{background:#125aa0;}
-a{color:#1976d2;text-decoration:none;}
-a:hover{text-decoration:underline;}
+.error{color:red;font-size:14px;margin:4px 0;}
+.link{margin-top:10px;text-align:center;}
+.link a{color:#1976d2;text-decoration:none;}
 </style>
 </head>
 <body>
 <div class="container">
 <h1>Login</h1>
-<input type="email" id="email" placeholder="Email" required>
-<input type="password" id="senha" placeholder="Senha" required>
+<div class="error" id="loginError"></div>
+<label>Email</label><input type="email" id="loginEmail" required>
+<label>Senha</label><input type="password" id="loginSenha" required>
 <button id="btnLogin">Entrar</button>
-<p><a href="cadastro.html">Criar conta</a> | <a href="recuperar.html">Esqueci a senha</a></p>
+<div class="link">
+  <a href="cadastro.html">Criar conta</a> | 
+  <a href="recuperar.html">Esqueci a senha</a>
+</div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -30,30 +37,33 @@ const firebaseConfig = {
   apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
   authDomain: "crm-vendas-43b6b.firebaseapp.com",
   projectId: "crm-vendas-43b6b",
-  storageBucket: "crm-vendas-43b6b.firebasestorage.app",
+  storageBucket: "crm-vendas-43b6b.appspot.com",
   messagingSenderId: "645002761099",
   appId: "1:645002761099:web:f194f70c351d1074ac158e"
 };
-  
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// Verifica se já está logado
-onAuthStateChanged(auth,user=>{
-    if(user) window.location.href="index.html";
-});
+const emailInput = document.getElementById("loginEmail");
+const senhaInput = document.getElementById("loginSenha");
+const btnLogin = document.getElementById("btnLogin");
+const loginError = document.getElementById("loginError");
 
-document.getElementById("btnLogin").addEventListener("click",async()=>{
-    const email = document.getElementById("email").value;
-    const senha = document.getElementById("senha").value;
-    try{
-        await signInWithEmailAndPassword(auth,email,senha);
-        window.location.href="index.html";
-    }catch(err){
-        alert(err.message);
+btnLogin.addEventListener("click", async () => {
+    loginError.textContent = "";
+    try {
+        await signInWithEmailAndPassword(auth, emailInput.value, senhaInput.value);
+        window.location.href = "index.html";
+    } catch(e) {
+        loginError.textContent = e.message;
     }
 });
+
+// Redireciona caso usuário já esteja logado
+onAuthStateChanged(auth, user => {
+    if(user) window.location.href = "index.html";
+});
 </script>
-</div>
 </body>
 </html>
