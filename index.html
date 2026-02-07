@@ -13,16 +13,29 @@ input:disabled{background:#eee;}
 textarea{resize:vertical;min-height:80px;}
 button{background:#1976d2;color:white;border:none;cursor:pointer;}
 button:active{background:#125aa0;}
-.btn-excluir{background:#e53935;}
 .card{background:white;padding:14px;border-radius:12px;margin-top:12px;box-shadow:0 2px 6px rgba(0,0,0,0.08);}
+.btn-excluir{background:#e53935;}
+.btn-excluir:active{background:#c62828;}
+.sucesso{
+  background:#c8e6c9;
+  color:#1b5e20;
+  padding:10px;
+  border-radius:8px;
+  margin-top:10px;
+  text-align:center;
+  display:none;
+}
 </style>
 </head>
-<body>
 
+<body>
 <div class="container">
 <h1>Registro de Venda</h1>
 
+<div id="msgSucesso" class="sucesso">Venda salva com sucesso ✅</div>
+
 <form id="formVenda">
+
 <h2>Dados do Pedido</h2>
 <label>Nº do Pedido</label>
 <input type="text" id="pedido" disabled>
@@ -34,15 +47,25 @@ button:active{background:#125aa0;}
 <input type="date" id="dataEntrega" required>
 
 <div>
-<input type="checkbox" id="montagem">
-<label for="montagem">Montagem</label>
+  <input type="checkbox" id="montagem">
+  <label for="montagem">Montagem</label>
 </div>
 
 <hr>
 
 <h2>Produto</h2>
+
 <label>Modelo do Sofá</label>
-<textarea id="modelo" required></textarea>
+<select id="modelo" required>
+  <option value="">Selecione o modelo</option>
+  <option>Sofá carina braço almofadado pilow de 15</option>
+  <option>Sofá carina braço almofadado pilow de 25</option>
+  <option>Sofá carina braço reto pilow de 15</option>
+  <option>Sofá carina braço reto pilow de 25</option>
+</select>
+
+<label>Tamanho do Sofá</label>
+<input type="text" id="tamanhoSofa" placeholder="Ex: 2,30m" required>
 
 <label>Cor</label>
 <input type="text" id="cor" required>
@@ -87,7 +110,7 @@ button:active{background:#125aa0;}
 <input type="text" id="bairro">
 
 <label>Município</label>
-<input type="text" id="municipio">
+<input type="text" id="municipio" value="São Paulo">
 
 <hr>
 
@@ -124,112 +147,114 @@ const db = getFirestore(app);
 const userVendedora = { email: "" };
 
 onAuthStateChanged(auth, async (user) => {
-    if (!user) window.location.href = "login.html";
-    userVendedora.email = user.email;
-    vendedora.innerHTML = `<option>${user.email}</option>`;
-    await carregarVendas();
+  if (!user) window.location.href = "login.html";
+  userVendedora.email = user.email;
+  vendedora.innerHTML = `<option>${user.email}</option>`;
+  await carregarVendas();
 });
 
-// Logout
-btnSair.addEventListener("click", async () => {
-    await signOut(auth);
-    window.location.href = "login.html";
-});
+btnSair.onclick = async ()=>{
+  await signOut(auth);
+  window.location.href="login.html";
+};
 
-// Moeda
 function formatarMoeda(input){
-    let v = input.value.replace(/\D/g,"");
-    v = (Number(v)/100).toFixed(2);
-    v = v.replace(".",",").replace(/\B(?=(\d{3})+(?!\d))/g,".");
-    input.value = "R$ " + v;
+  let v=input.value.replace(/\D/g,"");
+  v=(Number(v)/100).toFixed(2);
+  input.value="R$ "+v.replace(".",",").replace(/\B(?=(\d{3})+(?!\d))/g,".");
 }
-function limparMoeda(valor){
-    return Number(valor.replace("R$","").replace(/\./g,"").replace(",",".").trim()) || 0;
+
+function limparMoeda(v){
+  return Number(v.replace("R$","").replace(/\./g,"").replace(",",".").trim())||0;
 }
+
 function calcularTotal(){
-    const v = limparMoeda(valorSofa.value);
-    const f = limparMoeda(frete.value);
-    const m = montagem.checked ? limparMoeda(valorMontagem.value) : 0;
-    total.value = (v+f+m).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  const v=limparMoeda(valorSofa.value);
+  const f=limparMoeda(frete.value);
+  const m=montagem.checked?limparMoeda(valorMontagem.value):0;
+  total.value=(v+f+m).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 }
-valorSofa.oninput=()=>{formatarMoeda(valorSofa); calcularTotal();}
-frete.oninput=()=>{formatarMoeda(frete); calcularTotal();}
-valorMontagem.oninput=()=>{formatarMoeda(valorMontagem); calcularTotal();}
+
+valorSofa.oninput=()=>{formatarMoeda(valorSofa);calcularTotal();}
+frete.oninput=()=>{formatarMoeda(frete);calcularTotal();}
+valorMontagem.oninput=()=>{formatarMoeda(valorMontagem);calcularTotal();}
 montagem.onchange=calcularTotal;
 
-// CEP
-cep.addEventListener("blur", async ()=>{
-    const cepValor = cep.value.replace(/\D/g,'');
-    if(cepValor.length !== 8){
-        return;
-    }
-    try{
-        const res = await fetch(`https://viacep.com.br/ws/${cepValor}/json/`);
-        const data = await res.json();
-        if(data.erro) return;
-        rua.value = data.logradouro || "";
-        bairro.value = data.bairro || "";
-        municipio.value = data.localidade || "";
-    }catch(e){}
-});
+cep.onblur=async ()=>{
+  const c=cep.value.replace(/\D/g,'');
+  if(c.length!==8) return;
+  const r=await fetch(`https://viacep.com.br/ws/${c}/json/`);
+  const d=await r.json();
+  if(d.erro) return;
+  rua.value=d.logradouro;
+  bairro.value=d.bairro;
+  municipio.value=d.localidade || "São Paulo";
+};
 
-// Salvar venda
-formVenda.addEventListener("submit", async (e)=>{
-    e.preventDefault();
-    await addDoc(collection(db,"vendas"),{
-        vendedora: userVendedora.email,
-        pedido: Date.now(),
-        dataPedido: dataPedido.value,
-        dataEntrega: dataEntrega.value,
-        montagem: montagem.checked,
-        produto:{
-            modelo: modelo.value,
-            cor: cor.value,
-            valor: limparMoeda(valorSofa.value),
-            frete: limparMoeda(frete.value),
-            valorMontagem: montagem.checked?limparMoeda(valorMontagem.value):0,
-            total: limparMoeda(total.value)
-        },
-        pagamento: pagamento.value,
-        cliente:{
-            nome:nomeCliente.value,
-            contato:contato.value,
-            cep:cep.value,
-            rua:rua.value,
-            numero:numero.value,
-            bairro:bairro.value,
-            municipio:municipio.value
-        }
-    });
-    formVenda.reset();
-    calcularTotal();
-    carregarVendas();
-});
+formVenda.onsubmit=async e=>{
+  e.preventDefault();
 
-// Listar vendas
+  await addDoc(collection(db,"vendas"),{
+    vendedora:userVendedora.email,
+    pedido:Date.now(),
+    dataPedido:dataPedido.value,
+    dataEntrega:dataEntrega.value,
+    produto:{
+      modelo:modelo.value,
+      tamanho:tamanhoSofa.value,
+      cor:cor.value,
+      valor:limparMoeda(valorSofa.value),
+      frete:limparMoeda(frete.value),
+      montagem:montagem.checked?limparMoeda(valorMontagem.value):0,
+      total:limparMoeda(total.value)
+    },
+    pagamento:pagamento.value,
+    cliente:{
+      nome:nomeCliente.value,
+      contato:contato.value,
+      cep:cep.value,
+      rua:rua.value,
+      numero:numero.value,
+      bairro:bairro.value,
+      municipio:municipio.value
+    },
+    criadoEm:new Date()
+  });
+
+  formVenda.reset();
+  calcularTotal();
+  msgSucesso.style.display="block";
+  setTimeout(()=>msgSucesso.style.display="none",3000);
+
+  await carregarVendas();
+  listaVendas.scrollIntoView({behavior:"smooth"});
+};
+
 async function carregarVendas(){
-    listaVendas.innerHTML="";
-    const q = query(collection(db,"vendas"), where("vendedora","==",userVendedora.email));
-    const snap = await getDocs(q);
-    snap.forEach(d=>{
-        const v = d.data();
-        const div = document.createElement("div");
-        div.className="card";
-        div.innerHTML=`
-            <h3>Pedido Nº ${v.pedido}</h3>
-            <p><b>Cliente:</b> ${v.cliente.nome}</p>
-            <p><b>Total:</b> ${v.produto.total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}</p>
-            <button onclick="excluirVenda('${d.id}')">Excluir</button>
-        `;
-        listaVendas.appendChild(div);
-    });
+  listaVendas.innerHTML="";
+  const q=query(collection(db,"vendas"),where("vendedora","==",userVendedora.email));
+  const s=await getDocs(q);
+  s.forEach(d=>{
+    const v=d.data();
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=`
+      <h3>Pedido Nº ${v.pedido}</h3>
+      <p><strong>Cliente:</strong> ${v.cliente.nome}</p>
+      <p><strong>Modelo:</strong> ${v.produto.modelo}</p>
+      <p><strong>Total:</strong> ${v.produto.total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}</p>
+      <button class="btn-excluir" onclick="excluirVenda('${d.id}')">Excluir</button>
+    `;
+    listaVendas.appendChild(div);
+  });
 }
 
-window.excluirVenda = async (id)=>{
-    if(confirm("Excluir este pedido?")){
-        await deleteDoc(doc(db,"vendas",id));
-        carregarVendas();
-    }
+window.excluirVenda=async id=>{
+  if(!confirm("Você deseja realmente excluir essa venda?")) return;
+  const motivo=prompt("Informe o motivo da exclusão:");
+  if(!motivo) return alert("Motivo obrigatório");
+  await deleteDoc(doc(db,"vendas",id));
+  await carregarVendas();
 };
 </script>
 </body>
