@@ -8,40 +8,13 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#f4f6f8;}
-.container{max-width:1200px;margin:auto;padding:16px;}
-h1{margin-bottom:16px;}
-
-.menu{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:12px;
-  margin-bottom:20px;
-}
-.menu button{
-  padding:16px;
-  border-radius:12px;
-  border:none;
-  font-size:16px;
-  cursor:pointer;
-  background:#1976d2;
-  color:white;
-}
-
-.dashboard{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-  gap:16px;
-}
-
-.card{
-  background:white;
-  padding:16px;
-  border-radius:14px;
-  box-shadow:0 2px 6px rgba(0,0,0,.1);
-}
-
-canvas{margin-top:10px;}
+body{margin:0;font-family:Arial;background:#f4f6f8}
+.container{max-width:1200px;margin:auto;padding:20px}
+.top-menu{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.top-menu button{padding:14px;font-size:15px;border:none;border-radius:8px;background:#1976d2;color:#fff;cursor:pointer}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
+.card{background:#fff;padding:16px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+canvas{max-height:260px}
 </style>
 </head>
 
@@ -50,39 +23,35 @@ canvas{margin-top:10px;}
 
 <h1>Dashboard Geral</h1>
 
-<div class="menu">
-  <button onclick="location.href='jader-gerenciar.html'">Gerenciar Pedidos</button>
-  <button>Financeiro</button>
-  <button>Indicadores</button>
-  <button>Estoque</button>
+<div class="top-menu">
+<button>Gerenciar Pedidos</button>
+<button>Financeiro</button>
+<button>Indicadores</button>
+<button>Estoque</button>
 </div>
 
-<div class="dashboard">
-
+<div class="cards">
 <div class="card">
-  <h3>Status das Vendas</h3>
-  <canvas id="statusChart"></canvas>
-</div>
-
-<div class="card">
-  <h3>Formas de Pagamento</h3>
-  <canvas id="pagamentoChart"></canvas>
+<h3>Status das Vendas</h3>
+<canvas id="statusChart"></canvas>
 </div>
 
 <div class="card">
-  <h3>Quantidade de Vendas</h3>
-  <p id="totalVendas"></p>
-  <p id="vendasSemana"></p>
-  <p id="vendasMes"></p>
+<h3>Formas de Pagamento</h3>
+<canvas id="pagamentoChart"></canvas>
 </div>
 
 <div class="card">
-  <h3>Valores</h3>
-  <p id="valorTotal"></p>
-  <p id="ticketMedio"></p>
+<h3>Quantidade de Vendas</h3>
+<canvas id="quantidadeChart"></canvas>
 </div>
 
+<div class="card">
+<h3>Valores de Vendas</h3>
+<canvas id="valorChart"></canvas>
 </div>
+</div>
+
 </div>
 
 <script type="module">
@@ -94,16 +63,19 @@ const firebaseConfig = {
   apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
   authDomain: "crm-vendas-43b6b.firebaseapp.com",
   projectId: "crm-vendas-43b6b",
+  storageBucket: "crm-vendas-43b6b.appspot.com",
+  messagingSenderId: "645002761099",
+  appId: "1:645002761099:web:f194f70c351d1074ac158e"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 🔐 Segurança
-onAuthStateChanged(auth,user=>{
+onAuthStateChanged(auth, async user=>{
   if(!user || user.email!=="jader@hotmail.com"){
     location.href="login.html";
+    return;
   }
   carregarDashboard();
 });
@@ -111,54 +83,40 @@ onAuthStateChanged(auth,user=>{
 async function carregarDashboard(){
   const snap = await getDocs(collection(db,"vendas"));
 
-  let statusCount={};
-  let pagamentoCount={};
-  let total=0;
-  let somaValores=0;
+  let statusCount={}, pagamentoCount={}, vendasPorMes={}, valorPorVendedor={};
 
-  const agora = new Date();
-  let semana=0, mes=0;
+  snap.forEach(doc=>{
+    const v = doc.data();
 
-  snap.forEach(d=>{
-    const v=d.data();
+    statusCount[v.statusVenda||"Pendente"] = (statusCount[v.statusVenda||"Pendente"]||0)+1;
+    pagamentoCount[v.pagamento] = (pagamentoCount[v.pagamento]||0)+1;
 
-    statusCount[v.statusVenda]=(statusCount[v.statusVenda]||0)+1;
-    pagamentoCount[v.pagamento]=(pagamentoCount[v.pagamento]||0)+1;
+    const mes = new Date(v.dataPedido).toLocaleString("pt-BR",{month:"short",year:"numeric"});
+    vendasPorMes[mes] = (vendasPorMes[mes]||0)+1;
 
-    total++;
-    somaValores+=v.produto.total;
-
-    const data=new Date(v.dataPedido);
-    if(data >= new Date(agora-7*86400000)) semana++;
-    if(data.getMonth()===agora.getMonth()) mes++;
+    valorPorVendedor[v.vendedorNome] = (valorPorVendedor[v.vendedorNome]||0) + (v.produto.total||0);
   });
 
-  // 📊 Status
   new Chart(statusChart,{
-    type:'pie',
-    data:{
-      labels:Object.keys(statusCount),
-      datasets:[{data:Object.values(statusCount)}]
-    }
+    type:"doughnut",
+    data:{labels:Object.keys(statusCount),datasets:[{data:Object.values(statusCount)}]}
   });
 
-  // 💳 Pagamento
   new Chart(pagamentoChart,{
-    type:'doughnut',
-    data:{
-      labels:Object.keys(pagamentoCount),
-      datasets:[{data:Object.values(pagamentoCount)}]
-    }
+    type:"pie",
+    data:{labels:Object.keys(pagamentoCount),datasets:[{data:Object.values(pagamentoCount)}]}
   });
 
-  totalVendas.textContent = `Total de vendas: ${total}`;
-  vendasSemana.textContent = `Vendas na semana: ${semana}`;
-  vendasMes.textContent = `Vendas no mês: ${mes}`;
+  new Chart(quantidadeChart,{
+    type:"bar",
+    data:{labels:Object.keys(vendasPorMes),datasets:[{label:"Vendas",data:Object.values(vendasPorMes)}]}
+  });
 
-  valorTotal.textContent = `Faturamento total: ${somaValores.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}`;
-  ticketMedio.textContent = `Ticket médio: ${(somaValores/total||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}`;
+  new Chart(valorChart,{
+    type:"bar",
+    data:{labels:Object.keys(valorPorVendedor),datasets:[{label:"R$",data:Object.values(valorPorVendedor)}]}
+  });
 }
 </script>
-
 </body>
 </html>
