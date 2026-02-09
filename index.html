@@ -9,18 +9,14 @@
 body { margin:0; font-family:Arial; background:#f4f6f8; color:#333; }
 .container { max-width:480px; margin:auto; padding:16px; }
 h1,h2{margin:0 0 10px;}
-label,input,textarea,select,button{
-  width:100%;margin:6px 0;padding:12px;font-size:16px;border-radius:8px;
-}
-textarea{resize:vertical;min-height:70px;}
+label,input,textarea,select,button{width:100%;margin:6px 0;padding:12px;font-size:16px;border-radius:8px;}
 input:disabled{background:#eee;}
+textarea{resize:vertical;min-height:70px;}
 button{background:#1976d2;color:white;border:none;cursor:pointer;}
 button:active{background:#125aa0;}
 .btn-excluir{background:#e53935;}
-.card{
-  background:white;padding:14px;border-radius:12px;margin-top:12px;
-  box-shadow:0 2px 6px rgba(0,0,0,.1);
-}
+.card{background:white;padding:14px;border-radius:12px;margin-top:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);}
+.hidden{display:none;}
 </style>
 </head>
 
@@ -32,6 +28,8 @@ button:active{background:#125aa0;}
 <form id="formVenda">
 
 <h2>Pedido</h2>
+<input id="pedido" disabled>
+
 <label>Data do Pedido</label>
 <input type="date" id="dataPedido" required>
 
@@ -44,54 +42,51 @@ button:active{background:#125aa0;}
 
 <h2>Produto</h2>
 
-<label>Modelo do Sofá</label>
 <select id="modelo" required>
-<option value="">Selecione</option>
+<option value="">Modelo do sofá</option>
 <option>Sofá carina braço almofadado pilow de 15</option>
 <option>Sofá carina braço almofadado pilow de 25</option>
 <option>Sofá carina braço reto pilow de 15</option>
 <option>Sofá carina braço reto pilow de 25</option>
 </select>
 
-<label>Tamanho do Sofá</label>
-<input id="tamanho" required>
-
-<label>Cor</label>
-<input id="cor" required>
-
-<label>Valor do Sofá</label>
-<input id="valorSofa" required>
-
-<label>Frete</label>
-<input id="frete" value="0">
-
-<label>Valor da Montagem</label>
-<input id="valorMontagem" value="0">
-
-<label>Total</label>
-<input id="total" disabled>
+<input id="tamanho" placeholder="Tamanho" required>
+<input id="cor" placeholder="Cor" required>
+<input id="valorSofa" placeholder="Valor do Sofá" required>
+<input id="frete" placeholder="Frete" value="0">
+<input id="valorMontagem" placeholder="Valor da Montagem" value="0">
+<input id="total" placeholder="Total" disabled>
 
 <hr>
 
 <h2>Pagamento</h2>
-<input id="pagamento" required>
+
+<select id="formaPagamento" required>
+<option value="">Forma de pagamento</option>
+<option>Pix</option>
+<option>Dinheiro</option>
+<option>Cartão de Débito</option>
+<option>Cartão de Crédito</option>
+</select>
+
+<div id="boxParcelas" class="hidden">
+<input type="number" id="parcelas" placeholder="Quantidade de parcelas">
+<input id="valorParcela" placeholder="Valor da parcela" disabled>
+</div>
 
 <hr>
 
 <h2>Cliente</h2>
-<input placeholder="Nome" id="nomeCliente" required>
-<input placeholder="Contato" id="contato" required>
+<input id="nomeCliente" placeholder="Nome" required>
+<input id="contato" placeholder="Contato" required>
 
-<input placeholder="CEP" id="cep" required>
-<input placeholder="Rua" id="rua">
-<input placeholder="Número" id="numero">
-<input placeholder="Bairro" id="bairro">
-<input placeholder="Município" id="cidade">
+<input id="cep" placeholder="CEP" required>
+<input id="rua" placeholder="Rua">
+<input id="numero" placeholder="Número">
+<input id="bairro" placeholder="Bairro">
+<input id="cidade" placeholder="Cidade">
 
-<hr>
-
-<h2>Observações</h2>
-<textarea id="observacoes" placeholder="Observações sobre o cliente ou pedido"></textarea>
+<textarea id="observacoes" placeholder="Observações do cliente"></textarea>
 
 <button type="submit">Salvar Venda</button>
 </form>
@@ -106,10 +101,7 @@ button:active{background:#125aa0;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import {
-  getFirestore, collection, addDoc, getDocs,
-  query, where, deleteDoc, doc, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
@@ -124,38 +116,31 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let vendedor = { nome:"", email:"" };
+let vendedor = {};
 
-// 🔐 Autenticação
 onAuthStateChanged(auth, user=>{
   if(!user) location.href="login.html";
-  vendedor.nome = user.displayName || user.email;
+  vendedor.nome = user.displayName;
   vendedor.email = user.email;
   carregarVendas();
 });
 
-// 🚪 Logout
-btnSair.onclick = async ()=>{
+btnSair.onclick=async()=>{
   await signOut(auth);
   location.href="login.html";
 };
 
-// 💰 Moeda
 function moeda(i){
   let v=i.value.replace(/\D/g,"");
-  v=(v/100).toFixed(2);
-  v=v.replace(".",",").replace(/\B(?=(\d{3})+(?!\d))/g,".");
+  v=(v/100).toFixed(2).replace(".",",");
   i.value="R$ "+v;
   totalizar();
 }
-function limpar(v){ return Number(v.replace(/\D/g,""))/100||0; }
-
+function limpar(v){return Number(v.replace(/\D/g,""))/100||0;}
 function totalizar(){
-  total.value = (
-    limpar(valorSofa.value) +
-    limpar(frete.value) +
-    (montagem.checked ? limpar(valorMontagem.value) : 0)
-  ).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  total.value=(limpar(valorSofa.value)+limpar(frete.value)+(montagem.checked?limpar(valorMontagem.value):0))
+  .toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  calcularParcela();
 }
 
 valorSofa.oninput=()=>moeda(valorSofa);
@@ -163,36 +148,31 @@ frete.oninput=()=>moeda(frete);
 valorMontagem.oninput=()=>moeda(valorMontagem);
 montagem.onchange=totalizar;
 
-// 📍 CEP (auto + manual permitido)
-cep.onblur = async ()=>{
-  const c = cep.value.replace(/\D/g,"");
-  if(c.length!==8) return;
-  const r = await fetch(`https://viacep.com.br/ws/${c}/json/`).then(r=>r.json());
-  if(!r.erro){
-    rua.value = r.logradouro;
-    bairro.value = r.bairro;
-    cidade.value = r.localidade;
-  }
+formaPagamento.onchange=()=>{
+  boxParcelas.classList.toggle("hidden", formaPagamento.value!=="Cartão de Crédito");
 };
 
-// 💾 Salvar venda
-formVenda.onsubmit = async e=>{
-  e.preventDefault();
+parcelas.oninput=calcularParcela;
+function calcularParcela(){
+  if(parcelas.value>0){
+    valorParcela.value=(limpar(total.value)/parcelas.value)
+    .toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  }
+}
 
+formVenda.onsubmit=async e=>{
+  e.preventDefault();
   await addDoc(collection(db,"vendas"),{
-    vendedorNome: vendedor.nome,
-    vendedorEmail: vendedor.email,
-    status: "pendente",
-    criadoEm: serverTimestamp(),
-    dataPedido: dataPedido.value,
-    dataEntrega: dataEntrega.value,
-    produto:{
-      modelo:modelo.value,
-      tamanho:tamanho.value,
-      cor:cor.value,
-      total:limpar(total.value)
+    vendedorNome:vendedor.nome,
+    vendedorEmail:vendedor.email,
+    dataPedido:dataPedido.value,
+    dataEntrega:dataEntrega.value,
+    produto:{modelo:modelo.value,tamanho:tamanho.value,cor:cor.value,total:limpar(total.value)},
+    pagamento:{
+      forma:formaPagamento.value,
+      parcelas:parcelas.value||1,
+      valorParcela:limpar(valorParcela.value)
     },
-    pagamento: pagamento.value,
     cliente:{
       nome:nomeCliente.value,
       contato:contato.value,
@@ -202,45 +182,26 @@ formVenda.onsubmit = async e=>{
       bairro:bairro.value,
       cidade:cidade.value
     },
-    observacoes: observacoes.value
+    observacoes:observacoes.value
   });
-
   formVenda.reset();
   carregarVendas();
 };
 
-// 📄 Listar vendas do vendedor
 async function carregarVendas(){
   listaVendas.innerHTML="";
-  const q = query(
-    collection(db,"vendas"),
-    where("vendedorEmail","==",vendedor.email)
-  );
-  const s = await getDocs(q);
-
+  const q=query(collection(db,"vendas"),where("vendedorEmail","==",vendedor.email));
+  const s=await getDocs(q);
   s.forEach(d=>{
-    const v = d.data();
-    listaVendas.innerHTML += `
+    const v=d.data();
+    listaVendas.innerHTML+=`
       <div class="card">
         <b>${v.produto.modelo}</b><br>
         Cliente: ${v.cliente.nome}<br>
-        Total: R$ ${v.produto.total.toFixed(2)}<br>
-        ${v.observacoes ? `<em>Obs:</em> ${v.observacoes}<br>` : ""}
-        <small>Status: ${v.status}</small><br><br>
-        <button class="btn-excluir" onclick="excluir('${d.id}')">Excluir</button>
+        Total: R$ ${v.produto.total.toFixed(2)}
       </div>`;
   });
 }
-
-// 🗑️ Excluir com motivo
-window.excluir = async id=>{
-  if(!confirm("Você deseja realmente excluir essa venda?")) return;
-  const motivo = prompt("Informe o motivo da exclusão:");
-  if(!motivo) return;
-  await deleteDoc(doc(db,"vendas",id));
-  carregarVendas();
-};
 </script>
-
 </body>
 </html>
