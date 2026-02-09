@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Jader - Gerenciar Pedidos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{margin:0;font-family:Arial;background:#f4f6f8;}
+.container{max-width:900px;margin:auto;padding:16px;}
+h1{margin-bottom:10px;}
+
+.filtros{
+  display:grid;
+  grid-template-columns:1fr 1fr auto;
+  gap:10px;
+  margin-bottom:16px;
+}
+
+select,button{
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  font-size:15px;
+}
+
+button{
+  background:#1976d2;
+  color:#fff;
+  cursor:pointer;
+}
+
+.card{
+  background:#fff;
+  padding:14px;
+  border-radius:12px;
+  margin-bottom:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);
+}
+
+.status{
+  font-weight:bold;
+  margin-bottom:6px;
+}
+
+.aprovada{color:green;}
+.pendente{color:orange;}
+.reprovada{color:red;}
+
+.acoes button{
+  margin-top:8px;
+  margin-right:6px;
+}
+
+.btn-reprovar{background:#e53935;}
+.btn-aprovar{background:#2e7d32;}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>Gerenciar Pedidos</h1>
+
+<div class="filtros">
+  <select id="filtroStatus">
+    <option value="">Todos os status</option>
+    <option value="pendente">Pendente</option>
+    <option value="aprovada">Aprovada</option>
+    <option value="reprovada">Reprovada</option>
+    <option value="producao">Em produção</option>
+    <option value="finalizada">Finalizada</option>
+  </select>
+
+  <select id="filtroVendedor">
+    <option value="">Todos os vendedores</option>
+  </select>
+
+  <button onclick="carregarPedidos()">Filtrar</button>
+</div>
+
+<div id="listaPedidos"></div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, getDocs, query, where, updateDoc, doc } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
+  authDomain: "crm-vendas-43b6b.firebaseapp.com",
+  projectId: "crm-vendas-43b6b",
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// 🔐 Segurança (só Jader)
+onAuthStateChanged(auth,user=>{
+  if(!user || user.email !== "EMAIL_DO_JADER_AQUI"){
+    location.href="login.html";
+  }
+  carregarPedidos();
+});
+
+// 📄 Carregar pedidos
+async function carregarPedidos(){
+  listaPedidos.innerHTML="";
+
+  const status = filtroStatus.value;
+  const vendedor = filtroVendedor.value;
+
+  let q = collection(db,"vendas");
+  let filtros = [];
+
+  if(status) filtros.push(where("statusVenda","==",status));
+  if(vendedor) filtros.push(where("vendedor.email","==",vendedor));
+
+  const consulta = filtros.length ? query(q,...filtros) : q;
+  const snap = await getDocs(consulta);
+
+  const vendedoresSet = new Set();
+
+  snap.forEach(d=>{
+    const v=d.data();
+    vendedoresSet.add(v.vendedor.email);
+
+    listaPedidos.innerHTML+=`
+      <div class="card">
+        <div class="status ${v.statusVenda}">Status: ${v.statusVenda}</div>
+        <b>Cliente:</b> ${v.cliente.nome}<br>
+        <b>Produto:</b> ${v.produto.modelo}<br>
+        <b>Total:</b> ${v.produto.total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}<br>
+        <b>Vendedor:</b> ${v.vendedor.nome}<br>
+
+        <div class="acoes">
+          ${v.statusVenda==="pendente" ? `
+            <button class="btn-aprovar" onclick="aprovar('${d.id}')">Aprovar</button>
+            <button class="btn-reprovar" onclick="reprovar('${d.id}')">Reprovar</button>
+          ` : ""}
+        </div>
+      </div>`;
+  });
+
+  filtroVendedor.innerHTML = `<option value="">Todos os vendedores</option>`;
+  vendedoresSet.forEach(v=>{
+    filtroVendedor.innerHTML+=`<option value="${v}">${v}</option>`;
+  });
+}
+
+// ✅ Aprovar
+window.aprovar = async id=>{
+  if(!confirm("Deseja aprovar esta venda?")) return;
+  await updateDoc(doc(db,"vendas",id),{
+    statusVenda:"aprovada"
+  });
+  carregarPedidos();
+};
+
+// ❌ Reprovar
+window.reprovar = async id=>{
+  const motivo = prompt("Informe o motivo da reprovação:");
+  if(!motivo) return;
+
+  await updateDoc(doc(db,"vendas",id),{
+    statusVenda:"reprovada",
+    motivoReprovacao:motivo
+  });
+  carregarPedidos();
+};
+</script>
+
+</body>
+</html>
