@@ -9,14 +9,19 @@
 body { margin:0; font-family:Arial; background:#f4f6f8; color:#333; }
 .container { max-width:480px; margin:auto; padding:16px; }
 h1,h2{margin:0 0 10px;}
-label,input,textarea,select,button{width:100%;margin:6px 0;padding:12px;font-size:16px;border-radius:8px;}
+label,input,textarea,select,button{
+  width:100%;margin:6px 0;padding:12px;
+  font-size:16px;border-radius:8px;
+}
+textarea{resize:vertical;}
 input:disabled{background:#eee;}
-textarea{resize:vertical;min-height:70px;}
 button{background:#1976d2;color:white;border:none;cursor:pointer;}
 button:active{background:#125aa0;}
 .btn-excluir{background:#e53935;}
-.card{background:white;padding:14px;border-radius:12px;margin-top:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);}
-.hidden{display:none;}
+.card{
+  background:#fff;padding:14px;border-radius:12px;
+  margin-top:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);
+}
 </style>
 </head>
 
@@ -28,65 +33,76 @@ button:active{background:#125aa0;}
 <form id="formVenda">
 
 <h2>Pedido</h2>
-<input id="pedido" disabled>
-
 <label>Data do Pedido</label>
 <input type="date" id="dataPedido" required>
 
 <label>Data da Entrega</label>
 <input type="date" id="dataEntrega" required>
 
-<label><input type="checkbox" id="montagem"> Montagem</label>
+<label>
+  <input type="checkbox" id="montagem"> Montagem
+</label>
 
 <hr>
 
 <h2>Produto</h2>
 
+<label>Modelo do Sofá</label>
 <select id="modelo" required>
-<option value="">Modelo do sofá</option>
+<option value="">Selecione</option>
 <option>Sofá carina braço almofadado pilow de 15</option>
 <option>Sofá carina braço almofadado pilow de 25</option>
 <option>Sofá carina braço reto pilow de 15</option>
 <option>Sofá carina braço reto pilow de 25</option>
 </select>
 
-<input id="tamanho" placeholder="Tamanho" required>
-<input id="cor" placeholder="Cor" required>
-<input id="valorSofa" placeholder="Valor do Sofá" required>
-<input id="frete" placeholder="Frete" value="0">
-<input id="valorMontagem" placeholder="Valor da Montagem" value="0">
-<input id="total" placeholder="Total" disabled>
+<label>Tamanho do Sofá</label>
+<input id="tamanho" required>
+
+<label>Cor</label>
+<input id="cor" required>
+
+<label>Valor do Sofá</label>
+<input id="valorSofa" required>
+
+<label>Frete</label>
+<input id="frete" value="0">
+
+<label>Valor da Montagem</label>
+<input id="valorMontagem" value="0">
+
+<label>Total</label>
+<input id="total" disabled>
 
 <hr>
 
 <h2>Pagamento</h2>
-
-<select id="formaPagamento" required>
-<option value="">Forma de pagamento</option>
-<option>Pix</option>
-<option>Dinheiro</option>
-<option>Cartão de Débito</option>
-<option>Cartão de Crédito</option>
+<label>Forma de Pagamento</label>
+<select id="tipoPagamento" required>
+<option value="">Selecione</option>
+<option value="avista">À vista</option>
+<option value="prazo">À prazo</option>
+<option value="dinheiro">Dinheiro</option>
+<option value="pix">PIX</option>
+<option value="cartao">Cartão</option>
 </select>
 
-<div id="boxParcelas" class="hidden">
-<input type="number" id="parcelas" placeholder="Quantidade de parcelas">
-<input id="valorParcela" placeholder="Valor da parcela" disabled>
-</div>
+<label>Parcelas (se houver)</label>
+<input type="number" id="parcelas" value="1" min="1">
 
 <hr>
 
 <h2>Cliente</h2>
-<input id="nomeCliente" placeholder="Nome" required>
-<input id="contato" placeholder="Contato" required>
+<input placeholder="Nome" id="nomeCliente" required>
+<input placeholder="Contato" id="contato" required>
+<input placeholder="CEP" id="cep" required>
+<input placeholder="Rua" id="rua">
+<input placeholder="Número" id="numero">
+<input placeholder="Bairro" id="bairro">
+<input placeholder="Cidade" id="cidade">
 
-<input id="cep" placeholder="CEP" required>
-<input id="rua" placeholder="Rua">
-<input id="numero" placeholder="Número">
-<input id="bairro" placeholder="Bairro">
-<input id="cidade" placeholder="Cidade">
-
-<textarea id="observacoes" placeholder="Observações do cliente"></textarea>
+<label>Observações</label>
+<textarea id="observacao" placeholder="Observações do cliente"></textarea>
 
 <button type="submit">Salvar Venda</button>
 </form>
@@ -101,7 +117,8 @@ button:active{background:#125aa0;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, query, where, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, deleteDoc, doc, serverTimestamp } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
@@ -116,8 +133,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let vendedor = {};
+let vendedor = { nome:"", email:"" };
 
+// 🔐 Auth
 onAuthStateChanged(auth, user=>{
   if(!user) location.href="login.html";
   vendedor.nome = user.displayName;
@@ -125,54 +143,73 @@ onAuthStateChanged(auth, user=>{
   carregarVendas();
 });
 
-btnSair.onclick=async()=>{
+// 🚪 Logout
+btnSair.onclick = async ()=>{
   await signOut(auth);
   location.href="login.html";
 };
 
+// 💰 Moeda
 function moeda(i){
   let v=i.value.replace(/\D/g,"");
-  v=(v/100).toFixed(2).replace(".",",");
+  v=(v/100).toFixed(2);
+  v=v.replace(".",",").replace(/\B(?=(\d{3})+(?!\d))/g,".");
   i.value="R$ "+v;
   totalizar();
 }
-function limpar(v){return Number(v.replace(/\D/g,""))/100||0;}
+function limpar(v){ return Number(v.replace(/\D/g,""))/100||0; }
 function totalizar(){
   total.value=(limpar(valorSofa.value)+limpar(frete.value)+(montagem.checked?limpar(valorMontagem.value):0))
   .toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-  calcularParcela();
 }
-
 valorSofa.oninput=()=>moeda(valorSofa);
 frete.oninput=()=>moeda(frete);
 valorMontagem.oninput=()=>moeda(valorMontagem);
 montagem.onchange=totalizar;
 
-formaPagamento.onchange=()=>{
-  boxParcelas.classList.toggle("hidden", formaPagamento.value!=="Cartão de Crédito");
+// 📍 CEP
+cep.onblur=async()=>{
+  const c=cep.value.replace(/\D/g,"");
+  if(c.length!==8) return;
+  const r=await fetch(`https://viacep.com.br/ws/${c}/json/`).then(r=>r.json());
+  if(!r.erro){
+    rua.value=r.logradouro;
+    bairro.value=r.bairro;
+    cidade.value=r.localidade;
+  }
 };
 
-parcelas.oninput=calcularParcela;
-function calcularParcela(){
-  if(parcelas.value>0){
-    valorParcela.value=(limpar(total.value)/parcelas.value)
-    .toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-  }
-}
-
+// 💾 Salvar venda
 formVenda.onsubmit=async e=>{
   e.preventDefault();
+
   await addDoc(collection(db,"vendas"),{
-    vendedorNome:vendedor.nome,
-    vendedorEmail:vendedor.email,
+    criadoEm: serverTimestamp(),
+    statusVenda: "pendente",
+
+    vendedor:{
+      nome:vendedor.nome,
+      email:vendedor.email
+    },
+
     dataPedido:dataPedido.value,
     dataEntrega:dataEntrega.value,
-    produto:{modelo:modelo.value,tamanho:tamanho.value,cor:cor.value,total:limpar(total.value)},
-    pagamento:{
-      forma:formaPagamento.value,
-      parcelas:parcelas.value||1,
-      valorParcela:limpar(valorParcela.value)
+
+    produto:{
+      modelo:modelo.value,
+      tamanho:tamanho.value,
+      cor:cor.value,
+      valorSofa:limpar(valorSofa.value),
+      frete:limpar(frete.value),
+      montagem: montagem.checked ? limpar(valorMontagem.value) : 0,
+      total:limpar(total.value)
     },
+
+    pagamento:{
+      tipo: tipoPagamento.value,
+      parcelas: Number(parcelas.value)
+    },
+
     cliente:{
       nome:nomeCliente.value,
       contato:contato.value,
@@ -180,17 +217,25 @@ formVenda.onsubmit=async e=>{
       rua:rua.value,
       numero:numero.value,
       bairro:bairro.value,
-      cidade:cidade.value
+      cidade:cidade.value,
+      observacao:observacao.value
     },
-    observacoes:observacoes.value
+
+    exclusao:{
+      excluida:false,
+      motivo:"",
+      data:null
+    }
   });
+
   formVenda.reset();
   carregarVendas();
 };
 
+// 📄 Listar vendas
 async function carregarVendas(){
   listaVendas.innerHTML="";
-  const q=query(collection(db,"vendas"),where("vendedorEmail","==",vendedor.email));
+  const q=query(collection(db,"vendas"),where("vendedor.email","==",vendedor.email));
   const s=await getDocs(q);
   s.forEach(d=>{
     const v=d.data();
@@ -198,10 +243,21 @@ async function carregarVendas(){
       <div class="card">
         <b>${v.produto.modelo}</b><br>
         Cliente: ${v.cliente.nome}<br>
-        Total: R$ ${v.produto.total.toFixed(2)}
+        Total: ${v.produto.total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}<br>
+        <button class="btn-excluir" onclick="excluir('${d.id}')">Excluir</button>
       </div>`;
   });
 }
+
+// 🗑️ Excluir com motivo
+window.excluir=async id=>{
+  if(!confirm("Deseja realmente excluir essa venda?")) return;
+  const motivo=prompt("Informe o motivo da exclusão:");
+  if(!motivo) return;
+  await deleteDoc(doc(db,"vendas",id));
+  carregarVendas();
+};
 </script>
+
 </body>
 </html>
