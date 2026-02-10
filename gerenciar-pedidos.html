@@ -123,7 +123,7 @@ async function carregarPedidos() {
   });
 }
 
-window.atualizarStatus = async (id, status, motivo = null) => {
+  async function atualizarStatus(id, status, motivo = null) {
   const dados = { status };
 
   if (motivo) {
@@ -131,8 +131,12 @@ window.atualizarStatus = async (id, status, motivo = null) => {
   }
 
   await updateDoc(doc(db, "vendas", id), dados);
-  carregarPedidos();
+}
+  
+   carregarPedidos();
 };
+
+
 
   window.reprovarPedido = async (id) => {
   const motivo = prompt("Informe o motivo da reprovação:");
