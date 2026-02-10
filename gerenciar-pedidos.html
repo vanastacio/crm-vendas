@@ -60,12 +60,25 @@ const finalizadosDiv = document.getElementById("finalizados");
 
 function formatarPagamento(p) {
   if (!p) return "Não informado";
-  if (p.tipo === "prazo") return `${p.parcelas || 1}x sem juros`;
+  if (p.tipo === "prazo") return `${p.parcelas || 1}x`;
   return p.tipo;
 }
 
+function obterValorVenda(v) {
+  return (
+    v.produto?.total ??
+    v.produto?.valor ??
+    v.valorTotal ??
+    v.total ??
+    0
+  );
+}
+
 function formatarValor(v) {
-  return (v || 0).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+  return Number(v || 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
 }
 
 async function carregarPedidos() {
@@ -77,6 +90,7 @@ async function carregarPedidos() {
   snapshot.forEach(docSnap => {
     const v = docSnap.data();
     const status = v.status || "pendente";
+    const valorVenda = obterValorVenda(v);
 
     const html = `
       <div class="card">
@@ -86,7 +100,7 @@ async function carregarPedidos() {
         <b>Vendedor:</b> ${v.vendedorNome || "-"}<br>
         <b>Entrega:</b> ${v.dataEntrega || "-"}<br>
         <b>Pagamento:</b> ${formatarPagamento(v.pagamento)}<br>
-        <b>Valor:</b> ${formatarValor(v.produto?.total)}
+        <b>Valor:</b> ${formatarValor(valorVenda)}
         ${status === "pendente" ? `
           <div style="margin-top:10px;">
             <button class="btn-aprovar" onclick="atualizarStatus('${docSnap.id}','aprovado')">Aprovar</button>
