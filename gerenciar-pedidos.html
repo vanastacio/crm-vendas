@@ -149,12 +149,14 @@ function renderizar() {
           (v.pagamento.tipo === "prazo" ? ` (${v.pagamento.parcelas}x)` : "")
         : "Não informado";
 
-      const valorTotal = v.produto?.total
-        ? v.produto.total.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL"
-          })
-        : "R$ 0,00";
+    let valorTotal = "R$ 0,00";
+
+if (v.produto && typeof v.produto.total === "number") {
+  valorTotal = v.produto.total.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
+}
 
       const card = document.createElement("div");
       card.className = "card";
