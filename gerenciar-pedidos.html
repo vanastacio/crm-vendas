@@ -123,19 +123,10 @@ async function carregarPedidos() {
   });
 }
 
-  async function atualizarStatus(id, status, motivo = null) {
-  const dados = { status };
-
-  if (motivo) {
-    dados.motivoReprovacao = motivo;
-  }
-
-  await updateDoc(doc(db, "vendas", id), dados);
-}
-  
-   carregarPedidos();
+  window.atualizarStatus = async (id, status) => {
+  await updateDoc(doc(db, "vendas", id), { status });
+  carregarPedidos();
 };
-
 
 
   window.reprovarPedido = async (id) => {
