@@ -16,8 +16,7 @@ button{background:#1976d2;color:white;border:none;cursor:pointer;}
 button:active{background:#125aa0;}
 .btn-excluir{background:#e53935;}
 .card{background:white;padding:14px;border-radius:12px;margin-top:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);}
-.parcelas button{width:23%;margin:4px 1%;}
-.parcelas button.active{background:#2e7d32;}
+.parcelas button{margin:4px 0;}
 </style>
 </head>
 
@@ -39,7 +38,7 @@ button:active{background:#125aa0;}
 <input type="date" id="dataEntrega" required>
 
 <label>
-<input type="checkbox" id="montagem"> Possui Montagem
+  <input type="checkbox" id="montagem"> Montagem
 </label>
 
 <hr>
@@ -48,11 +47,11 @@ button:active{background:#125aa0;}
 
 <label>Modelo do Sofá</label>
 <select id="modelo" required>
-  <option value="">Selecione</option>
-  <option>Sofá carina braço almofadado pilow de 15</option>
-  <option>Sofá carina braço almofadado pilow de 25</option>
-  <option>Sofá carina braço reto pilow de 15</option>
-  <option>Sofá carina braço reto pilow de 25</option>
+<option value="">Selecione</option>
+<option>Sofá carina braço almofadado pilow de 15</option>
+<option>Sofá carina braço almofadado pilow de 25</option>
+<option>Sofá carina braço reto pilow de 15</option>
+<option>Sofá carina braço reto pilow de 25</option>
 </select>
 
 <label>Tamanho do Sofá</label>
@@ -76,21 +75,15 @@ button:active{background:#125aa0;}
 <hr>
 
 <h2>Pagamento</h2>
-
-<select id="pagamento" required>
-  <option value="">Selecione</option>
-  <option value="avista">À vista</option>
-  <option value="pix">Pix</option>
-  <option value="dinheiro">Dinheiro</option>
-  <option value="prazo">À prazo</option>
+<select id="formaPagamento" required>
+<option value="">Selecione</option>
+<option value="avista">À vista</option>
+<option value="pix">Pix</option>
+<option value="dinheiro">Dinheiro</option>
+<option value="prazo">A prazo</option>
 </select>
 
-<div id="parcelasBox" class="parcelas" style="display:none">
-  <label>Parcelas</label>
-  <div id="parcelasBtns"></div>
-</div>
-
-<input type="hidden" id="parcelas">
+<div id="parcelasBox" class="parcelas"></div>
 
 <hr>
 
@@ -105,7 +98,7 @@ button:active{background:#125aa0;}
 <input placeholder="Município" id="cidade">
 
 <label>Observações</label>
-<textarea id="observacao"></textarea>
+<textarea id="observacoes"></textarea>
 
 <button type="submit">Salvar Venda</button>
 </form>
@@ -126,41 +119,59 @@ const firebaseConfig = {
   apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
   authDomain: "crm-vendas-43b6b.firebaseapp.com",
   projectId: "crm-vendas-43b6b",
+  storageBucket: "crm-vendas-43b6b.appspot.com",
+  messagingSenderId: "645002761099",
+  appId: "1:645002761099:web:f194f70c351d1074ac158e"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let vendedor = {};
+let vendedor = { nome:"", email:"" };
 
+// 🔐 Auth
 onAuthStateChanged(auth, user=>{
   if(!user) location.href="login.html";
-  vendedor.nome = user.displayName;
+  vendedor.nome = user.displayName || user.email;
   vendedor.email = user.email;
-  pedido.value = Date.now();
+  gerarPedido();
   carregarVendas();
 });
 
+// 🚪 Logout
 btnSair.onclick = async ()=>{
   await signOut(auth);
   location.href="login.html";
 };
 
+// 🔢 Pedido
+function gerarPedido(){
+  pedido.value = Date.now();
+}
+
+// 💰 Moeda
 function moeda(i){
   let v=i.value.replace(/\D/g,"");
-  v=(v/100).toFixed(2).replace(".",",");
+  v=(v/100).toFixed(2);
+  v=v.replace(".",",");
   i.value="R$ "+v;
   totalizar();
 }
-function limpar(v){ return Number(v.replace(/\D/g,""))/100||0; }
+
+function limpar(v){
+  return Number(v.replace(/\D/g,""))/100||0;
+}
+
+function calcularTotalNumerico(){
+  return limpar(valorSofa.value) +
+         limpar(frete.value) +
+         (montagem.checked ? limpar(valorMontagem.value) : 0);
+}
 
 function totalizar(){
-  total.value = (
-    limpar(valorSofa.value) +
-    limpar(frete.value) +
-    (montagem.checked ? limpar(valorMontagem.value) : 0)
-  ).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  const t = calcularTotalNumerico();
+  total.value = t.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 }
 
 valorSofa.oninput=()=>moeda(valorSofa);
@@ -168,27 +179,23 @@ frete.oninput=()=>moeda(frete);
 valorMontagem.oninput=()=>moeda(valorMontagem);
 montagem.onchange=totalizar;
 
-pagamento.onchange=()=>{
-  parcelas.value="";
-  parcelasBtns.innerHTML="";
-  if(pagamento.value==="prazo"){
-    parcelasBox.style.display="block";
+// 💳 Pagamento
+formaPagamento.onchange=()=>{
+  parcelasBox.innerHTML="";
+  if(formaPagamento.value==="prazo"){
     for(let i=1;i<=12;i++){
       const b=document.createElement("button");
       b.type="button";
-      b.innerText=i+"x";
-      b.onclick=()=>{
-        document.querySelectorAll(".parcelas button").forEach(x=>x.classList.remove("active"));
-        b.classList.add("active");
-        parcelas.value=i;
-      };
-      parcelasBtns.appendChild(b);
+      b.textContent=i+"x";
+      b.onclick=()=>parcelasBox.dataset.parcelas=i;
+      parcelasBox.appendChild(b);
     }
   } else {
-    parcelasBox.style.display="none";
+    parcelasBox.dataset.parcelas="1";
   }
 };
 
+// 📍 CEP
 cep.onblur=async()=>{
   const c=cep.value.replace(/\D/g,"");
   if(c.length!==8) return;
@@ -200,24 +207,31 @@ cep.onblur=async()=>{
   }
 };
 
+// 💾 Salvar
 formVenda.onsubmit=async e=>{
   e.preventDefault();
+
+  const totalNum = calcularTotalNumerico();
+
   await addDoc(collection(db,"vendas"),{
     pedido:Number(pedido.value),
-    vendedorNome:vendedor.nome,
-    vendedorEmail:vendedor.email,
     dataPedido:dataPedido.value,
     dataEntrega:dataEntrega.value,
-    produto:{ modelo:modelo.value, tamanho:tamanho.value, cor:cor.value },
-    valores:{
-      sofa:limpar(valorSofa.value),
-      frete:limpar(frete.value),
-      montagem:montagem.checked?limpar(valorMontagem.value):0,
-      total:limpar(total.value)
-    },
+    vendedorNome:vendedor.nome,
+    vendedorEmail:vendedor.email,
+    status:"pendente",
     pagamento:{
-      tipo:pagamento.value,
-      parcelas:parcelas.value||1
+      tipo:formaPagamento.value,
+      parcelas:parcelasBox.dataset.parcelas || 1
+    },
+    produto:{
+      modelo:modelo.value,
+      tamanho:tamanho.value,
+      cor:cor.value,
+      valorSofa:limpar(valorSofa.value),
+      frete:limpar(frete.value),
+      montagem:montagem.checked ? limpar(valorMontagem.value) : 0,
+      total:totalNum
     },
     cliente:{
       nome:nomeCliente.value,
@@ -228,14 +242,15 @@ formVenda.onsubmit=async e=>{
       bairro:bairro.value,
       cidade:cidade.value
     },
-    observacao:observacao.value,
-    status:"pendente"
+    observacoes:observacoes.value
   });
+
   formVenda.reset();
-  pedido.value = Date.now();
+  gerarPedido();
   carregarVendas();
 };
 
+// 📄 Listar
 async function carregarVendas(){
   listaVendas.innerHTML="";
   const q=query(collection(db,"vendas"),where("vendedorEmail","==",vendedor.email));
@@ -245,23 +260,13 @@ async function carregarVendas(){
     listaVendas.innerHTML+=`
       <div class="card">
         <b>Pedido #${v.pedido}</b><br>
-        ${v.produto.modelo}<br>
         Cliente: ${v.cliente.nome}<br>
         Pagamento: ${v.pagamento.tipo} (${v.pagamento.parcelas}x)<br>
-        Total: R$ ${v.valores.total.toFixed(2)}<br>
         Entrega: ${v.dataEntrega}<br>
-        <button class="btn-excluir" onclick="excluir('${d.id}')">Excluir</button>
+        Total: ${v.produto.total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
       </div>`;
   });
 }
-
-window.excluir=async id=>{
-  if(!confirm("Deseja realmente excluir essa venda?")) return;
-  const motivo=prompt("Informe o motivo da exclusão:");
-  if(!motivo) return;
-  await deleteDoc(doc(db,"vendas",id));
-  carregarVendas();
-};
 </script>
 
 </body>
