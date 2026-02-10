@@ -2,97 +2,76 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>CRM - Registro de Vendas</title>
+<title>CRM - Vendas</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
-body { margin:0; font-family:Arial; background:#f4f6f8; color:#333; }
-.container { max-width:480px; margin:auto; padding:16px; }
-h1,h2{margin:0 0 10px;}
-label,input,textarea,select,button{width:100%;margin:6px 0;padding:12px;font-size:16px;border-radius:8px;}
-input:disabled{background:#eee;}
-textarea{resize:vertical;min-height:60px;}
-button{background:#1976d2;color:white;border:none;cursor:pointer;}
-button:active{background:#125aa0;}
-.btn-excluir{background:#e53935;}
-.parcelas button{width:48%; margin:4px 1%;}
-.card{background:white;padding:14px;border-radius:12px;margin-top:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);}
+body{margin:0;font-family:Arial;background:#f4f6f8;color:#333}
+.container{max-width:900px;margin:auto;padding:16px}
+h1,h2{margin:10px 0}
+input,select,textarea,button{width:100%;padding:10px;margin:6px 0;border-radius:6px;font-size:14px}
+button{background:#1976d2;color:#fff;border:none;cursor:pointer}
+button:active{background:#125aa0}
+.card{background:#fff;padding:12px;border-radius:8px;margin:8px 0}
+.btn-excluir{background:#c62828;margin-top:6px}
+.hidden{display:none}
+.parcelas-btns button{width:auto;margin:4px}
 </style>
 </head>
 
 <body>
 <div class="container">
-
-<h1>Registro de Venda</h1>
+<h1>Nova Venda</h1>
 
 <form id="formVenda">
+<label>Pedido</label>
+<input type="text" id="pedido" disabled>
 
-<h2>Pedido</h2>
-<input id="pedido" disabled>
+<label>Data do Pedido</label>
 <input type="date" id="dataPedido" required>
+
+<label>Data de Entrega</label>
 <input type="date" id="dataEntrega" required>
-<label><input type="checkbox" id="montagem"> Montagem</label>
 
-<hr>
-
-<h2>Produto</h2>
-<select id="modelo" required>
-<option value="">Modelo do Sofá</option>
-<option>Sofá carina braço almofadado pilow de 15</option>
-<option>Sofá carina braço almofadado pilow de 25</option>
-<option>Sofá carina braço reto pilow de 15</option>
-<option>Sofá carina braço reto pilow de 25</option>
-</select>
-
-<input id="tamanho" placeholder="Tamanho do sofá" required>
-<input id="cor" placeholder="Cor" required>
-
-<input id="valorSofa" placeholder="Valor do sofá">
-<input id="frete" value="0">
-<input id="valorMontagem" value="0">
-<input id="total" disabled>
-
-<hr>
-
-<h2>Pagamento</h2>
+<label>Forma de Pagamento</label>
 <select id="formaPagamento" required>
-<option value="">Forma de pagamento</option>
-<option value="avista">À vista</option>
-<option value="pix">Pix</option>
-<option value="dinheiro">Dinheiro</option>
-<option value="prazo">À prazo</option>
+  <option value="">Selecione</option>
+  <option value="avista">À vista</option>
+  <option value="dinheiro">Dinheiro</option>
+  <option value="pix">Pix</option>
+  <option value="prazo">À prazo</option>
 </select>
 
-<div id="areaParcelas" class="parcelas" style="display:none">
-<h3>Parcelas</h3>
+<div id="parcelasBox" class="hidden">
+<label>Parcelas</label>
+<div class="parcelas-btns" id="parcelasBtns"></div>
 </div>
 
-<hr>
+<h2>Produto</h2>
+<input placeholder="Modelo do sofá" id="modelo" required>
+<input placeholder="Tamanho" id="tamanho">
+<input placeholder="Cor" id="cor">
+<input placeholder="Valor total" id="total" required>
 
 <h2>Cliente</h2>
-<input id="nomeCliente" placeholder="Nome" required>
-<input id="contato" placeholder="Contato" required>
-<input id="cep" placeholder="CEP" required>
-<input id="rua" placeholder="Rua">
-<input id="numero" placeholder="Número">
-<input id="bairro" placeholder="Bairro">
-<input id="cidade" placeholder="Município">
-
-<textarea id="observacao" placeholder="Observações"></textarea>
+<input placeholder="Nome do cliente" id="nomeCliente" required>
+<input placeholder="Contato" id="contato">
+<input placeholder="CEP" id="cep">
+<input placeholder="Rua" id="rua">
+<input placeholder="Número" id="numero">
+<input placeholder="Bairro" id="bairro">
+<input placeholder="Cidade" id="cidade">
+<textarea placeholder="Observações do cliente" id="observacao"></textarea>
 
 <button type="submit">Salvar Venda</button>
 </form>
 
 <h2>Minhas Vendas</h2>
 <div id="listaVendas"></div>
-
-<button id="btnSair">Sair</button>
-
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, query, where, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -108,80 +87,58 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let vendedor = {};
+const vendedor = {};
+let parcelasSelecionadas = 1;
+
+function gerarNumeroPedido(){
+  return "PED" + Date.now();
+}
 
 onAuthStateChanged(auth, user=>{
   if(!user) location.href="login.html";
-  vendedor.nome = user.displayName;
+  vendedor.nome = user.displayName || user.email;
   vendedor.email = user.email;
+  pedido.value = gerarNumeroPedido();
   carregarVendas();
 });
 
-btnSair.onclick = async ()=>{
-  await signOut(auth);
-  location.href="login.html";
-};
+const formaPagamento = document.getElementById("formaPagamento");
+const parcelasBox = document.getElementById("parcelasBox");
+const parcelasBtns = document.getElementById("parcelasBtns");
 
-// 💰 moeda
-function moeda(i){ let v=i.value.replace(/\D/g,""); v=(v/100).toFixed(2); v=v.replace(".",",").replace(/\B(?=(\d{3})+(?!\d))/g,"."); i.value="R$ "+v; totalizar(); }
-function limpar(v){ return Number(v.replace(/\D/g,""))/100||0; }
-function totalizar(){
-  total.value=(limpar(valorSofa.value)+limpar(frete.value)+(montagem.checked?limpar(valorMontagem.value):0))
-  .toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-}
-valorSofa.oninput=()=>moeda(valorSofa);
-frete.oninput=()=>moeda(frete);
-valorMontagem.oninput=()=>moeda(valorMontagem);
-montagem.onchange=totalizar;
+formaPagamento.addEventListener("change", ()=>{
+  parcelasBox.classList.toggle("hidden", formaPagamento.value!=="prazo");
+  parcelasBtns.innerHTML="";
+  parcelasSelecionadas = 1;
 
-// 📦 Parcelas
-let parcelasSelecionadas = 1;
-const areaParcelas = document.getElementById("areaParcelas");
-
-for(let i=1;i<=12;i++){
-  const b=document.createElement("button");
-  b.type="button";
-  b.textContent=i+"x";
-  b.onclick=()=>parcelasSelecionadas=i;
-  areaParcelas.appendChild(b);
-}
-
-formaPagamento.onchange=()=>{
   if(formaPagamento.value==="prazo"){
-    areaParcelas.style.display="block";
-  } else {
-    areaParcelas.style.display="none";
-    parcelasSelecionadas=1;
+    for(let i=1;i<=12;i++){
+      const b=document.createElement("button");
+      b.type="button";
+      b.textContent=i+"x";
+      b.onclick=()=>parcelasSelecionadas=i;
+      parcelasBtns.appendChild(b);
+    }
   }
-};
+});
 
-// 📍 CEP
-cep.onblur=async()=>{
-  const c=cep.value.replace(/\D/g,"");
-  if(c.length!==8) return;
-  const r=await fetch(`https://viacep.com.br/ws/${c}/json/`).then(r=>r.json());
-  if(!r.erro){
-    rua.value=r.logradouro;
-    bairro.value=r.bairro;
-    cidade.value=r.localidade;
-  }
-};
-
-// 💾 Salvar
-formVenda.onsubmit=async e=>{
+formVenda.addEventListener("submit", async e=>{
   e.preventDefault();
+
   await addDoc(collection(db,"vendas"),{
+    pedido: pedido.value,
     vendedorNome:vendedor.nome,
     vendedorEmail:vendedor.email,
     dataPedido:dataPedido.value,
     dataEntrega:dataEntrega.value,
     pagamento:formaPagamento.value,
     parcelas: parcelasSelecionadas,
+    status:"pendente",
     produto:{
       modelo:modelo.value,
       tamanho:tamanho.value,
       cor:cor.value,
-      total:limpar(total.value)
+      total:Number(total.value.replace(",","."))||0
     },
     cliente:{
       nome:nomeCliente.value,
@@ -194,21 +151,24 @@ formVenda.onsubmit=async e=>{
       observacao:observacao.value
     }
   });
-  formVenda.reset();
-  carregarVendas();
-};
 
-// 📄 Listar
+  formVenda.reset();
+  pedido.value = gerarNumeroPedido();
+  carregarVendas();
+});
+
 async function carregarVendas(){
   listaVendas.innerHTML="";
   const q=query(collection(db,"vendas"),where("vendedorEmail","==",vendedor.email));
-  const s=await getDocs(q);
-  s.forEach(d=>{
+  const snap=await getDocs(q);
+
+  snap.forEach(d=>{
     const v=d.data();
     listaVendas.innerHTML+=`
       <div class="card">
+        <b>Pedido: ${v.pedido}</b><br>
         <b>${v.produto.modelo}</b><br>
-        Cliente: ${v.cliente.nome} (${v.cliente.contato})<br>
+        Cliente: ${v.cliente.nome} (${v.cliente.contato||""})<br>
         Pagamento: ${v.pagamento} ${v.pagamento==="prazo"?v.parcelas+"x":""}<br>
         Pedido: ${v.dataPedido} | Entrega: ${v.dataEntrega}<br>
         Total: R$ ${v.produto.total.toFixed(2)}<br>
@@ -217,15 +177,12 @@ async function carregarVendas(){
   });
 }
 
-// 🗑️ Excluir
-window.excluir=async id=>{
-  if(!confirm("Deseja realmente excluir essa venda?")) return;
-  const motivo=prompt("Informe o motivo da exclusão:");
-  if(!motivo) return;
-  await deleteDoc(doc(db,"vendas",id));
-  carregarVendas();
+window.excluir = async id=>{
+  if(confirm("Excluir venda?")){
+    await deleteDoc(doc(db,"vendas",id));
+    carregarVendas();
+  }
 };
 </script>
-
 </body>
 </html>
