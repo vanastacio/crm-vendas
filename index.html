@@ -152,17 +152,23 @@ function gerarPedido(){
 
 // 💰 Moeda
 function moeda(i){
-  let v=i.value.replace(/\D/g,"");
-  v=(v/100).toFixed(2);
-  v=v.replace(".",",");
-  i.value="R$ "+v;
+  let v = i.value.replace(/\D/g,"");
+  v = (v / 100).toFixed(2);
+  i.value = Number(v).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
   totalizar();
 }
 
 function limpar(v){
-  return Number(v.replace(/\D/g,""))/100||0;
+  return Number(
+    v.replace("R$", "")
+     .replace(/\./g, "")
+     .replace(",", ".")
+  ) || 0;
 }
-
+  
 function calcularTotalNumerico(){
   return limpar(valorSofa.value) +
          limpar(frete.value) +
@@ -208,48 +214,57 @@ cep.onblur=async()=>{
 };
 
 // 💾 Salvar
-formVenda.onsubmit=async e=>{
+formVenda.onsubmit = async e => {
   e.preventDefault();
 
-  const totalNum = calcularTotalNumerico();
+  const totalNumerico = calcularTotalNumerico();
 
   await addDoc(collection(db,"vendas"),{
-    pedido:Number(pedido.value),
-    dataPedido:dataPedido.value,
-    dataEntrega:dataEntrega.value,
-    vendedorNome:vendedor.nome,
-    vendedorEmail:vendedor.email,
-    status:"pendente",
-    pagamento:{
-      tipo:formaPagamento.value,
-      parcelas:parcelasBox.dataset.parcelas || 1
+    pedido: Number(pedido.value),
+    dataPedido: dataPedido.value,
+    dataEntrega: dataEntrega.value,
+
+    vendedorNome: vendedor.nome,
+    vendedorEmail: vendedor.email,
+
+    status: "pendente",
+
+    pagamento: {
+      tipo: formaPagamento.value,
+      parcelas: parcelasBox.dataset.parcelas || 1
     },
-    produto:{
-      modelo:modelo.value,
-      tamanho:tamanho.value,
-      cor:cor.value,
-      valorSofa:limpar(valorSofa.value),
-      frete:limpar(frete.value),
-      montagem:montagem.checked ? limpar(valorMontagem.value) : 0,
-      total:totalNum
+
+    // 🔴 CAMPO PADRÃO PARA O JADER (ESSENCIAL)
+    total: totalNumerico,
+
+    produto: {
+      modelo: modelo.value,
+      tamanho: tamanho.value,
+      cor: cor.value,
+      valorSofa: limpar(valorSofa.value),
+      frete: limpar(frete.value),
+      montagem: montagem.checked ? limpar(valorMontagem.value) : 0,
+      total: totalNumerico
     },
-    cliente:{
-      nome:nomeCliente.value,
-      contato:contato.value,
-      cep:cep.value,
-      rua:rua.value,
-      numero:numero.value,
-      bairro:bairro.value,
-      cidade:cidade.value
+
+    cliente: {
+      nome: nomeCliente.value,
+      contato: contato.value,
+      cep: cep.value,
+      rua: rua.value,
+      numero: numero.value,
+      bairro: bairro.value,
+      cidade: cidade.value
     },
-    observacoes:observacoes.value
+
+    observacoes: observacoes.value
   });
 
   formVenda.reset();
   gerarPedido();
   carregarVendas();
 };
-
+  
 // 📄 Listar
 async function carregarVendas(){
   listaVendas.innerHTML="";
@@ -271,3 +286,4 @@ async function carregarVendas(){
 
 </body>
 </html>
+
