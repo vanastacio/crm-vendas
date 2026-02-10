@@ -6,18 +6,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{margin:0;font-family:Arial;background:#f4f6f8}
-.container{max-width:900px;margin:auto;padding:16px}
-h1{margin-bottom:10px}
-.card{background:#fff;padding:14px;border-radius:12px;margin-bottom:12px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
-.badge{padding:4px 10px;border-radius:12px;font-size:13px;color:#fff}
-.pendente{background:#f9a825}
-.aprovado{background:#2e7d32}
-.reprovado{background:#c62828}
-button{padding:8px 12px;border:none;border-radius:6px;margin-right:6px;cursor:pointer}
-.aprovar{background:#2e7d32;color:#fff}
-.reprovar{background:#c62828;color:#fff}
-.voltar{background:#1976d2;color:#fff;margin-bottom:12px}
+body { margin:0; font-family:Arial; background:#f4f6f8; color:#333; }
+.container { max-width:900px; margin:auto; padding:16px; }
+h1,h2 { margin:10px 0; }
+.card {
+  background:#fff;
+  padding:14px;
+  border-radius:12px;
+  margin-bottom:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);
+}
+button {
+  padding:8px 12px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  margin-right:6px;
+}
+.aprovar { background:#2e7d32; color:#fff; }
+.reprovar { background:#c62828; color:#fff; }
+.voltar { background:#1976d2; color:#fff; margin-bottom:20px; }
+.status-aprovado { color:#2e7d32; font-weight:bold; }
+.status-reprovado { color:#c62828; font-weight:bold; }
 </style>
 </head>
 
@@ -28,13 +38,18 @@ button{padding:8px 12px;border:none;border-radius:6px;margin-right:6px;cursor:po
 
 <h1>Gerenciar Pedidos</h1>
 
-<div id="lista"></div>
+<h2>Pedidos Pendentes de Aprovação</h2>
+<div id="pendentes"></div>
+
+<h2>Status do Pedido</h2>
+<div id="finalizados"></div>
 
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
@@ -46,69 +61,75 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
 
-const lista = document.getElementById("lista");
+onAuthStateChanged(auth, user => {
+  if (!user) location.href = "login.html";
+  carregarPedidos();
+});
 
-function formatarPagamento(p){
-  if(!p) return "Não informado";
-  if(p.tipo === "prazo") return `A prazo (${p.parcelas}x)`;
-  if(p.tipo === "avista") return "À vista";
-  if(p.tipo === "pix") return "Pix";
-  if(p.tipo === "dinheiro") return "Dinheiro";
-  return p.tipo;
-}
+async function carregarPedidos() {
+  const pendentesDiv = document.getElementById("pendentes");
+  const finalizadosDiv = document.getElementById("finalizados");
 
-function moeda(v){
-  return Number(v || 0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-}
+  pendentesDiv.innerHTML = "";
+  finalizadosDiv.innerHTML = "";
 
-async function carregarPedidos(){
-  lista.innerHTML="";
-  const snap = await getDocs(collection(db,"vendas"));
+  const snapshot = await getDocs(collection(db, "vendas"));
 
-  snap.forEach(d=>{
+  snapshot.forEach(d => {
     const v = d.data();
+    const status = v.status || "pendente";
 
     const card = document.createElement("div");
-    card.className="card";
+    card.className = "card";
 
     card.innerHTML = `
-      <div>
-        <span class="badge ${v.status}">${v.status.toUpperCase()}</span>
-      </div>
-      <p><b>Pedido:</b> ${v.pedido}</p>
-      <p><b>Vendedor:</b> ${v.vendedorNome}</p>
-      <p><b>Cliente:</b> ${v.cliente.nome}</p>
-      <p><b>Modelo do Sofá:</b> ${v.produto.modelo}</p>
-      <p><b>Entrega:</b> ${v.dataEntrega}</p>
-      <p><b>Pagamento:</b> ${formatarPagamento(v.pagamento)}</p>
-      <p><b>Valor:</b> ${moeda(v.total)}</p>
-
-      <button class="aprovar">Aprovar</button>
-      <button class="reprovar">Reprovar</button>
+      <b>Pedido:</b> ${v.pedido}<br>
+      <b>Modelo:</b> ${v.produto?.modelo || "-"}<br>
+      <b>Cliente:</b> ${v.cliente?.nome || "-"}<br>
+      <b>Vendedor:</b> ${v.vendedorNome || "-"}<br>
+      <b>Entrega:</b> ${v.dataEntrega || "-"}<br>
+      <b>Pagamento:</b> ${v.pagamento?.tipo || v.pagamento || "-"}<br>
+      <b>Valor:</b> ${
+        v.produto?.total
+          ? v.produto.total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
+          : "R$ 0,00"
+      }<br>
     `;
 
-    card.querySelector(".aprovar").onclick = async ()=>{
-      await updateDoc(doc(db,"vendas",d.id),{status:"aprovado"});
-      carregarPedidos();
-    };
+    if (status === "pendente") {
+      const btnAprovar = document.createElement("button");
+      btnAprovar.textContent = "Aprovar";
+      btnAprovar.className = "aprovar";
+      btnAprovar.onclick = () => atualizarStatus(d.id, "aprovado");
 
-    card.querySelector(".reprovar").onclick = async ()=>{
-      const motivo = prompt("Motivo da reprovação:");
-      if(!motivo) return;
-      await updateDoc(doc(db,"vendas",d.id),{
-        status:"reprovado",
-        motivoReprovacao:motivo
-      });
-      carregarPedidos();
-    };
+      const btnReprovar = document.createElement("button");
+      btnReprovar.textContent = "Reprovar";
+      btnReprovar.className = "reprovar";
+      btnReprovar.onclick = () => atualizarStatus(d.id, "reprovado");
 
-    lista.appendChild(card);
+      card.appendChild(btnAprovar);
+      card.appendChild(btnReprovar);
+
+      pendentesDiv.appendChild(card);
+    } else {
+      const statusSpan = document.createElement("div");
+      statusSpan.className =
+        status === "aprovado" ? "status-aprovado" : "status-reprovado";
+      statusSpan.textContent = `Status: ${status.toUpperCase()}`;
+
+      card.appendChild(statusSpan);
+      finalizadosDiv.appendChild(card);
+    }
   });
 }
 
-carregarPedidos();
+async function atualizarStatus(id, novoStatus) {
+  await updateDoc(doc(db, "vendas", id), { status: novoStatus });
+  carregarPedidos();
+}
 </script>
 
 </body>
