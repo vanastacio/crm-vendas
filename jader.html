@@ -8,47 +8,68 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body {
-  margin:0;
-  font-family:Arial;
-  background:#f4f6f8;
-  color:#333;
-}
-.container {
-  max-width:1100px;
-  margin:auto;
-  padding:20px;
-}
-.top-menu {
+body { margin:0; font-family:Arial; background:#f4f6f8; color:#333; }
+.container { max-width:1200px; margin:auto; padding:16px; }
+h1 { margin-bottom:20px; }
+
+.topo {
   display:flex;
-  gap:12px;
-  flex-wrap:wrap;
+  justify-content:space-between;
+  align-items:center;
   margin-bottom:20px;
 }
-.top-menu button {
-  padding:14px;
+
+.topo button {
+  padding:10px 16px;
+  font-size:14px;
   border:none;
   border-radius:8px;
+  background:#e53935;
+  color:#fff;
+  cursor:pointer;
+}
+.topo button:hover { background:#c62828; }
+
+.menu {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-bottom:20px;
+}
+.menu button {
+  padding:16px;
+  font-size:16px;
+  border:none;
+  border-radius:10px;
   background:#1976d2;
   color:#fff;
   cursor:pointer;
 }
-.top-menu button.sair {
-  background:#e53935;
-}
-.cards {
+.menu button:hover { background:#125aa0; }
+
+.dashboard {
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-  gap:16px;
+  grid-template-columns:repeat(2,1fr);
+  gap:20px;
 }
+
 .card {
   background:#fff;
   padding:16px;
-  border-radius:12px;
+  border-radius:14px;
   box-shadow:0 2px 6px rgba(0,0,0,.1);
 }
-canvas {
-  max-height:220px;
+
+.card h2 {
+  margin-bottom:10px;
+  font-size:18px;
+}
+canvas { max-height:280px; }
+.resumo {
+  display:flex;
+  justify-content:space-between;
+  margin-top:10px;
+  font-weight:bold;
 }
 </style>
 </head>
@@ -56,39 +77,53 @@ canvas {
 <body>
 <div class="container">
 
-  <!-- MENU -->
-  <div class="top-menu">
-    <button onclick="location.href='gerenciar-pedidos.html'">Gerenciar Pedidos</button>
-    <button>Financeiro</button>
-    <button>Indicadores</button>
-    <button>Estoque</button>
-    <button class="sair" id="btnSair">Sair</button>
+<div class="topo">
+  <h1>Dashboard Geral</h1>
+  <button id="btnSair">Sair</button>
+</div>
+
+<div class="menu">
+  <button onclick="location.href='gerenciar-pedidos.html'">Gerenciar Pedidos</button>
+  <button>Financeiro</button>
+  <button>Indicadores</button>
+  <button>Estoque</button>
+</div>
+
+<div class="dashboard">
+
+  <div class="card">
+    <h2>Status das Vendas</h2>
+    <canvas id="statusChart"></canvas>
   </div>
 
-  <!-- DASHBOARD -->
-  <div class="cards">
-
-    <div class="card">
-      <h3>Status das Vendas</h3>
-      <canvas id="statusChart"></canvas>
-    </div>
-
-    <div class="card">
-      <h3>Formas de Pagamento</h3>
-      <canvas id="pagamentoChart"></canvas>
-    </div>
-
-    <div class="card">
-      <h3>Quantidade de Vendas</h3>
-      <canvas id="quantidadeChart"></canvas>
-    </div>
-
-    <div class="card">
-      <h3>Valores de Vendas</h3>
-      <canvas id="valoresChart"></canvas>
-    </div>
-
+  <div class="card">
+    <h2>Formas de Pagamento</h2>
+    <canvas id="pagamentoChart"></canvas>
   </div>
+
+  <div class="card">
+    <h2>Quantidade de Vendas</h2>
+    <canvas id="quantidadeChart"></canvas>
+    <div class="resumo">
+      <span>Total:</span>
+      <span id="totalVendas">0</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Valores de Vendas</h2>
+    <canvas id="valoresChart"></canvas>
+    <div class="resumo">
+      <span>Total Geral:</span>
+      <span id="valorTotal">R$ 0,00</span>
+    </div>
+    <div class="resumo">
+      <span>Ticket Médio:</span>
+      <span id="ticketMedio">R$ 0,00</span>
+    </div>
+  </div>
+
+</div>
 
 </div>
 
@@ -110,67 +145,70 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* 🔐 AUTH */
-onAuthStateChanged(auth, user=>{
-  if(!user) location.href="login.html";
+// 🔐 Proteção de acesso
+onAuthStateChanged(auth, user => {
+  if (!user) location.href = "login.html";
+  carregarDashboard();
 });
 
-/* 🚪 LOGOUT */
-btnSair.onclick = async ()=>{
+// 🚪 Logout
+document.getElementById("btnSair").onclick = async () => {
   await signOut(auth);
-  location.href="login.html";
+  location.href = "login.html";
 };
 
-/* 📊 DADOS */
-const statusCount = {};
-const pagamentoCount = {};
-let totalVendas = 0;
-let totalValor = 0;
+async function carregarDashboard() {
+  const snapshot = await getDocs(collection(db, "vendas"));
 
-const vendasSnap = await getDocs(collection(db,"vendas"));
+  let status = { pendente:0, aprovado:0, reprovado:0, producao:0, entregue:0 };
+  let pagamentos = {};
+  let vendasPorMes = {};
+  let totalVendas = 0;
+  let somaValores = 0;
 
-vendasSnap.forEach(doc=>{
-  const v = doc.data();
+  snapshot.forEach(doc => {
+    const v = doc.data();
 
-  statusCount[v.status || "pendente"] = (statusCount[v.status || "pendente"] || 0) + 1;
-  pagamentoCount[v.pagamento || "não informado"] = (pagamentoCount[v.pagamento || "não informado"] || 0) + 1;
+    status[v.status || "pendente"] = (status[v.status || "pendente"] || 0) + 1;
 
-  totalVendas++;
-  totalValor += Number(v.produto?.total || 0);
-});
+    const pg = v.pagamento?.tipo || v.pagamento;
+    if (pg) pagamentos[pg] = (pagamentos[pg] || 0) + 1;
 
-/* 📈 GRÁFICOS */
-new Chart(statusChart,{
-  type:"pie",
-  data:{
-    labels:Object.keys(statusCount),
-    datasets:[{data:Object.values(statusCount)}]
-  }
-});
+    const mes = v.dataPedido?.slice(0,7);
+    if (mes) vendasPorMes[mes] = (vendasPorMes[mes] || 0) + 1;
 
-new Chart(pagamentoChart,{
-  type:"pie",
-  data:{
-    labels:Object.keys(pagamentoCount),
-    datasets:[{data:Object.values(pagamentoCount)}]
-  }
-});
+    if (v.produto?.total) {
+      somaValores += v.produto.total;
+      totalVendas++;
+    }
+  });
 
-new Chart(quantidadeChart,{
-  type:"bar",
-  data:{
-    labels:["Total de Vendas"],
-    datasets:[{data:[totalVendas]}]
-  }
-});
+  document.getElementById("totalVendas").textContent = totalVendas;
+  document.getElementById("valorTotal").textContent =
+    somaValores.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  document.getElementById("ticketMedio").textContent =
+    totalVendas ? (somaValores/totalVendas).toLocaleString("pt-BR",{style:"currency",currency:"BRL"}) : "R$ 0,00";
 
-new Chart(valoresChart,{
-  type:"bar",
-  data:{
-    labels:["Valor Total"],
-    datasets:[{data:[totalValor]}]
-  }
-});
+  new Chart(statusChart,{
+    type:"doughnut",
+    data:{labels:Object.keys(status),datasets:[{data:Object.values(status)}]}
+  });
+
+  new Chart(pagamentoChart,{
+    type:"pie",
+    data:{labels:Object.keys(pagamentos),datasets:[{data:Object.values(pagamentos)}]}
+  });
+
+  new Chart(quantidadeChart,{
+    type:"bar",
+    data:{labels:Object.keys(vendasPorMes),datasets:[{label:"Vendas",data:Object.values(vendasPorMes)}]}
+  });
+
+  new Chart(valoresChart,{
+    type:"bar",
+    data:{labels:["Total"],datasets:[{label:"Valor",data:[somaValores]}]}
+  });
+}
 </script>
 
 </body>
