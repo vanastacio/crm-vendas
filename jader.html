@@ -2,32 +2,24 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>CRM - Dashboard Jader</title>
+<title>Dashboard - Jader</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
-body {
-  margin:0;
-  font-family: Arial;
-  background:#f4f6f8;
-  color:#333;
-}
+body { margin:0; font-family:Arial; background:#f4f6f8; color:#333; }
+.container { max-width:1200px; margin:auto; padding:16px; }
+h1 { margin-bottom:20px; }
 
-.container {
-  max-width:1200px;
-  margin:auto;
-  padding:20px;
-}
-
-.menu-topo {
+.menu {
   display:grid;
-  grid-template-columns: repeat(4,1fr);
+  grid-template-columns:repeat(4,1fr);
   gap:12px;
   margin-bottom:20px;
 }
-
-.menu-topo button {
-  padding:14px;
+.menu button {
+  padding:16px;
   font-size:16px;
   border:none;
   border-radius:10px;
@@ -35,14 +27,11 @@ body {
   color:#fff;
   cursor:pointer;
 }
-
-.menu-topo button:hover {
-  background:#125aa0;
-}
+.menu button:hover { background:#125aa0; }
 
 .dashboard {
   display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px,1fr));
+  grid-template-columns:repeat(2,1fr);
   gap:20px;
 }
 
@@ -53,88 +42,75 @@ body {
   box-shadow:0 2px 6px rgba(0,0,0,.1);
 }
 
-.card h3 {
+.card h2 {
   margin-bottom:10px;
-  font-size:16px;
-  text-align:center;
+  font-size:18px;
 }
-
-canvas {
-  width:100% !important;
-  height:220px !important;
-}
-
-.top-bar {
+canvas { max-height:280px; }
+.resumo {
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  margin-bottom:20px;
-}
-
-.logout {
-  background:#e53935;
-  border:none;
-  color:#fff;
-  padding:10px 16px;
-  border-radius:8px;
-  cursor:pointer;
+  margin-top:10px;
+  font-weight:bold;
 }
 </style>
 </head>
 
 <body>
-
 <div class="container">
 
-  <div class="top-bar">
-    <h1>Dashboard - Jader</h1>
-    <button class="logout" id="btnSair">Sair</button>
+<h1>Dashboard Geral</h1>
+
+<div class="menu">
+  <button onclick="location.href='gerenciar-pedidos.html'">Gerenciar Pedidos</button>
+  <button>Financeiro</button>
+  <button>Indicadores</button>
+  <button>Estoque</button>
+</div>
+
+<div class="dashboard">
+
+  <div class="card">
+    <h2>Status das Vendas</h2>
+    <canvas id="statusChart"></canvas>
   </div>
 
-  <!-- 🔹 BOTÕES PRINCIPAIS -->
-  <div class="menu-topo">
-    <button id="btnPedidos">Gerenciar Pedidos</button>
-    <button id="btnFinanceiro">Financeiro</button>
-    <button id="btnIndicadores">Indicadores</button>
-    <button id="btnEstoque">Estoque</button>
+  <div class="card">
+    <h2>Formas de Pagamento</h2>
+    <canvas id="pagamentoChart"></canvas>
   </div>
 
-  <!-- 🔹 DASHBOARDS -->
-  <div class="dashboard">
-
-    <div class="card">
-      <h3>Status das Vendas</h3>
-      <canvas id="graficoStatus"></canvas>
+  <div class="card">
+    <h2>Quantidade de Vendas</h2>
+    <canvas id="quantidadeChart"></canvas>
+    <div class="resumo">
+      <span>Total:</span>
+      <span id="totalVendas">0</span>
     </div>
+  </div>
 
-    <div class="card">
-      <h3>Formas de Pagamento</h3>
-      <canvas id="graficoPagamento"></canvas>
+  <div class="card">
+    <h2>Valores de Vendas</h2>
+    <canvas id="valoresChart"></canvas>
+    <div class="resumo">
+      <span>Total Geral:</span>
+      <span id="valorTotal">R$ 0,00</span>
     </div>
-
-    <div class="card">
-      <h3>Quantidade de Vendas</h3>
-      <canvas id="graficoQuantidade"></canvas>
+    <div class="resumo">
+      <span>Ticket Médio:</span>
+      <span id="ticketMedio">R$ 0,00</span>
     </div>
-
-    <div class="card">
-      <h3>Valores de Vendas</h3>
-      <canvas id="graficoValores"></canvas>
-    </div>
-
   </div>
 
 </div>
 
-<!-- 🔹 LIB CHART -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* 🔥 Firebase */
 const firebaseConfig = {
   apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
   authDomain: "crm-vendas-43b6b.firebaseapp.com",
@@ -148,80 +124,63 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* 🔐 Auth */
 onAuthStateChanged(auth, user => {
-  if(!user) location.href="login.html";
+  if (!user) location.href = "login.html";
+  carregarDashboard();
 });
 
-/* 🚪 Logout */
-document.getElementById("btnSair").onclick = async ()=>{
-  await signOut(auth);
-  location.href="login.html";
-};
+async function carregarDashboard() {
+  const snapshot = await getDocs(collection(db, "vendas"));
 
-/* 🔗 CONEXÃO DO BOTÃO GERENCIAR PEDIDOS */
-document.getElementById("btnPedidos").addEventListener("click", ()=>{
-  window.location.href = "gerenciar-pedidos.html";
-});
+  let status = { pendente:0, aprovado:0, reprovado:0, producao:0, entregue:0 };
+  let pagamentos = {};
+  let vendasPorMes = {};
+  let totalVendas = 0;
+  let somaValores = 0;
 
-/* 📊 Buscar vendas */
-const vendasSnap = await getDocs(collection(db,"vendas"));
-const vendas = vendasSnap.docs.map(d=>d.data());
+  snapshot.forEach(doc => {
+    const v = doc.data();
 
-/* 📊 Status */
-const statusCount = { pendente:0, aprovado:0, reprovado:0, producao:0, finalizado:0 };
-vendas.forEach(v=>{
-  statusCount[v.status || "pendente"]++;
-});
+    status[v.status || "pendente"] = (status[v.status || "pendente"] || 0) + 1;
 
-/* 📊 Gráfico Status */
-new Chart(graficoStatus,{
-  type:"doughnut",
-  data:{
-    labels:Object.keys(statusCount),
-    datasets:[{ data:Object.values(statusCount) }]
-  }
-});
+    const pg = v.pagamento?.tipo || v.pagamento;
+    if (pg) pagamentos[pg] = (pagamentos[pg] || 0) + 1;
 
-/* 📊 Pagamento */
-const pagamentos = {};
-vendas.forEach(v=>{
-  pagamentos[v.pagamento]=(pagamentos[v.pagamento]||0)+1;
-});
+    const mes = v.dataPedido?.slice(0,7);
+    if (mes) vendasPorMes[mes] = (vendasPorMes[mes] || 0) + 1;
 
-new Chart(graficoPagamento,{
-  type:"pie",
-  data:{
-    labels:Object.keys(pagamentos),
-    datasets:[{ data:Object.values(pagamentos) }]
-  }
-});
+    if (v.produto?.total) {
+      somaValores += v.produto.total;
+      totalVendas++;
+    }
+  });
 
-/* 📊 Quantidade */
-new Chart(graficoQuantidade,{
-  type:"bar",
-  data:{
-    labels:["Total"],
-    datasets:[{
-      label:"Vendas",
-      data:[vendas.length]
-    }]
-  }
-});
+  document.getElementById("totalVendas").textContent = totalVendas;
+  document.getElementById("valorTotal").textContent =
+    somaValores.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  document.getElementById("ticketMedio").textContent =
+    totalVendas ? (somaValores/totalVendas).toLocaleString("pt-BR",{style:"currency",currency:"BRL"}) : "R$ 0,00";
 
-/* 📊 Valores */
-const totalValor = vendas.reduce((s,v)=>s+(v.produto?.total||0),0);
+  new Chart(statusChart,{
+    type:"doughnut",
+    data:{labels:Object.keys(status),datasets:[{data:Object.values(status)}]}
+  });
 
-new Chart(graficoValores,{
-  type:"bar",
-  data:{
-    labels:["Valor Total"],
-    datasets:[{
-      label:"R$",
-      data:[totalValor]
-    }]
-  }
-});
+  new Chart(pagamentoChart,{
+    type:"pie",
+    data:{labels:Object.keys(pagamentos),datasets:[{data:Object.values(pagamentos)}]}
+  });
+
+  new Chart(quantidadeChart,{
+    type:"bar",
+    data:{labels:Object.keys(vendasPorMes),datasets:[{label:"Vendas",data:Object.values(vendasPorMes)}]}
+  });
+
+  new Chart(valoresChart,{
+    type:"bar",
+    data:{labels:["Total"],datasets:[{label:"Valor",data:[somaValores]}]}
+  });
+}
 </script>
 
 </body>
