@@ -14,9 +14,10 @@ input:disabled{background:#eee;}
 textarea{resize:vertical;min-height:60px;}
 button{background:#1976d2;color:white;border:none;cursor:pointer;}
 button:active{background:#125aa0;}
-.btn-excluir{background:#e53935;}
 .card{background:white;padding:14px;border-radius:12px;margin-top:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);}
-.parcelas button{margin:4px 0;}
+.parcelas{display:none;gap:6px;flex-wrap:wrap;}
+.parcelas button{width:auto;padding:8px 12px;background:#eee;color:#333;}
+.parcelas button.ativa{background:#1976d2;color:#fff;}
 </style>
 </head>
 
@@ -27,7 +28,6 @@ button:active{background:#125aa0;}
 
 <form id="formVenda">
 
-<h2>Pedido</h2>
 <label>Nº do Pedido</label>
 <input id="pedido" disabled>
 
@@ -37,13 +37,9 @@ button:active{background:#125aa0;}
 <label>Data da Entrega</label>
 <input type="date" id="dataEntrega" required>
 
-<label>
-  <input type="checkbox" id="montagem"> Montagem
-</label>
+<label><input type="checkbox" id="montagem"> Montagem</label>
 
 <hr>
-
-<h2>Produto</h2>
 
 <label>Modelo do Sofá</label>
 <select id="modelo" required>
@@ -74,21 +70,20 @@ button:active{background:#125aa0;}
 
 <hr>
 
-<h2>Pagamento</h2>
-<select id="formaPagamento" required>
+<label>Forma de Pagamento</label>
+<select id="pagamento" required>
 <option value="">Selecione</option>
 <option value="avista">À vista</option>
-<option value="pix">Pix</option>
 <option value="dinheiro">Dinheiro</option>
+<option value="pix">Pix</option>
 <option value="prazo">A prazo</option>
 </select>
 
-<div id="parcelasBox" class="parcelas"></div>
+<div class="parcelas" id="parcelas"></div>
 
 <hr>
 
-<h2>Cliente</h2>
-<input placeholder="Nome" id="nomeCliente" required>
+<input placeholder="Nome do Cliente" id="nomeCliente" required>
 <input placeholder="Contato" id="contato" required>
 
 <input placeholder="CEP" id="cep" required>
@@ -97,14 +92,10 @@ button:active{background:#125aa0;}
 <input placeholder="Bairro" id="bairro">
 <input placeholder="Município" id="cidade">
 
-<label>Observações</label>
-<textarea id="observacoes"></textarea>
+<textarea placeholder="Observações" id="obs"></textarea>
 
 <button type="submit">Salvar Venda</button>
 </form>
-
-<h2>Minhas Vendas</h2>
-<div id="listaVendas"></div>
 
 <button id="btnSair">Sair</button>
 
@@ -113,7 +104,7 @@ button:active{background:#125aa0;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, query, where, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
@@ -128,80 +119,56 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let vendedor = { nome:"", email:"" };
+let vendedor = {};
+let parcelaSelecionada = null;
 
-// 🔐 Auth
 onAuthStateChanged(auth, user=>{
   if(!user) location.href="login.html";
-  vendedor.nome = user.displayName || user.email;
+  vendedor.nome = user.displayName;
   vendedor.email = user.email;
-  gerarPedido();
-  carregarVendas();
 });
 
-// 🚪 Logout
-btnSair.onclick = async ()=>{
-  await signOut(auth);
-  location.href="login.html";
-};
+pedido.value = Date.now();
+dataPedido.valueAsDate = new Date();
 
-// 🔢 Pedido
-function gerarPedido(){
-  pedido.value = Date.now();
-}
-
-// 💰 Moeda
 function moeda(i){
-  let v = i.value.replace(/\D/g,"");
-  v = (v / 100).toFixed(2);
-  i.value = Number(v).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL"
-  });
+  let v=i.value.replace(/\D/g,"");
+  v=(v/100).toFixed(2);
+  v=v.replace(".",",").replace(/\B(?=(\d{3})+(?!\d))/g,".");
+  i.value="R$ "+v;
   totalizar();
 }
-
-function limpar(v){
-  return Number(
-    v.replace("R$", "")
-     .replace(/\./g, "")
-     .replace(",", ".")
-  ) || 0;
-}
-  
-function calcularTotalNumerico(){
-  return limpar(valorSofa.value) +
-         limpar(frete.value) +
-         (montagem.checked ? limpar(valorMontagem.value) : 0);
-}
-
+function limpar(v){ return Number(v.replace(/\D/g,""))/100||0; }
 function totalizar(){
-  const t = calcularTotalNumerico();
-  total.value = t.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  total.value=(limpar(valorSofa.value)+limpar(frete.value)+(montagem.checked?limpar(valorMontagem.value):0))
+  .toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 }
-
 valorSofa.oninput=()=>moeda(valorSofa);
 frete.oninput=()=>moeda(frete);
 valorMontagem.oninput=()=>moeda(valorMontagem);
 montagem.onchange=totalizar;
 
-// 💳 Pagamento
-formaPagamento.onchange=()=>{
-  parcelasBox.innerHTML="";
-  if(formaPagamento.value==="prazo"){
+pagamento.onchange=()=>{
+  parcelas.innerHTML="";
+  parcelaSelecionada=null;
+  if(pagamento.value==="prazo"){
+    parcelas.style.display="flex";
     for(let i=1;i<=12;i++){
       const b=document.createElement("button");
       b.type="button";
       b.textContent=i+"x";
-      b.onclick=()=>parcelasBox.dataset.parcelas=i;
-      parcelasBox.appendChild(b);
+      b.onclick=()=>{
+        document.querySelectorAll(".parcelas button").forEach(x=>x.classList.remove("ativa"));
+        b.classList.add("ativa");
+        parcelaSelecionada=i;
+      };
+      parcelas.appendChild(b);
     }
   } else {
-    parcelasBox.dataset.parcelas="1";
+    parcelas.style.display="none";
   }
 };
 
-// 📍 CEP
 cep.onblur=async()=>{
   const c=cep.value.replace(/\D/g,"");
   if(c.length!==8) return;
@@ -213,77 +180,51 @@ cep.onblur=async()=>{
   }
 };
 
-// 💾 Salvar
-formVenda.onsubmit = async e => {
+formVenda.onsubmit=async e=>{
   e.preventDefault();
-
-  const totalNumerico = calcularTotalNumerico();
+  if(pagamento.value==="prazo" && !parcelaSelecionada){
+    alert("Selecione a quantidade de parcelas");
+    return;
+  }
 
   await addDoc(collection(db,"vendas"),{
-    pedido: Number(pedido.value),
-    dataPedido: dataPedido.value,
-    dataEntrega: dataEntrega.value,
-
-    vendedorNome: vendedor.nome,
-    vendedorEmail: vendedor.email,
-
-    status: "pendente",
-
-    pagamento: {
-      tipo: formaPagamento.value,
-      parcelas: parcelasBox.dataset.parcelas || 1
+    pedido:pedido.value,
+    status:"pendente",
+    vendedorNome:vendedor.nome,
+    vendedorEmail:vendedor.email,
+    dataPedido:dataPedido.value,
+    dataEntrega:dataEntrega.value,
+    produto:{
+      modelo:modelo.value,
+      tamanho:tamanho.value,
+      cor:cor.value,
+      valor:limpar(valorSofa.value)
     },
-
-    // 🔴 CAMPO PADRÃO PARA O JADER (ESSENCIAL)
-    total: totalNumerico,
-
-    produto: {
-      modelo: modelo.value,
-      tamanho: tamanho.value,
-      cor: cor.value,
-      valorSofa: limpar(valorSofa.value),
-      frete: limpar(frete.value),
-      montagem: montagem.checked ? limpar(valorMontagem.value) : 0,
-      total: totalNumerico
+    pagamento:{
+      tipo:pagamento.value,
+      parcelas:parcelaSelecionada
     },
-
-    cliente: {
-      nome: nomeCliente.value,
-      contato: contato.value,
-      cep: cep.value,
-      rua: rua.value,
-      numero: numero.value,
-      bairro: bairro.value,
-      cidade: cidade.value
+    total:limpar(total.value),
+    cliente:{
+      nome:nomeCliente.value,
+      contato:contato.value,
+      cep:cep.value,
+      rua:rua.value,
+      numero:numero.value,
+      bairro:bairro.value,
+      cidade:cidade.value
     },
-
-    observacoes: observacoes.value
+    observacoes:obs.value
   });
 
-  formVenda.reset();
-  gerarPedido();
-  carregarVendas();
+  alert("Venda salva");
+  location.reload();
 };
-  
-// 📄 Listar
-async function carregarVendas(){
-  listaVendas.innerHTML="";
-  const q=query(collection(db,"vendas"),where("vendedorEmail","==",vendedor.email));
-  const s=await getDocs(q);
-  s.forEach(d=>{
-    const v=d.data();
-    listaVendas.innerHTML+=`
-      <div class="card">
-        <b>Pedido #${v.pedido}</b><br>
-        Cliente: ${v.cliente.nome}<br>
-        Pagamento: ${v.pagamento.tipo} (${v.pagamento.parcelas}x)<br>
-        Entrega: ${v.dataEntrega}<br>
-        Total: ${v.produto.total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
-      </div>`;
-  });
-}
-</script>
 
+btnSair.onclick=async()=>{
+  await signOut(auth);
+  location.href="login.html";
+};
+</script>
 </body>
 </html>
-
