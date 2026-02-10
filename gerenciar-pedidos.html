@@ -7,27 +7,20 @@
 
 <style>
 body { margin:0; font-family:Arial; background:#f4f6f8; color:#333; }
-.container { max-width:900px; margin:auto; padding:16px; }
-h1,h2 { margin:10px 0; }
+.container { max-width:1000px; margin:auto; padding:16px; }
+h1,h2 { margin-bottom:12px; }
 .card {
   background:#fff;
   padding:14px;
   border-radius:12px;
-  margin-bottom:12px;
   box-shadow:0 2px 6px rgba(0,0,0,.1);
+  margin-bottom:12px;
 }
-button {
-  padding:8px 12px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  margin-right:6px;
-}
-.aprovar { background:#2e7d32; color:#fff; }
-.reprovar { background:#c62828; color:#fff; }
-.voltar { background:#1976d2; color:#fff; margin-bottom:20px; }
+.btn-aprovar { background:#2e7d32; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
+.btn-reprovar { background:#c62828; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; margin-left:8px; }
 .status-aprovado { color:#2e7d32; font-weight:bold; }
 .status-reprovado { color:#c62828; font-weight:bold; }
+.voltar { margin-bottom:16px; }
 </style>
 </head>
 
@@ -48,7 +41,6 @@ button {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -61,75 +53,67 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getFirestore(app);
 
-onAuthStateChanged(auth, user => {
-  if (!user) location.href = "login.html";
-  carregarPedidos();
-});
+const pendentesDiv = document.getElementById("pendentes");
+const finalizadosDiv = document.getElementById("finalizados");
+
+function formatarPagamento(p) {
+  if (!p) return "Não informado";
+  if (p.tipo === "prazo") return `${p.parcelas || 1}x sem juros`;
+  return p.tipo;
+}
+
+function formatarValor(v) {
+  return (v || 0).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+}
 
 async function carregarPedidos() {
-  const pendentesDiv = document.getElementById("pendentes");
-  const finalizadosDiv = document.getElementById("finalizados");
-
   pendentesDiv.innerHTML = "";
   finalizadosDiv.innerHTML = "";
 
   const snapshot = await getDocs(collection(db, "vendas"));
 
-  snapshot.forEach(d => {
-    const v = d.data();
+  snapshot.forEach(docSnap => {
+    const v = docSnap.data();
     const status = v.status || "pendente";
 
-    const card = document.createElement("div");
-    card.className = "card";
-
-    card.innerHTML = `
-      <b>Pedido:</b> ${v.pedido}<br>
-      <b>Modelo:</b> ${v.produto?.modelo || "-"}<br>
-      <b>Cliente:</b> ${v.cliente?.nome || "-"}<br>
-      <b>Vendedor:</b> ${v.vendedorNome || "-"}<br>
-      <b>Entrega:</b> ${v.dataEntrega || "-"}<br>
-      <b>Pagamento:</b> ${v.pagamento?.tipo || v.pagamento || "-"}<br>
-      <b>Valor:</b> ${
-        v.produto?.total
-          ? v.produto.total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
-          : "R$ 0,00"
-      }<br>
+    const html = `
+      <div class="card">
+        <b>Pedido:</b> ${v.pedido}<br>
+        <b>Modelo:</b> ${v.produto?.modelo || "-"}<br>
+        <b>Cliente:</b> ${v.cliente?.nome || "-"}<br>
+        <b>Vendedor:</b> ${v.vendedorNome || "-"}<br>
+        <b>Entrega:</b> ${v.dataEntrega || "-"}<br>
+        <b>Pagamento:</b> ${formatarPagamento(v.pagamento)}<br>
+        <b>Valor:</b> ${formatarValor(v.produto?.total)}
+        ${status === "pendente" ? `
+          <div style="margin-top:10px;">
+            <button class="btn-aprovar" onclick="atualizarStatus('${docSnap.id}','aprovado')">Aprovar</button>
+            <button class="btn-reprovar" onclick="atualizarStatus('${docSnap.id}','reprovado')">Reprovar</button>
+          </div>
+        ` : `
+          <div style="margin-top:10px;">
+            <span class="status-${status}">${status.toUpperCase()}</span>
+          </div>
+        `}
+      </div>
     `;
 
     if (status === "pendente") {
-      const btnAprovar = document.createElement("button");
-      btnAprovar.textContent = "Aprovar";
-      btnAprovar.className = "aprovar";
-      btnAprovar.onclick = () => atualizarStatus(d.id, "aprovado");
-
-      const btnReprovar = document.createElement("button");
-      btnReprovar.textContent = "Reprovar";
-      btnReprovar.className = "reprovar";
-      btnReprovar.onclick = () => atualizarStatus(d.id, "reprovado");
-
-      card.appendChild(btnAprovar);
-      card.appendChild(btnReprovar);
-
-      pendentesDiv.appendChild(card);
+      pendentesDiv.innerHTML += html;
     } else {
-      const statusSpan = document.createElement("div");
-      statusSpan.className =
-        status === "aprovado" ? "status-aprovado" : "status-reprovado";
-      statusSpan.textContent = `Status: ${status.toUpperCase()}`;
-
-      card.appendChild(statusSpan);
-      finalizadosDiv.appendChild(card);
+      finalizadosDiv.innerHTML += html;
     }
   });
 }
 
-async function atualizarStatus(id, novoStatus) {
-  await updateDoc(doc(db, "vendas", id), { status: novoStatus });
+window.atualizarStatus = async (id, status) => {
+  await updateDoc(doc(db, "vendas", id), { status });
   carregarPedidos();
-}
+};
+
+carregarPedidos();
 </script>
 
 </body>
