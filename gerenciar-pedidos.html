@@ -6,132 +6,187 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{margin:0;font-family:Arial;background:#f4f6f8}
-.container{max-width:900px;margin:auto;padding:16px}
-.card{background:#fff;padding:14px;border-radius:10px;margin:10px 0;box-shadow:0 2px 6px rgba(0,0,0,.1)}
-button{padding:10px 14px;border:none;border-radius:8px;cursor:pointer;margin:4px}
-.aprovar{background:#2e7d32;color:#fff}
-.reprovar{background:#c62828;color:#fff}
-.voltar{background:#1976d2;color:#fff}
-select{padding:10px;width:100%;margin:8px 0;border-radius:8px}
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+  padding: 16px;
+}
+
+h1 {
+  margin-bottom: 10px;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+select, button {
+  padding: 10px;
+  font-size: 15px;
+  border-radius: 8px;
+  border: none;
+}
+
+button {
+  background: #1976d2;
+  color: #fff;
+  cursor: pointer;
+}
+
+button.voltar {
+  background: #555;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.1);
+}
+
+.status {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.acoes {
+  margin-top: 10px;
+}
+
+.acoes button {
+  margin-right: 8px;
+}
+
+.aprovar { background: #2e7d32; }
+.reprovar { background: #c62828; }
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<button class="voltar" onclick="location.href='jader.html'">⬅ Voltar ao Dashboard</button>
+  <div class="top-bar">
+    <h1>Gerenciar Pedidos</h1>
+    <button class="voltar" onclick="voltar()">⬅ Voltar ao Dashboard</button>
+  </div>
 
-<h1>Gerenciar Pedidos</h1>
+  <label>Filtrar por vendedor</label>
+  <select id="filtroVendedor">
+    <option value="">Todos</option>
+  </select>
 
-<label>Filtrar por vendedor</label>
-<select id="filtroVendedor">
-  <option value="">Todos</option>
-</select>
-
-<div id="lista"></div>
+  <div id="listaPedidos"></div>
 
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
   authDomain: "crm-vendas-43b6b.firebaseapp.com",
   projectId: "crm-vendas-43b6b",
+  storageBucket: "crm-vendas-43b6b.appspot.com",
+  messagingSenderId: "645002761099",
+  appId: "1:645002761099:web:f194f70c351d1074ac158e"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
-const lista = document.getElementById("lista");
-const filtroVendedor = document.getElementById("filtroVendedor");
+const auth = getAuth(app);
 
 let vendas = [];
 
-function formatarPagamento(p) {
-  if (!p) return "Não informado";
-  if (typeof p === "string") return p;
+onAuthStateChanged(auth, user => {
+  if (!user) location.href = "login.html";
+  carregarPedidos();
+});
 
-  if (p.tipo === "avista") return "À vista";
-  if (p.tipo === "pix") return "Pix";
-  if (p.tipo === "prazo") return `A prazo (${p.parcelas || 1}x)`;
-
-  return "Não informado";
-}
-
-async function carregarVendas() {
-  vendas = [];
-  lista.innerHTML = "";
-  filtroVendedor.innerHTML = `<option value="">Todos</option>`;
-
+async function carregarPedidos() {
   const snap = await getDocs(collection(db, "vendas"));
-  const vendedoresSet = new Set();
+  vendas = [];
+  listaPedidos.innerHTML = "";
+  filtroVendedor.innerHTML = `<option value="">Todos</option>`;
 
   snap.forEach(docSnap => {
     const v = docSnap.data();
-    v.id = docSnap.id;
+    vendas.push({ id: docSnap.id, ...v });
 
-    if (!v.status) v.status = "pendente";
-    if (!v.vendedorNome) v.vendedorNome = "Vendedor não informado";
-
-    vendas.push(v);
-    vendedoresSet.add(v.vendedorNome);
+    if (v.vendedorNome) {
+      const opt = document.createElement("option");
+      opt.value = v.vendedorNome;
+      opt.textContent = v.vendedorNome;
+      filtroVendedor.appendChild(opt);
+    }
   });
 
-  vendedoresSet.forEach(v => {
-    const op = document.createElement("option");
-    op.value = v;
-    op.textContent = v;
-    filtroVendedor.appendChild(op);
-  });
-
-  render();
+  renderizar();
 }
 
-function render() {
-  lista.innerHTML = "";
-  const vendedor = filtroVendedor.value;
+filtroVendedor.onchange = renderizar;
+
+function renderizar() {
+  listaPedidos.innerHTML = "";
 
   vendas
-    .filter(v => v.status === "pendente")
-    .filter(v => !vendedor || v.vendedorNome === vendedor)
+    .filter(v => !filtroVendedor.value || v.vendedorNome === filtroVendedor.value)
     .forEach(v => {
-      lista.innerHTML += `
-        <div class="card">
-          <b>Pedido:</b> ${v.pedido || "—"}<br>
-          <b>Vendedor:</b> ${v.vendedorNome}<br>
-          <b>Cliente:</b> ${v.cliente?.nome || ""}<br>
-          <b>Pagamento:</b> ${formatarPagamento(v.pagamento)}<br>
-          <b>Total:</b> R$ ${(v.produto?.total || 0).toFixed(2)}<br><br>
 
-          <button class="aprovar" onclick="aprovar('${v.id}')">Aprovar</button>
-          <button class="reprovar" onclick="reprovar('${v.id}')">Reprovar</button>
+      const pagamentoTexto = v.pagamento?.tipo
+        ? v.pagamento.tipo.toUpperCase() +
+          (v.pagamento.tipo === "prazo" ? ` (${v.pagamento.parcelas}x)` : "")
+        : "Não informado";
+
+      const valorTotal = v.produto?.total
+        ? v.produto.total.toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL"
+          })
+        : "R$ 0,00";
+
+      const card = document.createElement("div");
+      card.className = "card";
+
+      card.innerHTML = `
+        <div class="status">Status: ${v.status || "pendente"}</div>
+        <p><strong>Pedido:</strong> ${v.pedido}</p>
+        <p><strong>Vendedor:</strong> ${v.vendedorNome}</p>
+        <p><strong>Cliente:</strong> ${v.cliente?.nome}</p>
+        <p><strong>Entrega:</strong> ${v.dataEntrega}</p>
+        <p><strong>Pagamento:</strong> ${pagamentoTexto}</p>
+        <p><strong>Valor:</strong> ${valorTotal}</p>
+
+        <div class="acoes">
+          <button class="aprovar" onclick="alterarStatus('${v.id}','aprovada')">Aprovar</button>
+          <button class="reprovar" onclick="alterarStatus('${v.id}','reprovada')">Reprovar</button>
         </div>
       `;
+
+      listaPedidos.appendChild(card);
     });
 }
 
-window.aprovar = async id => {
-  await updateDoc(doc(db, "vendas", id), { status: "aprovado" });
-  carregarVendas();
+async function alterarStatus(id, status) {
+  await updateDoc(doc(db, "vendas", id), { status });
+  carregarPedidos();
+}
+
+window.voltar = () => {
+  location.href = "jader.html";
 };
-
-window.reprovar = async id => {
-  const motivo = prompt("Motivo da reprovação:");
-  if (!motivo) return;
-  await updateDoc(doc(db, "vendas", id), {
-    status: "reprovado",
-    motivoReprovacao: motivo
-  });
-  carregarVendas();
-};
-
-filtroVendedor.onchange = render;
-
-carregarVendas();
 </script>
+
 </body>
 </html>
