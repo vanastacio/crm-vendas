@@ -138,17 +138,15 @@ let parcelaSelecionada = null;
 
 onAuthStateChanged(auth, (user) => {
 
-  if (user) {
-    vendedor.nome = user.displayName;
-    vendedor.email = user.email;
-    carregarMinhasVendas();
-  } else {
-    setTimeout(() => {
-      if (!auth.currentUser) {
-        window.location.replace("login.html");
-      }
-    }, 500);
+  if (!user) {
+    window.location.replace("login.html");
+    return;
   }
+
+  vendedor.nome = user.displayName;
+  vendedor.email = user.email;
+
+  carregarMinhasVendas();
 
 });
 
@@ -301,4 +299,5 @@ btnSair.onclick=async()=>{
 </script>
 </body>
 </html>
+
 
