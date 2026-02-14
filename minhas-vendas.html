@@ -159,7 +159,6 @@ onAuthStateChanged(auth, async (user) => {
   const q = query(
     collection(db, "vendas"),
     where("vendedorEmail", "==", user.email),
-    orderBy("data", "desc")
   );
 
   const snapshot = await getDocs(q);
@@ -170,6 +169,11 @@ onAuthStateChanged(auth, async (user) => {
       ...docSnap.data()
     });
   });
+
+  todasVendas.sort((a, b) => {
+  if (!a.data || !b.data) return 0;
+  return b.data.seconds - a.data.seconds;
+});
 
   vendasFiltradas = [...todasVendas];
   renderizarPagina();
