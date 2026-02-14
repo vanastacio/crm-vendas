@@ -39,6 +39,14 @@ button {
 </head>
 
 <body>
+
+<div class="filtros">
+  <input type="date" id="filtroData">
+  <input type="text" id="filtroCliente" placeholder="Nome do cliente">
+  <input type="text" id="filtroPedido" placeholder="Número do pedido">
+  <button id="btnFiltrar">Filtrar</button>
+</div>
+  
 <div class="container">
 
 <h1>Minhas Vendas</h1>
@@ -78,6 +86,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+  let todasVendas = [];
+
 onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
@@ -99,7 +109,15 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  snapshot.forEach(docSnap => {
+ snapshot.forEach(docSnap => {
+  todasVendas.push({
+    id: docSnap.id,
+    ...docSnap.data()
+  });
+});
+
+renderizarVendas(todasVendas);
+    
     const venda = docSnap.data();
 
     const div = document.createElement("div");
@@ -138,6 +156,78 @@ onAuthStateChanged(auth, async (user) => {
 
     lista.appendChild(div);
   });
+
+  function renderizarVendas(listaVendas) {
+  const lista = document.getElementById("listaVendas");
+  lista.innerHTML = "";
+
+  if (listaVendas.length === 0) {
+    lista.innerHTML = "<p>Nenhuma venda encontrada.</p>";
+    return;
+  }
+
+  listaVendas.forEach(venda => {
+
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <strong>Pedido:</strong> ${venda.pedido}<br>
+      <strong>Cliente:</strong> ${venda.cliente.nome}<br>
+      <strong>Total:</strong> R$ ${venda.total.toFixed(2)}<br>
+      <strong>Status:</strong> ${venda.status}
+    `;
+
+    if (venda.status !== "aprovado" && venda.status !== "cancelado") {
+      const btn = document.createElement("button");
+      btn.textContent = "Cancelar";
+
+      btn.onclick = async () => {
+        const motivo = prompt("Informe o motivo do cancelamento:");
+
+        if (!motivo) return;
+
+        await updateDoc(doc(db, "vendas", venda.id), {
+          status: "cancelado",
+          motivoCancelamento: motivo
+        });
+
+        location.reload();
+      };
+
+      div.appendChild(btn);
+    }
+
+    lista.appendChild(div);
+  });
+}
+
+btnFiltrar.onclick = () => {
+
+  const data = filtroData.value;
+  const cliente = filtroCliente.value.toLowerCase();
+  const pedido = filtroPedido.value.toLowerCase();
+
+  let filtradas = todasVendas.filter(venda => {
+
+    const matchCliente = venda.cliente.nome.toLowerCase().includes(cliente);
+    const matchPedido = venda.pedido.toLowerCase().includes(pedido);
+
+    let matchData = true;
+
+    if (data) {
+      const dataVenda = new Date(venda.data.seconds * 1000)
+        .toISOString()
+        .split("T")[0];
+
+      matchData = dataVenda === data;
+    }
+
+    return matchCliente && matchPedido && matchData;
+  });
+
+  renderizarVendas(filtradas);
+};  
 
 });
 </script>
