@@ -70,34 +70,20 @@ const limitePagina = 10;
 async function carregarPedidos() {
 
   pendentesDiv.innerHTML = "Carregando...";
-  finalizadosDiv.innerHTML = "";
 
-  const q = query(
-    collection(db, "vendas"),
-    orderBy("dataPedido", "desc"),
-    limit(limitePagina)
+  const snapshot = await getDocs(
+    collection(db, "vendas")
   );
 
-  const snapshot = await getDocs(q);
-
-  if (snapshot.empty) {
-    pendentesDiv.innerHTML = "Nenhum pedido encontrado.";
-    return;
-  }
-
-  pendentesDiv.innerHTML = "";
+  console.log("TOTAL DOCUMENTOS:", snapshot.size);
 
   snapshot.forEach(docSnap => {
-    const v = docSnap.data();
-    pendentesDiv.innerHTML += `
-      <div class="card">
-        <b>Pedido:</b> ${v.pedido}<br>
-        <b>Status:</b> ${v.status || "-"}
-      </div>
-    `;
+    console.log(docSnap.id, docSnap.data());
   });
-}
 
+  pendentesDiv.innerHTML = "Veja o console.";
+}
+  
 window.proximaPagina = () => {
   paginaAtual++;
   carregarPedidos();
