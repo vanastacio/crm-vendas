@@ -191,12 +191,14 @@ async function carregarDashboard() {
   document.getElementById("ticketMedio").textContent =
     totalVendas ? (somaValores/totalVendas).toLocaleString("pt-BR",{style:"currency",currency:"BRL"}) : "R$ 0,00";
 
-  new Chart(statusChart,{
+  new 
+    Chart(document.getElementById("statusChart"),{
     type:"doughnut",
     data:{labels:Object.keys(status),datasets:[{data:Object.values(status)}]}
   });
 
-  new Chart(pagamentoChart,{
+  new 
+    Chart(document.getElementById("pagamentoChart"),{
     type:"pie",
     data:{labels:Object.keys(pagamentos),datasets:[{data:Object.values(pagamentos)}]}
   });
@@ -207,11 +209,26 @@ async function carregarDashboard() {
     data:{labels:Object.keys(vendasPorMes),datasets:[{label:"Vendas",data:Object.values(vendasPorMes)}]}
   });
 
-  new 
-    Chart(document.getElementById("valoresChart"),{
-    type:"bar",
-    data:{labels:["Total"],datasets:[{label:"Valor",data:[somaValores]}]}
-  });
+let valoresPorMes = {};
+
+snapshot.forEach(doc => {
+  const v = doc.data();
+  const mes = v.dataPedido?.slice(0,7);
+  const valor = Number(v.valor || v.total || v.produto?.total || 0);
+
+  if (mes && valor > 0) {
+    valoresPorMes[mes] = (valoresPorMes[mes] || 0) + valor;
+  }
+});
+
+new Chart(document.getElementById("valoresChart"),{
+  type:"bar",
+  data:{
+    labels:Object.keys(valoresPorMes),
+    datasets:[{label:"Valor",data:Object.values(valoresPorMes)}]
+  }
+});
+  
 }
 </script>
 
