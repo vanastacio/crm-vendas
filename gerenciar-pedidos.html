@@ -67,61 +67,35 @@ let ultimoDoc = null;
 let paginaAtual = 1;
 const limitePagina = 10;
 
-async function carregarPedidos(statusFiltro = "pendente") {
+async function carregarPedidos() {
 
   pendentesDiv.innerHTML = "Carregando...";
   finalizadosDiv.innerHTML = "";
 
-  let q = query(
+  const q = query(
     collection(db, "vendas"),
-    where("status", "==", statusFiltro),
     orderBy("dataPedido", "desc"),
     limit(limitePagina)
   );
 
-  if (ultimoDoc) {
-    q = query(
-      collection(db, "vendas"),
-      where("status", "==", statusFiltro),
-      orderBy("dataPedido", "desc"),
-      startAfter(ultimoDoc),
-      limit(limitePagina)
-    );
-  }
-
   const snapshot = await getDocs(q);
-
-  pendentesDiv.innerHTML = "";
 
   if (snapshot.empty) {
     pendentesDiv.innerHTML = "Nenhum pedido encontrado.";
     return;
   }
 
-  ultimoDoc = snapshot.docs[snapshot.docs.length - 1];
+  pendentesDiv.innerHTML = "";
 
   snapshot.forEach(docSnap => {
     const v = docSnap.data();
-    const valor = obterValorVenda(v);
-
     pendentesDiv.innerHTML += `
       <div class="card">
         <b>Pedido:</b> ${v.pedido}<br>
-        <b>Cliente:</b> ${v.cliente?.nome || "-"}<br>
-        <b>Valor:</b> ${formatarValor(valor)}
-        <div style="margin-top:10px;">
-          <button class="btn-aprovar" onclick="aprovar('${docSnap.id}')">Aprovar</button>
-          <button class="btn-reprovar" onclick="reprovar('${docSnap.id}')">Reprovar</button>
-        </div>
+        <b>Status:</b> ${v.status || "-"}
       </div>
     `;
   });
-
-  pendentesDiv.innerHTML += `
-    <div style="text-align:center;margin-top:10px;">
-      <button onclick="proximaPagina()">Próxima Página</button>
-    </div>
-  `;
 }
 
 window.proximaPagina = () => {
