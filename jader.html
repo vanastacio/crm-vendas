@@ -177,10 +177,12 @@ async function carregarDashboard() {
     const mes = v.dataPedido?.slice(0,7);
     if (mes) vendasPorMes[mes] = (vendasPorMes[mes] || 0) + 1;
 
-    if (v.produto?.total) {
-      somaValores += v.produto.total;
+    const valor = Number(v.valor || v.total || v.produto?.total || 0);
+    if (valor > 0) {
+      somaValores += valor;
       totalVendas++;
     }
+    
   });
 
   document.getElementById("totalVendas").textContent = totalVendas;
@@ -199,12 +201,14 @@ async function carregarDashboard() {
     data:{labels:Object.keys(pagamentos),datasets:[{data:Object.values(pagamentos)}]}
   });
 
-  new Chart(quantidadeChart,{
+  new 
+    Chart(document.getElementById("quantidadeChart"),{
     type:"bar",
     data:{labels:Object.keys(vendasPorMes),datasets:[{label:"Vendas",data:Object.values(vendasPorMes)}]}
   });
 
-  new Chart(valoresChart,{
+  new 
+    Chart(document.getElementById("valoresChart"),{
     type:"bar",
     data:{labels:["Total"],datasets:[{label:"Valor",data:[somaValores]}]}
   });
