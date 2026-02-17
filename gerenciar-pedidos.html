@@ -9,6 +9,7 @@
 body { margin:0; font-family:Arial; background:#f4f6f8; color:#333; }
 .container { max-width:1000px; margin:auto; padding:16px; }
 h1,h2 { margin-bottom:12px; }
+
 .card {
   background:#fff;
   padding:14px;
@@ -16,11 +17,37 @@ h1,h2 { margin-bottom:12px; }
   box-shadow:0 2px 6px rgba(0,0,0,.1);
   margin-bottom:12px;
 }
-.btn-aprovar { background:#2e7d32; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
-.btn-reprovar { background:#c62828; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; margin-left:8px; }
-.status-aprovado { color:#2e7d32; font-weight:bold; }
-.status-reprovado { color:#c62828; font-weight:bold; }
+
+.btn-aprovar {
+  background:#2e7d32;
+  color:#fff;
+  border:none;
+  padding:8px 12px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.btn-reprovar {
+  background:#c62828;
+  color:#fff;
+  border:none;
+  padding:8px 12px;
+  border-radius:6px;
+  cursor:pointer;
+  margin-left:8px;
+}
+
 .voltar { margin-bottom:16px; }
+
+.paginacao {
+  text-align:center;
+  margin-top:10px;
+}
+
+.paginacao button {
+  padding:6px 10px;
+  margin:0 5px;
+}
 </style>
 </head>
 
@@ -34,16 +61,16 @@ h1,h2 { margin-bottom:12px; }
 <h2>Pedidos Pendentes de Aprovação</h2>
 <div id="pendentes"></div>
 
-<h2>Status do Pedido</h2>
-<div id="finalizados"></div>
+<div class="paginacao">
+  <button onclick="paginaAnterior()">⬅ Anterior</button>
+  <button onclick="proximaPagina()">Próxima ➡</button>
+</div>
 
 </div>
 
 <script type="module">
-import { 
-  initializeApp 
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { 
   getFirestore, 
   collection, 
@@ -53,39 +80,107 @@ import {
   startAfter, 
   getDocs, 
   updateDoc, 
-  doc,
-  where
+  doc, 
+  where 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
+  authDomain: "crm-vendas-43b6b.firebaseapp.com",
+  projectId: "crm-vendas-43b6b",
+  storageBucket: "crm-vendas-43b6b.appspot.com",
+  messagingSenderId: "645002761099",
+  appId: "1:645002761099:web:f194f70c351d1074ac158e"
+};
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const pendentesDiv = document.getElementById("pendentes");
-const finalizadosDiv = document.getElementById("finalizados");
 
 let ultimoDoc = null;
-let paginaAtual = 1;
+let primeiroDoc = null;
+let historicoDocs = [];
 const limitePagina = 10;
 
-async function carregarPedidos() {
+function formatarValor(v) {
+  return Number(v || 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
+}
+
+function obterValorVenda(v) {
+  return (
+    v.produto?.total ??
+    v.produto?.valor ??
+    v.valor ??
+    v.total ??
+    0
+  );
+}
+
+async function carregarPedidos(direcao = "primeira") {
 
   pendentesDiv.innerHTML = "Carregando...";
 
-  const snapshot = await getDocs(
-    collection(db, "vendas")
-  );
+  let q;
 
-  console.log("TOTAL DOCUMENTOS:", snapshot.size);
+  if (direcao === "proxima" && ultimoDoc) {
+    q = query(
+      collection(db, "vendas"),
+      where("status", "==", "pendente"),
+      orderBy("dataPedido", "desc"),
+      startAfter(ultimoDoc),
+      limit(limitePagina)
+    );
+  } else {
+    q = query(
+      collection(db, "vendas"),
+      where("status", "==", "pendente"),
+      orderBy("dataPedido", "desc"),
+      limit(limitePagina)
+    );
+  }
+
+  const snapshot = await getDocs(q);
+
+  if (snapshot.empty) {
+    pendentesDiv.innerHTML = "Nenhum pedido pendente.";
+    return;
+  }
+
+  primeiroDoc = snapshot.docs[0];
+  ultimoDoc = snapshot.docs[snapshot.docs.length - 1];
+
+  pendentesDiv.innerHTML = "";
 
   snapshot.forEach(docSnap => {
-    console.log(docSnap.id, docSnap.data());
-  });
+    const v = docSnap.data();
+    const valor = obterValorVenda(v);
 
-  pendentesDiv.innerHTML = "Veja o console.";
+    pendentesDiv.innerHTML += `
+      <div class="card">
+        <b>Pedido:</b> ${v.pedido || "-"}<br>
+        <b>Cliente:</b> ${v.cliente?.nome || "-"}<br>
+        <b>Vendedor:</b> ${v.vendedorNome || "-"}<br>
+        <b>Entrega:</b> ${v.dataEntrega || "-"}<br>
+        <b>Valor:</b> ${formatarValor(valor)}
+        <div style="margin-top:10px;">
+          <button class="btn-aprovar" onclick="aprovar('${docSnap.id}')">Aprovar</button>
+          <button class="btn-reprovar" onclick="reprovar('${docSnap.id}')">Reprovar</button>
+        </div>
+      </div>
+    `;
+  });
 }
-  
+
 window.proximaPagina = () => {
-  paginaAtual++;
+  carregarPedidos("proxima");
+};
+
+window.paginaAnterior = () => {
+  ultimoDoc = null;
   carregarPedidos();
 };
 
@@ -97,7 +192,10 @@ window.aprovar = async (id) => {
 
 window.reprovar = async (id) => {
   const motivo = prompt("Informe o motivo da reprovação:");
-  if (!motivo) return;
+  if (!motivo || motivo.trim() === "") {
+    alert("A reprovação exige um motivo.");
+    return;
+  }
 
   await updateDoc(doc(db, "vendas", id), { 
     status: "reprovado",
@@ -109,7 +207,7 @@ window.reprovar = async (id) => {
 };
 
 carregarPedidos();
-</script>
 
+</script>
 </body>
 </html>
