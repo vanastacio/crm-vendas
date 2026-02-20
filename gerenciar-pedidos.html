@@ -58,7 +58,15 @@ h1,h2 { margin-bottom:12px; }
 
 <h1>Gerenciar Pedidos</h1>
 
-<h2>Pedidos Pendentes de Aprovação</h2>
+<h2 id="tituloLista">Pedidos Pendentes</h2>
+
+<div style="margin-bottom:15px;">
+  <button onclick="mudarFiltro('pendente')">Pendentes</button>
+  <button onclick="mudarFiltro('aprovado')">Aprovados</button>
+  <button onclick="mudarFiltro('reprovado')">Reprovados</button>
+  <button onclick="mudarFiltro('todos')">Todos</button>
+</div>
+
 <div id="pendentes"></div>
 
 <div class="paginacao">
@@ -85,7 +93,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
+  apiKey: "SUA_API_KEY",
   authDomain: "crm-vendas-43b6b.firebaseapp.com",
   projectId: "crm-vendas-43b6b",
   storageBucket: "crm-vendas-43b6b.appspot.com",
@@ -99,9 +107,8 @@ const db = getFirestore(app);
 const pendentesDiv = document.getElementById("pendentes");
 
 let ultimoDoc = null;
-let primeiroDoc = null;
-let historicoDocs = [];
 const limitePagina = 10;
+let statusAtual = "pendente";
 
 function formatarValor(v) {
   return Number(v || 0).toLocaleString("pt-BR", {
@@ -127,32 +134,51 @@ async function carregarPedidos(direcao = "primeira") {
   let q;
 
   if (direcao === "proxima" && ultimoDoc) {
-    q = query(
-      collection(db, "vendas"),
-      where("status", "==", "pendente"),
-      orderBy("dataPedido", "desc"),
-      startAfter(ultimoDoc),
-      limit(limitePagina)
-    );
+
+    if (statusAtual === "todos") {
+      q = query(
+        collection(db, "vendas"),
+        orderBy("dataPedido", "desc"),
+        startAfter(ultimoDoc),
+        limit(limitePagina)
+      );
+    } else {
+      q = query(
+        collection(db, "vendas"),
+        where("status", "==", statusAtual),
+        orderBy("dataPedido", "desc"),
+        startAfter(ultimoDoc),
+        limit(limitePagina)
+      );
+    }
+
   } else {
-    q = query(
-      collection(db, "vendas"),
-      where("status", "==", "pendente"),
-      orderBy("dataPedido", "desc"),
-      limit(limitePagina)
-    );
+
+    if (statusAtual === "todos") {
+      q = query(
+        collection(db, "vendas"),
+        orderBy("dataPedido", "desc"),
+        limit(limitePagina)
+      );
+    } else {
+      q = query(
+        collection(db, "vendas"),
+        where("status", "==", statusAtual),
+        orderBy("dataPedido", "desc"),
+        limit(limitePagina)
+      );
+    }
+
   }
 
   const snapshot = await getDocs(q);
 
   if (snapshot.empty) {
-    pendentesDiv.innerHTML = "Nenhum pedido pendente.";
+    pendentesDiv.innerHTML = "Nenhum pedido encontrado.";
     return;
   }
 
-  primeiroDoc = snapshot.docs[0];
   ultimoDoc = snapshot.docs[snapshot.docs.length - 1];
-
   pendentesDiv.innerHTML = "";
 
   snapshot.forEach(docSnap => {
@@ -167,13 +193,29 @@ async function carregarPedidos(direcao = "primeira") {
         <b>Entrega:</b> ${v.dataEntrega || "-"}<br>
         <b>Valor:</b> ${formatarValor(valor)}
         <div style="margin-top:10px;">
+          ${statusAtual === "pendente" ? `
           <button class="btn-aprovar" onclick="aprovar('${docSnap.id}')">Aprovar</button>
           <button class="btn-reprovar" onclick="reprovar('${docSnap.id}')">Reprovar</button>
+          ` : ""}
         </div>
       </div>
     `;
   });
 }
+
+window.mudarFiltro = (novoStatus) => {
+  statusAtual = novoStatus;
+  ultimoDoc = null;
+
+  const titulo = document.getElementById("tituloLista");
+
+  if (novoStatus === "pendente") titulo.innerText = "Pedidos Pendentes";
+  if (novoStatus === "aprovado") titulo.innerText = "Pedidos Aprovados";
+  if (novoStatus === "reprovado") titulo.innerText = "Pedidos Reprovados";
+  if (novoStatus === "todos") titulo.innerText = "Todos os Pedidos";
+
+  carregarPedidos();
+};
 
 window.proximaPagina = () => {
   carregarPedidos("proxima");
