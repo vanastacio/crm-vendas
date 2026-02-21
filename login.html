@@ -6,73 +6,90 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', Arial, sans-serif;
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
 
-  /* 🔥 FUNDO PREMIUM */
   background: url("fundo.jpg") no-repeat center center fixed;
   background-size: cover;
 }
 
+/* Card */
 .container {
   width: 100%;
-  max-width: 380px;
+  max-width: 420px;
   padding: 40px;
-  background: transparent;
+  border-radius: 18px;
+
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(212,175,55,0.6);
+  box-shadow: 0 0 40px rgba(212,175,55,0.25);
+
+  backdrop-filter: blur(8px);
 }
 
-/* Esconde o logo antigo */
+/* Esconde logo antigo */
 .logo-container {
   display: none;
 }
 
 h1 {
   text-align: center;
-  margin-bottom: 25px;
-  color: #d4af37; /* dourado */
+  margin-bottom: 30px;
+  font-size: 32px;
+  color: #d4af37;
+  letter-spacing: 1px;
 }
 
 label {
   color: #d4af37;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 14px;
 }
 
 input {
   width: 100%;
-  padding: 12px;
-  margin: 8px 0 15px 0;
-  border-radius: 8px;
-  border: 1px solid #d4af37;
+  padding: 14px;
+  margin: 8px 0 18px 0;
+  border-radius: 10px;
+  border: 1px solid rgba(212,175,55,0.5);
   background: rgba(0,0,0,0.6);
-  color: white;
-  font-size: 16px;
+  color: #fff;
+  font-size: 15px;
+  outline: none;
+  transition: 0.3s;
 }
 
-input::placeholder {
-  color: #ccc;
+input:focus {
+  border-color: #d4af37;
+  box-shadow: 0 0 10px rgba(212,175,55,0.4);
 }
 
 button {
   width: 100%;
-  padding: 12px;
-  border-radius: 8px;
+  padding: 14px;
+  border-radius: 10px;
   border: none;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
 
   background: linear-gradient(90deg, #d4af37, #b8860b);
-  color: black;
+  color: #000;
   transition: 0.3s;
 }
 
 button:hover {
   transform: scale(1.03);
+  box-shadow: 0 0 15px rgba(212,175,55,0.6);
 }
 
 .error {
@@ -84,14 +101,20 @@ button:hover {
 
 .links {
   text-align: center;
-  margin-top: 15px;
+  margin-top: 20px;
 }
 
 .links a {
   color: #d4af37;
   text-decoration: none;
   display: block;
-  margin-top: 6px;
+  margin-top: 8px;
+  font-size: 14px;
+  transition: 0.3s;
+}
+
+.links a:hover {
+  color: #fff;
 }
 </style>
 </head>
