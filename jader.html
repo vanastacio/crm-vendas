@@ -214,7 +214,13 @@ let valoresPorMes = {};
 snapshot.forEach(doc => {
   const v = doc.data();
   const mes = v.dataPedido?.slice(0,7);
-  const valor = Number(v.valor || v.total || v.produto?.total || 0);
+  const valor = Number(
+  v.produto?.total ??
+  v.produto?.valor ??
+  v.valor ??
+  v.total ??
+  0
+);
 
   if (mes && valor > 0) {
     valoresPorMes[mes] = (valoresPorMes[mes] || 0) + valor;
