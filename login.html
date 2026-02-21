@@ -8,63 +8,87 @@
 <style>
 body {
   margin: 0;
-  font-family: Arial;
-  background: #f4f6f8;
-  color: #333;
+  font-family: Arial, sans-serif;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* 🔥 FUNDO PREMIUM */
+  background: url("fundo.jpg") no-repeat center center fixed;
+  background-size: cover;
 }
+
 .container {
-  max-width: 400px;
-  margin: auto;
-  padding: 20px;
+  width: 100%;
+  max-width: 380px;
+  padding: 40px;
+  background: transparent;
 }
 
+/* Esconde o logo antigo */
 .logo-container {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.logo-container img {
-  width: 180px;
-  max-width: 100%;
+  display: none;
 }
 
 h1 {
-  margin-bottom: 15px;
   text-align: center;
+  margin-bottom: 25px;
+  color: #d4af37; /* dourado */
 }
 
-label, input, button {
+label {
+  color: #d4af37;
+  font-weight: bold;
+}
+
+input {
   width: 100%;
-  margin: 6px 0;
   padding: 12px;
-  font-size: 16px;
+  margin: 8px 0 15px 0;
   border-radius: 8px;
+  border: 1px solid #d4af37;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  font-size: 16px;
+}
+
+input::placeholder {
+  color: #ccc;
 }
 
 button {
-  background: #1976d2;
-  color: #fff;
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
   border: none;
+  font-size: 16px;
+  font-weight: bold;
   cursor: pointer;
+
+  background: linear-gradient(90deg, #d4af37, #b8860b);
+  color: black;
+  transition: 0.3s;
 }
 
-button:active {
-  background: #125aa0;
+button:hover {
+  transform: scale(1.03);
 }
 
 .error {
-  color: red;
+  color: #ff4d4d;
   font-size: 14px;
   margin-bottom: 10px;
+  text-align: center;
 }
 
 .links {
   text-align: center;
-  margin-top: 10px;
+  margin-top: 15px;
 }
 
 .links a {
-  color: #1976d2;
+  color: #d4af37;
   text-decoration: none;
   display: block;
   margin-top: 6px;
@@ -74,10 +98,6 @@ button:active {
 
 <body>
 <div class="container">
-
-<div class="logo-container">
-  <img src="logo.png" alt="JD Fábrica de Estofados">
-</div>
 
 <h1>Login</h1>
 
