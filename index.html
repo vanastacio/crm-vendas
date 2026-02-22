@@ -283,7 +283,7 @@ pagamento.onchange=()=>{
 cep.onblur=async()=>{
   const c=cep.value.replace(/\D/g,"");
   if(c.length!==8) return;
-  const r=await fetch(https://viacep.com.br/ws/${c}/json/).then(r=>r.json());
+  const r=await fetch(`https://viacep.com.br/ws/${c}/json/`).then(r=>r.json());
   if(!r.erro){
     rua.value=r.logradouro;
     bairro.value=r.bairro;
@@ -340,3 +340,4 @@ btnSair.onclick=async()=>{
 
 </body>
 </html>
+
