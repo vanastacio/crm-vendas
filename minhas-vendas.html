@@ -9,15 +9,12 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-
-  /* 🔥 Fundo premium */
   background: url("fundo.jpg") no-repeat center center fixed;
   background-size: cover;
   position: relative;
   color: #fff;
 }
 
-/* Overlay escuro elegante */
 body::before {
   content: "";
   position: fixed;
@@ -39,7 +36,6 @@ h1 {
   font-weight: bold;
 }
 
-/* Cards das vendas */
 .card {
   background: rgba(255,255,255,0.95);
   color: #333;
@@ -72,7 +68,6 @@ button {
   background: #125aa0;
 }
 </style>
-  
 </head>
 
 <body>
@@ -113,9 +108,10 @@ import {
   getDocs, 
   doc, 
   updateDoc,
-  deleteDoc
+  deleteDoc,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-  
+
 const firebaseConfig = {
   apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
   authDomain: "crm-vendas-43b6b.firebaseapp.com",
@@ -156,9 +152,8 @@ onAuthStateChanged(auth, async (user) => {
   });
 
   todasVendas.sort((a, b) => {
-    return new Date(b.dataPedido) - new
-  Date(a.dataPedido);  
-});
+    return new Date(b.dataPedido) - new Date(a.dataPedido);  
+  });
 
   vendasFiltradas = [...todasVendas];
   renderizarPagina();
@@ -191,72 +186,72 @@ function renderizarPagina() {
     `;
 
     if (venda.status === "cancelado" && venda.motivoCancelamento) {
-      div.innerHTML += `<div class="motivo">Motivo: ${venda.motivoCancelamento}</div>`;
+      div.innerHTML += <div class="motivo">Motivo: ${venda.motivoCancelamento}</div>;
     }
 
-if (venda.status !== "aprovado" && venda.status !== "cancelado") {
+    if (venda.status !== "aprovado" && venda.status !== "cancelado") {
 
-  /* BOTÃO CANCELAR */
-  const btnCancelar = document.createElement("button");
-  btnCancelar.textContent = "Cancelar";
-  btnCancelar.className = "btn-cancelar";
+      /* CANCELAR */
+      const btnCancelar = document.createElement("button");
+      btnCancelar.textContent = "Cancelar";
+      btnCancelar.className = "btn-cancelar";
 
-  btnCancelar.onclick = async () => {
-    const motivo = prompt("Informe o motivo do cancelamento:");
+      btnCancelar.onclick = async () => {
+        const motivo = prompt("Informe o motivo do cancelamento:");
 
-    if (!motivo || motivo.trim() === "") {
-      alert("Motivo obrigatório.");
-      return;
+        if (!motivo || motivo.trim() === "") {
+          alert("Motivo obrigatório.");
+          return;
+        }
+
+        await updateDoc(doc(db, "vendas", venda.id), {
+          status: "cancelado",
+          motivoCancelamento: motivo
+        });
+
+        alert("Venda cancelada com sucesso!");
+        location.reload();
+      };
+
+      div.appendChild(btnCancelar);
+
+      /* EDITAR */
+      const btnEditar = document.createElement("button");
+      btnEditar.textContent = "Editar";
+      btnEditar.style.background = "#5bc0de";
+      btnEditar.style.marginLeft = "8px";
+
+      btnEditar.onclick = () => {
+        location.href = editar-venda.html?id=${venda.id};
+      };
+
+      div.appendChild(btnEditar);
+
+      /* EXCLUIR */
+      const btnExcluir = document.createElement("button");
+      btnExcluir.textContent = "Excluir";
+      btnExcluir.style.background = "#d9534f";
+      btnExcluir.style.marginLeft = "8px";
+
+      btnExcluir.onclick = async () => {
+        const confirmar = confirm("Tem certeza que deseja excluir esta venda?");
+
+        if (!confirmar) return;
+
+        await deleteDoc(doc(db, "vendas", venda.id));
+
+        alert("Venda excluída com sucesso!");
+        location.reload();
+      };
+
+      div.appendChild(btnExcluir);
     }
-
-    await updateDoc(doc(db, "vendas", venda.id), {
-      status: "cancelado",
-      motivoCancelamento: motivo
-    });
-
-    alert("Venda cancelada com sucesso!");
-    location.reload();
-  };
-
-  div.appendChild(btnCancelar);
-
-
-  /* BOTÃO EDITAR */
-  const btnEditar = document.createElement("button");
-  btnEditar.textContent = "Editar";
-  btnEditar.style.background = "#f0ad4e";
-  btnEditar.style.marginLeft = "8px";
-
-  btnEditar.onclick = () => {
-    location.href = editar-venda.html?id=${venda.id}`;
-  };
-
-  div.appendChild(btnEditar);
-
-
-  /* BOTÃO EXCLUIR */
-  const btnExcluir = document.createElement("button");
-  btnExcluir.textContent = "Excluir";
-  btnExcluir.style.background = "#d9534f";
-  btnExcluir.style.marginLeft = "8px";
-
-  btnExcluir.onclick = async () => {
-    const confirmar = confirm("Tem certeza que deseja excluir esta venda? Essa ação não pode ser desfeita.");
-
-    if (!confirmar) return;
-
-    await deleteDoc(doc(db, "vendas", venda.id));
-
-    alert("Venda excluída com sucesso!");
-    location.reload();
-  };
-
-  div.appendChild(btnExcluir);
-}
 
     lista.appendChild(div);
   });
 }
+
+/* filtros e paginação mantidos exatamente iguais */
 
 document.getElementById("btnFiltrar").onclick = () => {
 
@@ -271,9 +266,9 @@ document.getElementById("btnFiltrar").onclick = () => {
 
     let matchData = true;
 
-   if (data && venda.dataPedido) {
-    matchData = venda.dataPedido === data;
-}
+    if (data && venda.dataPedido) {
+      matchData = venda.dataPedido === data;
+    }
 
     return matchCliente && matchPedido && matchData;
   });
