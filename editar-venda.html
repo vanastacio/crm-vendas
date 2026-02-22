@@ -230,7 +230,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// PEGAR ID DA URL
 const params = new URLSearchParams(window.location.search);
 const vendaId = params.get("id");
 
@@ -240,33 +239,77 @@ if (!vendaId) {
 }
 
 let vendaRef;
+let parcelaSelecionada = null;
 
-function limpar(v){ 
-  return Number(v.replace(/\D/g,""))/100||0; 
+function moeda(i){
+  let v=i.value.replace(/\D/g,"");
+  v=(v/100).toFixed(2);
+  v=v.replace(".",",").replace(/\B(?=(\d{3})+(?!\d))/g,".");
+  i.value="R$ "+v;
+  totalizar();
 }
+function limpar(v){ return Number(v.replace(/\D/g,""))/100||0; }
+
+function totalizar(){
+  total.value=(limpar(valorSofa.value)+
+              limpar(frete.value)+
+              (montagem.checked?limpar(valorMontagem.value):0))
+  .toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+}
+
+valorSofa.oninput=()=>moeda(valorSofa);
+frete.oninput=()=>moeda(frete);
+valorMontagem.oninput=()=>moeda(valorMontagem);
+montagem.onchange=totalizar;
+
+pagamento.onchange=()=>{
+  parcelas.innerHTML="";
+  parcelaSelecionada=null;
+
+  if(pagamento.value==="prazo"){
+    parcelas.style.display="flex";
+
+    for(let i=1;i<=12;i++){
+      const b=document.createElement("button");
+      b.type="button";
+      b.textContent=i+"x";
+
+      b.onclick=()=>{
+        document.querySelectorAll(".parcelas button")
+        .forEach(x=>x.classList.remove("ativa"));
+
+        b.classList.add("ativa");
+        parcelaSelecionada=i;
+      };
+
+      parcelas.appendChild(b);
+    }
+  } else {
+    parcelas.style.display="none";
+  }
+};
 
 onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
-    location.href = "login.html";
+    location.href="login.html";
     return;
   }
 
-  vendaRef = doc(db, "vendas", vendaId);
+  vendaRef = doc(db,"vendas",vendaId);
   const snap = await getDoc(vendaRef);
 
-  if (!snap.exists()) {
+  if(!snap.exists()){
     alert("Venda não encontrada.");
-    location.href = "minhas-vendas.html";
+    location.href="minhas-vendas.html";
     return;
   }
 
   const venda = snap.data();
 
-  // SEGURANÇA
-  if (venda.vendedorEmail !== user.email) {
-    alert("Você não tem permissão para editar esta venda.");
-    location.href = "minhas-vendas.html";
+  if(venda.vendedorEmail !== user.email){
+    alert("Sem permissão.");
+    location.href="minhas-vendas.html";
     return;
   }
 
@@ -278,10 +321,36 @@ onAuthStateChanged(auth, async (user) => {
   modelo.value = venda.produto.modelo;
   tamanho.value = venda.produto.tamanho;
   cor.value = venda.produto.cor;
-  valorSofa.value = venda.produto.valor.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+
+  valorSofa.value = venda.produto.valor
+    .toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+
+  frete.value = (venda.frete || 0)
+    .toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+
+  if(venda.montagem){
+    montagem.checked = true;
+    valorMontagem.value = venda.montagem
+      .toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  }
 
   pagamento.value = venda.pagamento.tipo;
-  total.value = venda.total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+
+  if(venda.pagamento.tipo==="prazo"){
+    pagamento.onchange();
+    parcelaSelecionada = venda.pagamento.parcelas;
+
+    setTimeout(()=>{
+      const botoes=document.querySelectorAll(".parcelas button");
+      botoes.forEach(btn=>{
+        if(btn.textContent === venda.pagamento.parcelas+"x"){
+          btn.classList.add("ativa");
+        }
+      });
+    },100);
+  }
+
+  totalizar();
 
   nomeCliente.value = venda.cliente.nome;
   contato.value = venda.cliente.contato;
@@ -294,20 +363,27 @@ onAuthStateChanged(auth, async (user) => {
   obs.value = venda.observacoes;
 });
 
-// SALVAR ALTERAÇÃO
-formVenda.onsubmit = async (e) => {
+formVenda.onsubmit=async e=>{
   e.preventDefault();
 
-  await updateDoc(vendaRef, {
-    dataEntrega: dataEntrega.value,
+  if(pagamento.value==="prazo" && !parcelaSelecionada){
+    alert("Selecione a quantidade de parcelas");
+    return;
+  }
+
+  await updateDoc(vendaRef,{
+    dataEntrega:dataEntrega.value,
     produto:{
       modelo:modelo.value,
       tamanho:tamanho.value,
       cor:cor.value,
       valor:limpar(valorSofa.value)
     },
+    frete:limpar(frete.value),
+    montagem:montagem.checked ? limpar(valorMontagem.value) : 0,
     pagamento:{
-      tipo:pagamento.value
+      tipo:pagamento.value,
+      parcelas:parcelaSelecionada
     },
     total:limpar(total.value),
     cliente:{
@@ -320,13 +396,13 @@ formVenda.onsubmit = async (e) => {
       cidade:cidade.value
     },
     observacoes:obs.value,
-    status:"ativa" // 🔒 sempre ativa
+    status:"ativa"
   });
 
   alert("Venda atualizada com sucesso!");
-  location.href = "minhas-vendas.html";
+  location.href="minhas-vendas.html";
 };
 </script>
-
+  
 </body>
 </html>
