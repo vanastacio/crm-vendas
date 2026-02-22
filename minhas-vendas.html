@@ -186,7 +186,9 @@ function renderizarPagina() {
     `;
 
     if (venda.status === "cancelado" && venda.motivoCancelamento) {
-      div.innerHTML += <div class="motivo">Motivo: ${venda.motivoCancelamento}</div>;
+      div.innerHTML += `<div
+      class="motivo">Motivo: $
+      {venda.motivoCancelamento}</div>`;
     }
 
     if (venda.status !== "aprovado" && venda.status !== "cancelado") {
