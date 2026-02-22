@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>CRM - Registro de Vendas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: url("fundo.jpg") no-repeat center center fixed;
+  background-size: cover;
+  color: #fff;
+}
+
+/* ANIMAÇÃO SUAVE */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.container {
+  max-width: 520px;
+  margin: 40px auto;
+  padding: 30px;
+  background: rgba(0, 0, 0, 0.88);
+  border-radius: 18px;
+  border: 1px solid rgba(212,175,55,0.5);
+  box-shadow: 0 0 35px rgba(212,175,55,0.15);
+  animation: fadeUp 0.6s ease-out;
+}
+
+.logo {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.logo img {
+  width: 120px;
+  filter: drop-shadow(0 0 8px rgba(212,175,55,0.6));
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #d4af37;
+}
+
+label {
+  font-size: 14px;
+  margin-top: 8px;
+  display: block;
+}
+
+input, textarea, select, button {
+  width: 100%;
+  margin: 6px 0;
+  padding: 12px;
+  font-size: 15px;
+  border-radius: 10px;
+  border: 1px solid #444;
+  background: #111;
+  color: #fff;
+}
+
+input:disabled {
+  background: #222;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 70px;
+}
+
+button {
+  background: linear-gradient(45deg,#d4af37,#b8962e);
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  transform: scale(1.03);
+}
+
+.parcelas {
+  display: none;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.parcelas button {
+  width: auto;
+  padding: 8px 14px;
+  background: #222;
+  border: 1px solid #555;
+}
+
+.parcelas button.ativa {
+  background: #d4af37;
+  color: #000;
+}
+
+hr {
+  border: none;
+  height: 1px;
+  background: rgba(212,175,55,0.4);
+  margin: 18px 0;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="logo">
+  <img src="logo-jd.png" alt="Logo JD">
+</div>
+
+<h1>Registro de Venda</h1>
+
+<form id="formVenda">
+
+<label>Nº do Pedido</label>
+<input id="pedido" disabled>
+
+<label>Data do Pedido</label>
+<input type="date" id="dataPedido" required>
+
+<label>Data da Entrega</label>
+<input type="date" id="dataEntrega" required>
+
+<label><input type="checkbox" id="montagem" style="width:auto;"> Montagem</label>
+
+<hr>
+
+<label>Modelo do Sofá</label>
+<select id="modelo" required>
+<option value="">Selecione</option>
+<option>Sofá carina braço almofadado pilow de 15</option>
+<option>Sofá carina braço almofadado pilow de 25</option>
+<option>Sofá carina braço reto pilow de 15</option>
+<option>Sofá carina braço reto pilow de 25</option>
+</select>
+
+<label>Tamanho do Sofá</label>
+<input id="tamanho" required>
+
+<label>Cor</label>
+<input id="cor" required>
+
+<label>Valor do Sofá</label>
+<input id="valorSofa" required>
+
+<label>Frete</label>
+<input id="frete" value="0">
+
+<label>Valor da Montagem</label>
+<input id="valorMontagem" value="0">
+
+<label>Total</label>
+<input id="total" disabled>
+
+<hr>
+
+<label>Forma de Pagamento</label>
+<select id="pagamento" required>
+<option value="">Selecione</option>
+<option value="avista">À vista</option>
+<option value="dinheiro">Dinheiro</option>
+<option value="pix">Pix</option>
+<option value="prazo">A prazo</option>
+</select>
+
+<div class="parcelas" id="parcelas"></div>
+
+<hr>
+
+<input placeholder="Nome do Cliente" id="nomeCliente" required>
+<input placeholder="Contato" id="contato" required>
+
+<input placeholder="CEP" id="cep" required>
+<input placeholder="Rua" id="rua">
+<input placeholder="Número" id="numero">
+<input placeholder="Bairro" id="bairro">
+<input placeholder="Município" id="cidade">
+
+<textarea placeholder="Observações" id="obs"></textarea>
+
+<button type="submit">Salvar Venda</button>
+</form>
+
+<button onclick="location.href='minhas-vendas.html'">
+Ver Minhas Vendas
+</button>
+
+<button id="btnSair">Sair</button>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { 
+  getFirestore, 
+  doc, 
+  getDoc, 
+  updateDoc 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
+  authDomain: "crm-vendas-43b6b.firebaseapp.com",
+  projectId: "crm-vendas-43b6b",
+  storageBucket: "crm-vendas-43b6b.appspot.com",
+  messagingSenderId: "645002761099",
+  appId: "1:645002761099:web:f194f70c351d1074ac158e"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// PEGAR ID DA URL
+const params = new URLSearchParams(window.location.search);
+const vendaId = params.get("id");
+
+if (!vendaId) {
+  alert("Venda não encontrada.");
+  location.href = "minhas-vendas.html";
+}
+
+let vendaRef;
+
+function limpar(v){ 
+  return Number(v.replace(/\D/g,""))/100||0; 
+}
+
+onAuthStateChanged(auth, async (user) => {
+
+  if (!user) {
+    location.href = "login.html";
+    return;
+  }
+
+  vendaRef = doc(db, "vendas", vendaId);
+  const snap = await getDoc(vendaRef);
+
+  if (!snap.exists()) {
+    alert("Venda não encontrada.");
+    location.href = "minhas-vendas.html";
+    return;
+  }
+
+  const venda = snap.data();
+
+  // SEGURANÇA
+  if (venda.vendedorEmail !== user.email) {
+    alert("Você não tem permissão para editar esta venda.");
+    location.href = "minhas-vendas.html";
+    return;
+  }
+
+  // PREENCHER CAMPOS
+  pedido.value = venda.pedido;
+  dataPedido.value = venda.dataPedido;
+  dataEntrega.value = venda.dataEntrega;
+
+  modelo.value = venda.produto.modelo;
+  tamanho.value = venda.produto.tamanho;
+  cor.value = venda.produto.cor;
+  valorSofa.value = venda.produto.valor.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+
+  pagamento.value = venda.pagamento.tipo;
+  total.value = venda.total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+
+  nomeCliente.value = venda.cliente.nome;
+  contato.value = venda.cliente.contato;
+  cep.value = venda.cliente.cep;
+  rua.value = venda.cliente.rua;
+  numero.value = venda.cliente.numero;
+  bairro.value = venda.cliente.bairro;
+  cidade.value = venda.cliente.cidade;
+
+  obs.value = venda.observacoes;
+});
+
+// SALVAR ALTERAÇÃO
+formVenda.onsubmit = async (e) => {
+  e.preventDefault();
+
+  await updateDoc(vendaRef, {
+    dataEntrega: dataEntrega.value,
+    produto:{
+      modelo:modelo.value,
+      tamanho:tamanho.value,
+      cor:cor.value,
+      valor:limpar(valorSofa.value)
+    },
+    pagamento:{
+      tipo:pagamento.value
+    },
+    total:limpar(total.value),
+    cliente:{
+      nome:nomeCliente.value,
+      contato:contato.value,
+      cep:cep.value,
+      rua:rua.value,
+      numero:numero.value,
+      bairro:bairro.value,
+      cidade:cidade.value
+    },
+    observacoes:obs.value,
+    status:"ativa" // 🔒 sempre ativa
+  });
+
+  alert("Venda atualizada com sucesso!");
+  location.href = "minhas-vendas.html";
+};
+</script>
+
+</body>
+</html>
