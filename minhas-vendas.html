@@ -181,7 +181,7 @@ function renderizarPagina() {
       <strong>Pedido:</strong> ${venda.pedido || "-"}<br>
       <strong>Cliente:</strong> ${venda.cliente?.nome || "-"}<br>
       <strong>Total:</strong> R$ ${venda.total?.toFixed(2) || "0.00"}<br>
-      <strong class="status">Status:</strong> ${venda.status}
+      <strong class="status">Status:</strong> ${venda.status === "pendente" ? "ativa" : venda.status}
     `;
 
     /* EDITAR */
