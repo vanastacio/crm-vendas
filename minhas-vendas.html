@@ -224,7 +224,7 @@ function renderizarPagina() {
       btnEditar.style.marginLeft = "8px";
 
       btnEditar.onclick = () => {
-        location.href = editar-venda.html?id=${venda.id};
+        location.href = `editar-venda.html?id=${venda.id}`;
       };
 
       div.appendChild(btnEditar);
