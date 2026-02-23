@@ -311,6 +311,10 @@ formVenda.onsubmit=async e=>{
       cor:cor.value,
       valor:limpar(valorSofa.value)
     },
+     frete: limpar(frete.value),
+     montagem: montagem.checked ?
+       limpar(valorMontagem.value) : 0,
+    
     pagamento:{
       tipo:pagamento.value,
       parcelas:parcelaSelecionada
@@ -340,4 +344,5 @@ btnSair.onclick=async()=>{
 
 </body>
 </html>
+
 
