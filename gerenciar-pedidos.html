@@ -135,15 +135,19 @@ function formatarValor(v) {
 }
 
 function obterValorVenda(v) {
-  return (
+  const valorProduto =
     v.produto?.total ??
     v.produto?.valor ??
     v.valor ??
     v.total ??
-    0
-  );
-}
+    0;
 
+  const frete = Number(v.frete || 0);
+  const montagem = Number(v.montagem || 0);
+
+  return Number(valorProduto) + frete + montagem;
+}
+  
 async function carregarPedidos(direcao = "primeira") {
 
   pendentesDiv.innerHTML = "Carregando...";
