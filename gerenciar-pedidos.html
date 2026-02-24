@@ -1,100 +1,165 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
 <title>Gerenciar Pedidos</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body { margin:0; font-family:Arial; background:#f4f6f8; color:#333; }
-.container { max-width:1000px; margin:auto; padding:16px; }
-h1,h2 { margin-bottom:12px; }
 
-.card {
-  background:#fff;
-  padding:14px;
-  border-radius:12px;
-  box-shadow:0 2px 6px rgba(0,0,0,.1);
-  margin-bottom:12px;
+/* ===== FUNDO IGUAL INDEX ===== */
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+  color:white;
 }
 
-.btn-aprovar {
-  background:#2e7d32;
-  color:#fff;
-  border:none;
-  padding:8px 12px;
-  border-radius:6px;
+/* ===== TOPO ===== */
+.topo{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:20px 40px;
+}
+
+.titulo{
+  text-align:center;
+  font-size:32px;
+  font-weight:bold;
+  flex:1;
+}
+
+.btn-topo{
+  border:2px solid white;
+  padding:8px 18px;
+  border-radius:25px;
   cursor:pointer;
+  transition:.2s;
 }
 
-.btn-reprovar {
-  background:#c62828;
-  color:#fff;
-  border:none;
-  padding:8px 12px;
-  border-radius:6px;
-  cursor:pointer;
-  margin-left:8px;
+.btn-topo:hover{
+  background:white;
+  color:black;
 }
 
-.voltar { margin-bottom:16px; }
-
-.paginacao {
+/* ===== FILTRO ===== */
+.filtro-container{
   text-align:center;
   margin-top:10px;
 }
 
-.paginacao button {
-  padding:6px 10px;
-  margin:0 5px;
+.filtro-input{
+  padding:10px 15px;
+  border-radius:20px;
+  border:none;
+  width:300px;
+  outline:none;
 }
+
+/* ===== GRID ===== */
+.cards-container{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:20px;
+  padding:40px;
+}
+
+/* ===== CARD ===== */
+.card-pedido{
+  background:white;
+  color:black;
+  border-radius:15px;
+  padding:15px;
+  cursor:pointer;
+  transition:all .25s ease;
+  box-shadow:0 4px 10px rgba(0,0,0,0.2);
+  position:relative;
+}
+
+.card-pedido:hover{
+  transform:scale(1.05) rotate(.5deg);
+  box-shadow:0 10px 25px rgba(0,0,0,0.3);
+}
+
+.card-expandido{
+  grid-column:span 2;
+  background:#f2f2f2;
+}
+
+/* ===== PAGINAÇÃO ===== */
+.paginacao{
+  text-align:center;
+  margin:30px;
+}
+
+.paginacao button{
+  padding:10px 20px;
+  margin:10px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+/* ===== NOTIFICAÇÃO ===== */
+.notificacao{
+  position:relative;
+}
+
+.badge{
+  position:absolute;
+  top:-8px;
+  right:-8px;
+  background:red;
+  color:white;
+  font-size:12px;
+  border-radius:50%;
+  padding:4px 8px;
+}
+
 </style>
 </head>
-
 <body>
-<div class="container">
 
-<button class="voltar" onclick="location.href='jader.html'">⬅ Voltar ao Dashboard</button>
-
-<h1>Gerenciar Pedidos</h1>
-
-<h2 id="tituloLista">Pedidos Pendentes</h2>
-
-<div style="margin-bottom:15px;">
-  <button onclick="mudarFiltro('pendente')">Pendentes</button>
-  <button onclick="mudarFiltro('aprovado')">Aprovados</button>
-  <button onclick="mudarFiltro('reprovado')">Reprovados</button>
-  <button onclick="mudarFiltro('todos')">Todos</button>
+<div class="topo">
+  <div class="btn-topo" onclick="window.location.href='jader.html'">Voltar</div>
+  <div class="titulo">GERENCIAR PEDIDOS</div>
+  <div class="btn-topo notificacao" onclick="limparNotificacao()">
+    🔔
+    <span id="badge" class="badge" style="display:none;">0</span>
+  </div>
 </div>
 
-<div id="pendentes"></div>
+<div class="filtro-container">
+  <input 
+    type="text" 
+    id="filtroInput"
+    class="filtro-input"
+    placeholder="Filtrar por cliente, vendedor, pedido ou data..."
+    oninput="aplicarFiltro()"
+  >
+</div>
+
+<div id="pendentes" class="cards-container"></div>
 
 <div class="paginacao">
-  <button onclick="paginaAnterior()">⬅ Anterior</button>
-  <button onclick="proximaPagina()">Próxima ➡</button>
-</div>
-
+  <button onclick="paginaAnterior()">Anterior</button>
+  <button onclick="proximaPagina()">Próxima</button>
 </div>
 
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { 
-  getFirestore, 
-  collection, 
-  query, 
-  orderBy, 
-  limit, 
-  startAfter, 
-  getDocs, 
-  updateDoc, 
-  doc, 
-  where 
+  getFirestore,
+  collection,
+  query,
+  orderBy,
+  limit,
+  startAfter,
+  getDocs,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-import { 
-  getAuth, 
-  onAuthStateChanged 
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
@@ -105,168 +170,155 @@ const firebaseConfig = {
   appId: "1:645002761099:web:f194f70c351d1074ac158e"
 };
 
-// 🔥 PRIMEIRO inicializa o app
 const app = initializeApp(firebaseConfig);
-
-// 🔥 DEPOIS cria as instâncias
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    console.log("Usuário não autenticado.");
-    return; // não redireciona
-  }
-
-  carregarPedidos();
-});
-  
-const pendentesDiv = document.getElementById("pendentes");
-
 let ultimoDoc = null;
-const limitePagina = 10;
-let statusAtual = "ativa";
+const limitePagina = 12;
+let vendasCache = [];
+let contadorNotificacao = 0;
 
-function formatarValor(v) {
-  return Number(v || 0).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL"
-  });
+/* ===== LOGIN ===== */
+onAuthStateChanged(auth, (user)=>{
+  if(!user) return;
+  carregarPedidos();
+  ativarNotificacaoTempoReal();
+});
+
+/* ===== FORMATAR ===== */
+function formatarValor(v){
+  return Number(v || 0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 }
 
-function obterValorVenda(v) {
-  const valorProduto =
-    v.produto?.total ??
-    v.produto?.valor ??
-    v.valor ??
-    v.total ??
-    0;
-
-  const frete = Number(v.frete || 0);
-  const montagem = Number(v.montagem || 0);
-
-  return Number(valorProduto) + frete + montagem;
+function calcularTotal(v){
+  const produto = v.produto?.valor ?? 0;
+  const frete = v.frete ?? 0;
+  const montagem = v.montagem ?? 0;
+  return produto + frete + montagem;
 }
-  
-async function carregarPedidos(direcao = "primeira") {
 
+/* ===== CARREGAR ===== */
+async function carregarPedidos(direcao="primeira"){
+
+  const pendentesDiv = document.getElementById("pendentes");
   pendentesDiv.innerHTML = "Carregando...";
 
   let q;
 
-  if (direcao === "proxima" && ultimoDoc) {
-
-    if (statusAtual === "todos") {
-      q = query(
-        collection(db, "vendas"),
-        orderBy("dataPedido", "desc"),
-        startAfter(ultimoDoc),
-        limit(limitePagina)
-      );
-    } else {
-      q = query(
-        collection(db, "vendas"),
-        where("status", "==", statusAtual),
-        orderBy("dataPedido", "desc"),
-        startAfter(ultimoDoc),
-        limit(limitePagina)
-      );
-    }
-
-  } else {
-
-    if (statusAtual === "todos") {
-      q = query(
-        collection(db, "vendas"),
-        orderBy("dataPedido", "desc"),
-        limit(limitePagina)
-      );
-    } else {
-      q = query(
-        collection(db, "vendas"),
-        where("status", "==", statusAtual),
-        orderBy("dataPedido", "desc"),
-        limit(limitePagina)
-      );
-    }
-
+  if(direcao==="proxima" && ultimoDoc){
+    q = query(
+      collection(db,"vendas"),
+      orderBy("dataPedido","desc"),
+      startAfter(ultimoDoc),
+      limit(limitePagina)
+    );
+  }else{
+    q = query(
+      collection(db,"vendas"),
+      orderBy("dataPedido","desc"),
+      limit(limitePagina)
+    );
   }
 
   const snapshot = await getDocs(q);
 
-  if (snapshot.empty) {
-    pendentesDiv.innerHTML = "Nenhum pedido encontrado.";
+  if(snapshot.empty){
+    pendentesDiv.innerHTML="Nenhum pedido encontrado.";
     return;
   }
 
-  ultimoDoc = snapshot.docs[snapshot.docs.length - 1];
-  pendentesDiv.innerHTML = "";
+  ultimoDoc = snapshot.docs[snapshot.docs.length-1];
 
-  snapshot.forEach(docSnap => {
-    const v = docSnap.data();
-    const valor = obterValorVenda(v);
+  vendasCache = snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
 
-    pendentesDiv.innerHTML += `
-      <div class="card">
-        <b>Pedido:</b> ${v.pedido || "-"}<br>
-        <b>Cliente:</b> ${v.cliente?.nome || "-"}<br>
-        <b>Vendedor:</b> ${v.vendedorNome || "-"}<br>
-        <b>Entrega:</b> ${v.dataEntrega || "-"}<br>
-        <b>Valor:</b> ${formatarValor(valor)}
-        <div style="margin-top:10px;">
-          ${statusAtual === "pendente" ? `
-          <button class="btn-aprovar" onclick="aprovar('${docSnap.id}')">Aprovar</button>
-          <button class="btn-reprovar" onclick="reprovar('${docSnap.id}')">Reprovar</button>
-          ` : ""}
+  renderizarCards(vendasCache);
+}
+
+/* ===== RENDER ===== */
+function renderizarCards(lista){
+
+  const pendentesDiv = document.getElementById("pendentes");
+  pendentesDiv.innerHTML="";
+
+  lista.forEach(v=>{
+
+    const total = calcularTotal(v);
+
+    pendentesDiv.innerHTML+=`
+      <div class="card-pedido" onclick="expandirCard(this)">
+        <b>Pedido:</b> ${v.pedido}<br>
+        <b>Cliente:</b> ${v.cliente?.nome}<br>
+        <b>Vendedor:</b> ${v.vendedorNome}<br>
+        <b>Entrega:</b> ${v.dataEntrega}<br>
+        <b>Valor:</b> ${formatarValor(total)}
+        <div class="detalhes" style="display:none;margin-top:10px;">
+          <hr>
+          <b>Modelo:</b> ${v.produto?.modelo}<br>
+          <b>Cor:</b> ${v.produto?.cor}<br>
+          <b>Tamanho:</b> ${v.produto?.tamanho}<br>
+          <b>Frete:</b> ${formatarValor(v.frete)}<br>
+          <b>Montagem:</b> ${formatarValor(v.montagem)}<br>
+          <b>Pagamento:</b> ${v.pagamento?.tipo}<br>
+          <b>Observações:</b> ${v.observacoes || "-"}
         </div>
       </div>
     `;
   });
 }
 
-window.mudarFiltro = (novoStatus) => {
-  statusAtual = novoStatus;
-  ultimoDoc = null;
+/* ===== EXPANSÃO ===== */
+window.expandirCard=(card)=>{
 
-  const titulo = document.getElementById("tituloLista");
+  const detalhes = card.querySelector(".detalhes");
+  const expandido = card.classList.contains("card-expandido");
 
-  if (novoStatus === "pendente") titulo.innerText = "Pedidos Pendentes";
-  if (novoStatus === "aprovado") titulo.innerText = "Pedidos Aprovados";
-  if (novoStatus === "reprovado") titulo.innerText = "Pedidos Reprovados";
-  if (novoStatus === "todos") titulo.innerText = "Todos os Pedidos";
-
-  carregarPedidos();
-};
-
-window.proximaPagina = () => {
-  carregarPedidos("proxima");
-};
-
-window.paginaAnterior = () => {
-  ultimoDoc = null;
-  carregarPedidos();
-};
-
-window.aprovar = async (id) => {
-  await updateDoc(doc(db, "vendas", id), { status: "aprovado" });
-  ultimoDoc = null;
-  carregarPedidos();
-};
-
-window.reprovar = async (id) => {
-  const motivo = prompt("Informe o motivo da reprovação:");
-  if (!motivo || motivo.trim() === "") {
-    alert("A reprovação exige um motivo.");
-    return;
-  }
-
-  await updateDoc(doc(db, "vendas", id), { 
-    status: "reprovado",
-    motivoReprovacao: motivo
+  document.querySelectorAll(".card-pedido").forEach(c=>{
+    c.classList.remove("card-expandido");
+    c.querySelector(".detalhes").style.display="none";
   });
 
-  ultimoDoc = null;
+  if(!expandido){
+    card.classList.add("card-expandido");
+    detalhes.style.display="block";
+  }
+};
+
+/* ===== FILTRO INTELIGENTE ===== */
+window.aplicarFiltro=()=>{
+  const termo = document.getElementById("filtroInput").value.toLowerCase();
+
+  const filtrado = vendasCache.filter(v=>
+    v.pedido?.toLowerCase().includes(termo) ||
+    v.cliente?.nome?.toLowerCase().includes(termo) ||
+    v.vendedorNome?.toLowerCase().includes(termo) ||
+    v.dataPedido?.toLowerCase().includes(termo)
+  );
+
+  renderizarCards(filtrado);
+};
+
+/* ===== PAGINAÇÃO ===== */
+window.proximaPagina=()=>carregarPedidos("proxima");
+window.paginaAnterior=()=>{
+  ultimoDoc=null;
   carregarPedidos();
+};
+
+/* ===== NOTIFICAÇÃO REALTIME ===== */
+function ativarNotificacaoTempoReal(){
+  onSnapshot(collection(db,"vendas"),()=>{
+    contadorNotificacao++;
+    const badge = document.getElementById("badge");
+    badge.style.display="block";
+    badge.innerText=contadorNotificacao;
+  });
+}
+
+window.limparNotificacao=()=>{
+  contadorNotificacao=0;
+  const badge = document.getElementById("badge");
+  badge.style.display="none";
 };
 
 </script>
