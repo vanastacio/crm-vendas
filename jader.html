@@ -8,7 +8,13 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body { margin:0; font-family:Arial; background:#f4f6f8; color:#333; }
+body {
+  margin:0;
+  font-family:'Segoe UI', Arial, sans-serif;
+  background: url("fundo.jpg") no-repeat center center fixed;
+  background-size: cover;
+  color:#fff;
+}
 .container { max-width:1200px; margin:auto; padding:16px; }
 h1 { margin-bottom:20px; }
 
@@ -54,7 +60,8 @@ h1 { margin-bottom:20px; }
 }
 
 .card {
-  background:#fff;
+  background: rgba(0,0,0,0.85);
+  color:#fff;
   padding:16px;
   border-radius:14px;
   box-shadow:0 2px 6px rgba(0,0,0,.1);
@@ -160,7 +167,7 @@ document.getElementById("btnSair").onclick = async () => {
 async function carregarDashboard() {
   const snapshot = await getDocs(collection(db, "vendas"));
 
-  let status = { pendente:0, aprovado:0, reprovado:0, producao:0, entregue:0 };
+  let status = { ativa:0, producao:0, entregue:0 };
   let pagamentos = {};
   let vendasPorMes = {};
   let totalVendas = 0;
@@ -169,7 +176,9 @@ async function carregarDashboard() {
   snapshot.forEach(doc => {
     const v = doc.data();
 
-    status[v.status || "pendente"] = (status[v.status || "pendente"] || 0) + 1;
+    if (status.hasOwnProperty(v.status)) {
+      status[v.status]++;
+    }
 
     const pg = v.pagamento?.tipo || v.pagamento;
     if (pg) pagamentos[pg] = (pagamentos[pg] || 0) + 1;
