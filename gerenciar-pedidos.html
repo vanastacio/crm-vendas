@@ -7,11 +7,12 @@
 <style>
 
 /* ===== FUNDO IGUAL INDEX ===== */
-body{
-  margin:0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-  color:white;
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: url("fundo.jpg") no-repeat center center fixed;
+  background-size: cover;
+  color: #fff;
 }
 
 /* ===== TOPO ===== */
@@ -43,17 +44,33 @@ body{
 }
 
 /* ===== FILTRO ===== */
+
 .filtro-container{
   text-align:center;
-  margin-top:10px;
+  margin-top:15px;
 }
 
+.filtro-select,
 .filtro-input{
   padding:10px 15px;
   border-radius:20px;
   border:none;
-  width:300px;
+  margin:5px;
   outline:none;
+}
+
+.btn-filtrar{
+  padding:10px 20px;
+  border-radius:20px;
+  border:none;
+  cursor:pointer;
+  background:white;
+  font-weight:bold;
+  transition:.2s;
+}
+
+.btn-filtrar:hover{
+  transform:scale(1.05);
 }
 
 /* ===== GRID ===== */
@@ -130,13 +147,22 @@ body{
 </div>
 
 <div class="filtro-container">
+  <select id="tipoFiltro" class="filtro-select">
+    <option value="">Selecione o filtro</option>
+    <option value="pedido">Número do Pedido</option>
+    <option value="cliente">Cliente</option>
+    <option value="vendedor">Vendedor</option>
+    <option value="data">Data</option>
+  </select>
+
   <input 
-    type="text" 
-    id="filtroInput"
+    type="text"
+    id="valorFiltro"
     class="filtro-input"
-    placeholder="Filtrar por cliente, vendedor, pedido ou data..."
-    oninput="aplicarFiltro()"
+    placeholder="Digite o valor..."
   >
+
+  <button class="btn-filtrar" onclick="aplicarFiltro()">Filtrar</button>
 </div>
 
 <div id="pendentes" class="cards-container"></div>
@@ -285,15 +311,41 @@ window.expandirCard=(card)=>{
 };
 
 /* ===== FILTRO INTELIGENTE ===== */
-window.aplicarFiltro=()=>{
-  const termo = document.getElementById("filtroInput").value.toLowerCase();
+window.aplicarFiltro = () => {
 
-  const filtrado = vendasCache.filter(v=>
-    v.pedido?.toLowerCase().includes(termo) ||
-    v.cliente?.nome?.toLowerCase().includes(termo) ||
-    v.vendedorNome?.toLowerCase().includes(termo) ||
-    v.dataPedido?.toLowerCase().includes(termo)
-  );
+  const tipo = document.getElementById("tipoFiltro").value;
+  const valor = document.getElementById("valorFiltro").value.toLowerCase();
+
+  if(!tipo || !valor){
+    renderizarCards(vendasCache);
+    return;
+  }
+
+  let filtrado = [];
+
+  if(tipo === "pedido"){
+    filtrado = vendasCache.filter(v =>
+      v.pedido?.toLowerCase() === valor
+    );
+  }
+
+  if(tipo === "cliente"){
+    filtrado = vendasCache.filter(v =>
+      v.cliente?.nome?.toLowerCase().includes(valor)
+    );
+  }
+
+  if(tipo === "vendedor"){
+    filtrado = vendasCache.filter(v =>
+      v.vendedorNome?.toLowerCase().includes(valor)
+    );
+  }
+
+  if(tipo === "data"){
+    filtrado = vendasCache.filter(v =>
+      v.dataPedido?.toLowerCase() === valor
+    );
+  }
 
   renderizarCards(filtrado);
 };
