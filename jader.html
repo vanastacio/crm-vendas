@@ -8,6 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+/* ===== FUNDO (igual das outras páginas) ===== */
 body{
   margin:0;
   font-family:'Segoe UI', Arial, sans-serif;
@@ -16,124 +17,208 @@ body{
   color:#fff;
 }
 
+/* leve overlay pra dar contraste sem escurecer demais */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at 30% 10%, rgba(33,150,243,0.20), transparent 45%),
+    radial-gradient(circle at 80% 30%, rgba(76,175,80,0.12), transparent 45%),
+    rgba(0,0,0,0.25);
+  z-index:-1;
+}
+
+/* ===== LAYOUT ===== */
 .container{
-  max-width:1500px;
+  max-width:1200px;
   margin:auto;
-  padding:70px 50px;
+  padding:32px 22px;
 }
 
-.topo{
+/* ===== TOPO ===== */
+.topbar{
   display:flex;
-  justify-content:space-between;
   align-items:center;
-  margin-bottom:50px;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:18px;
 }
 
-.topo h1{
-  font-size:52px;
+.title{
+  font-size:40px;
   font-weight:800;
-  letter-spacing:1px;
+  letter-spacing:.3px;
+  margin:0;
 }
 
-#btnSair{
-  padding:14px 32px;
-  border-radius:50px;
-  border:1px solid rgba(255,255,255,0.3);
-  background:rgba(0,0,0,0.4);
-  backdrop-filter:blur(12px);
-  color:#fff;
-  font-size:16px;
-  cursor:pointer;
-  transition:.3s;
-}
-
-#btnSair:hover{
-  background:rgba(255,255,255,0.15);
-}
-
-.menu{
+/* pill sair + avatar */
+.top-actions{
   display:flex;
-  gap:35px;
-  margin-bottom:60px;
+  gap:12px;
+  align-items:center;
+}
+
+.btn-pill{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 18px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.18);
+  background:rgba(0,0,0,0.25);
+  backdrop-filter:blur(12px);
+  cursor:pointer;
+  color:#fff;
+  font-weight:700;
+  transition:.25s ease;
+}
+
+.btn-pill:hover{
+  transform:translateY(-1px);
+  background:rgba(255,255,255,0.12);
+}
+
+.avatar{
+  width:44px;
+  height:44px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.18);
+  background:rgba(0,0,0,0.25);
+  backdrop-filter:blur(12px);
+  display:grid;
+  place-items:center;
+  font-size:20px;
+}
+
+/* ===== MENU ===== */
+.menu{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+  margin:18px 0 18px;
 }
 
 .menu button{
-  flex:1;
-  padding:22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  padding:16px 18px;
   border:none;
-  border-radius:20px;
-  font-size:18px;
-  font-weight:700;
+  border-radius:16px;
   cursor:pointer;
   color:#fff;
-  background:linear-gradient(135deg,#1e88e5,#0d47a1);
-  box-shadow:0 12px 30px rgba(0,0,0,0.6);
-  transition:.3s;
+  font-weight:800;
+  font-size:16px;
+  background:linear-gradient(135deg,#1e88e5,#1565c0);
+  box-shadow:0 10px 26px rgba(0,0,0,0.45);
+  transition:.25s ease;
 }
 
 .menu button:hover{
-  transform:translateY(-8px);
-  box-shadow:0 18px 40px rgba(0,0,0,0.8);
+  transform:translateY(-3px);
+  box-shadow:0 16px 34px rgba(0,0,0,0.55);
 }
 
+/* ícones do menu */
+.icon{
+  width:20px;
+  height:20px;
+  display:inline-block;
+}
+.icon svg{ width:20px; height:20px; fill:#fff; opacity:.95; }
+
+/* ===== CARDS (GLASS) ===== */
 .dashboard{
   display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:45px;
+  grid-template-columns:repeat(2, 1fr);
+  gap:18px;
 }
 
 .card{
-  background:linear-gradient(145deg,rgba(20,25,40,0.85),rgba(10,15,30,0.85));
-  backdrop-filter:blur(18px);
-  padding:35px;
-  border-radius:28px;
-  box-shadow:0 25px 60px rgba(0,0,0,0.7);
-  transition:.3s;
-}
-
-.card:hover{
-  transform:translateY(-8px);
-}
-
-.card-grande{
-  grid-column:1 / span 2;
+  background:rgba(0,0,0,0.22);
+  border:1px solid rgba(255,255,255,0.14);
+  border-radius:18px;
+  padding:18px;
+  backdrop-filter:blur(14px);
+  box-shadow:0 14px 36px rgba(0,0,0,0.40);
 }
 
 .card h2{
-  font-size:28px;
-  margin-bottom:25px;
-  font-weight:700;
+  margin:0 0 10px;
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:.2px;
 }
 
-canvas{
-  max-height:380px;
+/* ===== STATUS CARD GRANDE ===== */
+.card--wide{
+  grid-column:span 2;
+  padding:18px 18px 10px;
 }
 
+.status-wrap{
+  display:grid;
+  grid-template-columns: 1.2fr .8fr;
+  gap:12px;
+  align-items:center;
+}
+
+.legend{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:6px 8px;
+}
+
+.legend-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:18px;
+  font-weight:800;
+  opacity:.95;
+}
+
+.dot{
+  width:14px;
+  height:14px;
+  border-radius:4px;
+  display:inline-block;
+  box-shadow:0 0 0 2px rgba(255,255,255,0.08);
+}
+
+.dot.blue{ background:#2196f3; }
+.dot.orange{ background:#ff9800; }
+.dot.green{ background:#4caf50; }
+
+/* ===== RESUMO ===== */
 .resumo{
   display:flex;
   justify-content:space-between;
-  margin-top:18px;
-  font-size:20px;
-  font-weight:700;
+  margin-top:10px;
+  font-size:18px;
+  font-weight:900;
 }
 
-#valorTotal,
-#ticketMedio{
-  color:#4caf50;
+#valorTotal, #ticketMedio{
+  color:#79ff9a;
 }
 
-@media(max-width:1100px){
-  .dashboard{
-    grid-template-columns:1fr;
-  }
+/* canvas maior e responsivo */
+canvas{
+  width:100% !important;
+  max-height:260px;
+}
 
-  .card-grande{
-    grid-column:auto;
-  }
-
-  .menu{
-    flex-direction:column;
-  }
+/* ===== RESPONSIVO ===== */
+@media (max-width:1000px){
+  .menu{ grid-template-columns:1fr 1fr; }
+  .dashboard{ grid-template-columns:1fr; }
+  .card--wide{ grid-column:span 1; }
+  .status-wrap{ grid-template-columns:1fr; }
+  .title{ font-size:32px; }
 }
 </style>
 </head>
@@ -141,32 +226,84 @@ canvas{
 <body>
 <div class="container">
 
-  <div class="topo">
-    <h1>Dashboard Geral</h1>
-    <button id="btnSair">Sair</button>
+  <!-- TOPO -->
+  <div class="topbar">
+    <h1 class="title">Dashboard Geral</h1>
+
+    <div class="top-actions">
+      <button id="btnSair" class="btn-pill" type="button" aria-label="Sair">
+        <!-- ícone (wifi/exit estilizado simples) -->
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M10 17v-2h4v2h-4Zm-6.4 1.6 1.4-1.4A9.97 9.97 0 0 1 12 14c2.61 0 5.01 1 6.99 2.8l1.41 1.41-1.41 1.41-1.41-1.41A7.97 7.97 0 0 0 12 16c-2.09 0-4.02.8-5.58 2.2l-1.42 1.4-1.4-1.4Zm-1.6-4 1.4-1.4A14 14 0 0 1 12 10c3.7 0 7.1 1.4 9.6 3.6l1.4 1.4-1.4 1.4-1.4-1.4A12 12 0 0 0 12 12c-3.13 0-6.02 1.18-8.2 3.2l-1.4 1.4-1.4-1.4Zm-2-4 1.4-1.4A18 18 0 0 1 12 6c4.84 0 9.26 1.82 12.6 5.2l1.4 1.4-1.4 1.4-1.4-1.4A16 16 0 0 0 12 8C7.58 8 3.56 9.64 0.6 12.6l-1.4 1.4-1.4-1.4Z" />
+          </svg>
+        </span>
+        Sair
+      </button>
+
+      <div class="avatar" title="Jader">👤</div>
+    </div>
   </div>
 
+  <!-- MENU -->
   <div class="menu">
-    <button onclick="location.href='gerenciar-pedidos.html'">Gerenciar Pedidos</button>
-    <button>Financeiro</button>
-    <button>Indicadores</button>
-    <button>Estoque</button>
+    <button onclick="location.href='gerenciar-pedidos.html'">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M7 2h10v2H7V2Zm-2 4h14v14H5V6Zm2 2v10h10V8H7Zm2 2h6v2H9v-2Zm0 4h6v2H9v-2Z"/></svg>
+      </span>
+      Gerenciar Pedidos
+    </button>
+
+    <button type="button">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3V3Zm2 2v14h14V5H5Zm2 10h2v2H7v-2Zm0-4h2v3H7v-3Zm4 2h2v4h-2v-4Zm4-6h2v10h-2V7Z"/></svg>
+      </span>
+      Financeiro
+    </button>
+
+    <button type="button">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 7-7 1 1-8 8-4-4-5 5H3Zm0 4h18v2H3v-2Z"/></svg>
+      </span>
+      Indicadores
+    </button>
+
+    <button type="button">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16v4H4V4Zm0 6h16v10H4V10Zm2 2v6h12v-6H6Z"/></svg>
+      </span>
+      Estoque
+    </button>
   </div>
 
+  <!-- DASHBOARD -->
   <div class="dashboard">
 
-    <!-- CARD GRANDE STATUS -->
-    <div class="card card-grande">
+    <!-- STATUS (GRANDE) -->
+    <div class="card card--wide">
       <h2>Status das Vendas</h2>
-      <canvas id="statusChart"></canvas>
+
+      <div class="status-wrap">
+        <div>
+          <canvas id="statusChart"></canvas>
+        </div>
+
+        <!-- legenda fixa (igual da imagem) -->
+        <div class="legend">
+          <div class="legend-item"><span class="dot blue"></span> Ativa</div>
+          <div class="legend-item"><span class="dot orange"></span> Produção</div>
+          <div class="legend-item"><span class="dot green"></span> Entregue</div>
+        </div>
+      </div>
     </div>
 
-    <!-- LINHA 2 -->
+    <!-- FORMAS DE PAGAMENTO -->
     <div class="card">
       <h2>Formas de Pagamento</h2>
       <canvas id="pagamentoChart"></canvas>
     </div>
 
+    <!-- QUANTIDADE -->
     <div class="card">
       <h2>Quantidade de Vendas</h2>
       <canvas id="quantidadeChart"></canvas>
@@ -176,7 +313,7 @@ canvas{
       </div>
     </div>
 
-    <!-- LINHA 3 -->
+    <!-- VALORES -->
     <div class="card">
       <h2>Valores de Vendas</h2>
       <canvas id="valoresChart"></canvas>
@@ -194,6 +331,7 @@ canvas{
 
 </div>
 
+<!-- ✅ SCRIPT: mantido (mesma lógica) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -251,7 +389,6 @@ async function carregarDashboard() {
       somaValores += valor;
       totalVendas++;
     }
-    
   });
 
   document.getElementById("totalVendas").textContent = totalVendas;
@@ -261,66 +398,57 @@ async function carregarDashboard() {
     totalVendas ? (somaValores/totalVendas).toLocaleString("pt-BR",{style:"currency",currency:"BRL"}) : "R$ 0,00";
 
   new Chart(document.getElementById("statusChart"),{
-  type:"doughnut",
-  data:{
-    labels:["Ativa","Produção","Entregue"],
-    datasets:[{
-      data:[
-        status.ativa,
-        status.producao,
-        status.entregue
-      ],
-      backgroundColor:[
-        "#2196f3",   // azul
-        "#ff9800",   // laranja
-        "#4caf50"    // verde
-      ]
-    }]
-  }
-});
-
-  new 
-    Chart(document.getElementById("pagamentoChart"),{
-    type:"pie",
-    data:{labels:Object.keys(pagamentos),datasets:[{data:Object.values(pagamentos)}]}
+    type:"doughnut",
+    data:{
+      labels:["Ativa","Produção","Entregue"],
+      datasets:[{
+        data:[ status.ativa, status.producao, status.entregue ],
+        backgroundColor:[ "#2196f3", "#ff9800", "#4caf50" ]
+      }]
+    }
   });
 
-   new Chart(document.getElementById("quantidadeChart"),{
-  type:"bar",
-  data:{
-    labels:Object.keys(vendasPorMes),
-    datasets:[{
-      label:"Vendas",
-      data:Object.values(vendasPorMes),
-      backgroundColor:"#2196f3"
-    }]
-  }
-});
+  new Chart(document.getElementById("pagamentoChart"),{
+    type:"pie",
+    data:{
+      labels:Object.keys(pagamentos),
+      datasets:[{ data:Object.values(pagamentos) }]
+    }
+  });
 
-let valoresPorMes = {};
+  new Chart(document.getElementById("quantidadeChart"),{
+    type:"bar",
+    data:{
+      labels:Object.keys(vendasPorMes),
+      datasets:[{
+        label:"Vendas",
+        data:Object.values(vendasPorMes),
+        backgroundColor:"#2196f3"
+      }]
+    }
+  });
 
-snapshot.forEach(doc => {
-  const v = doc.data();
-  const mes = v.dataPedido?.slice(0,7);
-  const valor = Number(v.valor || v.total || v.produto?.total || 0);
+  let valoresPorMes = {};
+  snapshot.forEach(doc => {
+    const v = doc.data();
+    const mes = v.dataPedido?.slice(0,7);
+    const valor = Number(v.valor || v.total || v.produto?.total || 0);
+    if (mes && valor > 0) {
+      valoresPorMes[mes] = (valoresPorMes[mes] || 0) + valor;
+    }
+  });
 
-  if (mes && valor > 0) {
-    valoresPorMes[mes] = (valoresPorMes[mes] || 0) + valor;
-  }
-});
-
-new Chart(document.getElementById("valoresChart"),{
-  type:"bar",
-  data:{
-    labels:Object.keys(valoresPorMes),
-   datasets:[{
-  label:"Valor",
-  data:Object.values(valoresPorMes),
-  backgroundColor:"#4caf50"
-}]
-  }
-});
-  
+  new Chart(document.getElementById("valoresChart"),{
+    type:"bar",
+    data:{
+      labels:Object.keys(valoresPorMes),
+      datasets:[{
+        label:"Valor",
+        data:Object.values(valoresPorMes),
+        backgroundColor:"#4caf50"
+      }]
+    }
+  });
 }
 </script>
 
