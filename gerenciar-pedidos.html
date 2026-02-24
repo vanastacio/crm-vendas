@@ -147,22 +147,22 @@ body {
 </div>
 
 <div class="filtro-container">
+
   <select id="tipoFiltro" class="filtro-select">
-    <option value="">Selecione o filtro</option>
+    <option value="">Filtrar por...</option>
     <option value="pedido">Número do Pedido</option>
     <option value="cliente">Cliente</option>
     <option value="vendedor">Vendedor</option>
-    <option value="data">Data</option>
+    <option value="data">Data do Pedido</option>
   </select>
 
   <input 
-    type="text"
-    id="valorFiltro"
+    id="campoFiltro"
     class="filtro-input"
-    placeholder="Digite o valor..."
+    placeholder="Selecione um filtro acima"
+    style="display:none;"
   >
 
-  <button class="btn-filtrar" onclick="aplicarFiltro()">Filtrar</button>
 </div>
 
 <div id="pendentes" class="cards-container"></div>
@@ -311,39 +311,64 @@ window.expandirCard=(card)=>{
 };
 
 /* ===== FILTRO INTELIGENTE ===== */
-window.aplicarFiltro = () => {
+const tipoFiltro = document.getElementById("tipoFiltro");
+const campoFiltro = document.getElementById("campoFiltro");
 
-  const tipo = document.getElementById("tipoFiltro").value;
-  const valor = document.getElementById("valorFiltro").value.toLowerCase();
+tipoFiltro.onchange = () => {
 
-  if(!tipo || !valor){
+  campoFiltro.value = "";
+
+  if(!tipoFiltro.value){
+    campoFiltro.style.display = "none";
+    renderizarCards(vendasCache);
+    return;
+  }
+
+  campoFiltro.style.display = "inline-block";
+
+  if(tipoFiltro.value === "data"){
+    campoFiltro.type = "date";
+  } 
+  else if(tipoFiltro.value === "pedido"){
+    campoFiltro.type = "number";
+  }
+  else {
+    campoFiltro.type = "text";
+  }
+};
+
+campoFiltro.oninput = () => {
+
+  const valor = campoFiltro.value.toLowerCase();
+
+  if(!valor){
     renderizarCards(vendasCache);
     return;
   }
 
   let filtrado = [];
 
-  if(tipo === "pedido"){
+  if(tipoFiltro.value === "pedido"){
     filtrado = vendasCache.filter(v =>
-      v.pedido?.toLowerCase() === valor
+      v.pedido === valor
     );
   }
 
-  if(tipo === "cliente"){
+  if(tipoFiltro.value === "cliente"){
     filtrado = vendasCache.filter(v =>
       v.cliente?.nome?.toLowerCase().includes(valor)
     );
   }
 
-  if(tipo === "vendedor"){
+  if(tipoFiltro.value === "vendedor"){
     filtrado = vendasCache.filter(v =>
       v.vendedorNome?.toLowerCase().includes(valor)
     );
   }
 
-  if(tipo === "data"){
+  if(tipoFiltro.value === "data"){
     filtrado = vendasCache.filter(v =>
-      v.dataPedido?.toLowerCase() === valor
+      v.dataPedido === valor
     );
   }
 
