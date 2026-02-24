@@ -251,16 +251,17 @@ async function carregarDashboard() {
     data:{labels:Object.keys(pagamentos),datasets:[{data:Object.values(pagamentos)}]}
   });
 
-  new 
-    Chart(document.getElementById("quantidadeChart"),{
-    type:"bar",
-    data:{labels:Object.keys(vendasPorMes),
-          datasets:[{
-  label:"Vendas",
-  data:Object.values(vendasPorMes),
-  backgroundColor:"#2196f3"
-}]
-  });
+   new Chart(document.getElementById("quantidadeChart"),{
+  type:"bar",
+  data:{
+    labels:Object.keys(vendasPorMes),
+    datasets:[{
+      label:"Vendas",
+      data:Object.values(vendasPorMes),
+      backgroundColor:"#2196f3"
+    }]
+  }
+});
 
 let valoresPorMes = {};
 
