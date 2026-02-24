@@ -112,18 +112,14 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// Só verifica login depois que o Firebase terminar de restaurar sessão
-setTimeout(() => {
-  const user = auth.currentUser;
-
+onAuthStateChanged(auth, (user) => {
   if (!user) {
-    alert("Você precisa estar logado.");
-    window.location.href = "login.html";
-    return;
+    console.log("Usuário não autenticado.");
+    return; // não redireciona
   }
 
   carregarPedidos();
-}, 500);
+});
   
 const pendentesDiv = document.getElementById("pendentes");
 
