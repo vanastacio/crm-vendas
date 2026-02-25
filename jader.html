@@ -17,7 +17,7 @@ body{
   color:#fff;
 }
 
-/* leve overlay pra dar contraste sem escurecer demais */
+/* overlay leve (igual vibe da imagem) */
 body::before{
   content:"";
   position:fixed;
@@ -25,15 +25,15 @@ body::before{
   background:
     radial-gradient(circle at 30% 10%, rgba(33,150,243,0.20), transparent 45%),
     radial-gradient(circle at 80% 30%, rgba(76,175,80,0.12), transparent 45%),
-    rgba(0,0,0,0.25);
+    rgba(0,0,0,0.18);
   z-index:-1;
 }
 
 /* ===== LAYOUT ===== */
 .container{
-  max-width:1200px;
+  max-width:1280px;
   margin:auto;
-  padding:32px 22px;
+  padding:34px 26px;
 }
 
 /* ===== TOPO ===== */
@@ -42,12 +42,12 @@ body::before{
   align-items:center;
   justify-content:space-between;
   gap:14px;
-  margin-bottom:18px;
+  margin-bottom:14px;
 }
 
 .title{
-  font-size:40px;
-  font-weight:800;
+  font-size:44px;
+  font-weight:900;
   letter-spacing:.3px;
   margin:0;
 }
@@ -70,7 +70,7 @@ body::before{
   backdrop-filter:blur(12px);
   cursor:pointer;
   color:#fff;
-  font-weight:700;
+  font-weight:800;
   transition:.25s ease;
 }
 
@@ -91,12 +91,12 @@ body::before{
   font-size:20px;
 }
 
-/* ===== MENU ===== */
+/* ===== MENU (3 botões como na imagem) ===== */
 .menu{
   display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:16px;
-  margin:18px 0 18px;
+  grid-template-columns:repeat(3,1fr);
+  gap:18px;
+  margin:14px 0 18px;
 }
 
 .menu button{
@@ -104,15 +104,15 @@ body::before{
   align-items:center;
   justify-content:center;
   gap:12px;
-  padding:16px 18px;
+  padding:18px 18px;
   border:none;
-  border-radius:16px;
+  border-radius:14px;
   cursor:pointer;
   color:#fff;
-  font-weight:800;
+  font-weight:900;
   font-size:16px;
-  background:linear-gradient(135deg,#1e88e5,#1565c0);
-  box-shadow:0 10px 26px rgba(0,0,0,0.45);
+  background:linear-gradient(135deg,#0d63c9,#0b4da6);
+  box-shadow:0 10px 24px rgba(0,0,0,0.45);
   transition:.25s ease;
 }
 
@@ -121,7 +121,6 @@ body::before{
   box-shadow:0 16px 34px rgba(0,0,0,0.55);
 }
 
-/* ícones do menu */
 .icon{
   width:20px;
   height:20px;
@@ -129,20 +128,21 @@ body::before{
 }
 .icon svg{ width:20px; height:20px; fill:#fff; opacity:.95; }
 
-/* ===== CARDS (GLASS) ===== */
+/* ===== DASHBOARD GRID ===== */
 .dashboard{
   display:grid;
   grid-template-columns:repeat(2, 1fr);
   gap:18px;
 }
 
+/* ===== CARDS (GLASS) ===== */
 .card{
-  background:rgba(0,0,0,0.22);
-  border:1px solid rgba(255,255,255,0.14);
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.16);
   border-radius:18px;
   padding:18px;
   backdrop-filter:blur(14px);
-  box-shadow:0 14px 36px rgba(0,0,0,0.40);
+  box-shadow: 0 18px 46px rgba(0,0,0,0.45);
 }
 
 .card h2{
@@ -152,10 +152,10 @@ body::before{
   letter-spacing:.2px;
 }
 
-/* ===== STATUS CARD GRANDE ===== */
+/* card de status bem horizontal (igual imagem) */
 .card--wide{
   grid-column:span 2;
-  padding:18px 18px 10px;
+  padding:18px;
 }
 
 .status-wrap{
@@ -177,7 +177,7 @@ body::before{
   align-items:center;
   gap:10px;
   font-size:18px;
-  font-weight:800;
+  font-weight:900;
   opacity:.95;
 }
 
@@ -206,9 +206,19 @@ body::before{
   color:#79ff9a;
 }
 
-/* canvas maior e responsivo */
+/* canvas */
 canvas{
   width:100% !important;
+  max-height:240px;
+}
+
+/* cards de baixo mais baixos (igual imagem) */
+.dashboard > .card:not(.card--wide){
+  min-height:320px;
+}
+
+/* status maior um pouco */
+.card--wide canvas{
   max-height:260px;
 }
 
@@ -219,58 +229,6 @@ canvas{
   .card--wide{ grid-column:span 1; }
   .status-wrap{ grid-template-columns:1fr; }
   .title{ font-size:32px; }
-}
-  /* ===== REFINO PRA FICAR IGUAL À IMAGEM ===== */
-.container{
-  max-width: 1280px;          /* mais “cara de dashboard” */
-  padding: 34px 26px;
-}
-
-.title{
-  font-size: 44px;
-  font-weight: 900;
-}
-
-.menu{
-  gap: 18px;
-  margin-top: 14px;
-}
-
-.menu button{
-  border-radius: 14px;
-  padding: 18px 18px;
-  font-size: 16px;
-  background: linear-gradient(135deg,#0d63c9,#0b4da6);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.45);
-}
-
-.card{
-  background: rgba(0,0,0,0.18);         /* mais transparente */
-  border: 1px solid rgba(255,255,255,0.16);
-  box-shadow: 0 18px 46px rgba(0,0,0,0.45);
-}
-
-.card--wide{
-  padding: 18px;
-}
-
-.card h2{
-  font-size: 22px;
-  font-weight: 900;
-}
-
-canvas{
-  max-height: 240px;  /* mais parecido com a imagem */
-}
-
-/* deixa os cards de baixo mais “baixos” como na imagem */
-.dashboard > .card:not(.card--wide){
-  min-height: 320px;
-}
-
-/* o card do status fica bem “horizontal” */
-.card--wide canvas{
-  max-height: 260px;
 }
 </style>
 </head>
@@ -284,7 +242,6 @@ canvas{
 
     <div class="top-actions">
       <button id="btnSair" class="btn-pill" type="button" aria-label="Sair">
-        <!-- ícone (wifi/exit estilizado simples) -->
         <span class="icon" aria-hidden="true">
           <svg viewBox="0 0 24 24">
             <path d="M10 17v-2h4v2h-4Zm-6.4 1.6 1.4-1.4A9.97 9.97 0 0 1 12 14c2.61 0 5.01 1 6.99 2.8l1.41 1.41-1.41 1.41-1.41-1.41A7.97 7.97 0 0 0 12 16c-2.09 0-4.02.8-5.58 2.2l-1.42 1.4-1.4-1.4Zm-1.6-4 1.4-1.4A14 14 0 0 1 12 10c3.7 0 7.1 1.4 9.6 3.6l1.4 1.4-1.4 1.4-1.4-1.4A12 12 0 0 0 12 12c-3.13 0-6.02 1.18-8.2 3.2l-1.4 1.4-1.4-1.4Zm-2-4 1.4-1.4A18 18 0 0 1 12 6c4.84 0 9.26 1.82 12.6 5.2l1.4 1.4-1.4 1.4-1.4-1.4A16 16 0 0 0 12 8C7.58 8 3.56 9.64 0.6 12.6l-1.4 1.4-1.4-1.4Z" />
@@ -319,13 +276,6 @@ canvas{
       </span>
       Indicadores
     </button>
-
-    <button type="button">
-      <span class="icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M4 4h16v4H4V4Zm0 6h16v10H4V10Zm2 2v6h12v-6H6Z"/></svg>
-      </span>
-      Estoque
-    </button>
   </div>
 
   <!-- DASHBOARD -->
@@ -340,7 +290,6 @@ canvas{
           <canvas id="statusChart"></canvas>
         </div>
 
-        <!-- legenda fixa (igual da imagem) -->
         <div class="legend">
           <div class="legend-item"><span class="dot blue"></span> Ativa</div>
           <div class="legend-item"><span class="dot orange"></span> Produção</div>
@@ -349,13 +298,11 @@ canvas{
       </div>
     </div>
 
-    <!-- FORMAS DE PAGAMENTO -->
     <div class="card">
       <h2>Formas de Pagamento</h2>
       <canvas id="pagamentoChart"></canvas>
     </div>
 
-    <!-- QUANTIDADE -->
     <div class="card">
       <h2>Quantidade de Vendas</h2>
       <canvas id="quantidadeChart"></canvas>
@@ -365,7 +312,6 @@ canvas{
       </div>
     </div>
 
-    <!-- VALORES -->
     <div class="card">
       <h2>Valores de Vendas</h2>
       <canvas id="valoresChart"></canvas>
@@ -383,7 +329,6 @@ canvas{
 
 </div>
 
-<!-- ✅ SCRIPT: mantido (mesma lógica) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -402,9 +347,18 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// visual (Chart.js)
+Chart.defaults.color = "rgba(255,255,255,0.85)";
+Chart.defaults.font.family = "'Segoe UI', Arial, sans-serif";
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+Chart.defaults.plugins.legend.labels.boxWidth = 10;
+
 // 🔐 Proteção de acesso
 onAuthStateChanged(auth, user => {
-  if (!user) location.href = "login.html";
+  if (!user) {
+    location.href = "login.html";
+    return;
+  }
   carregarDashboard();
 });
 
@@ -417,125 +371,129 @@ document.getElementById("btnSair").onclick = async () => {
 async function carregarDashboard() {
   const snapshot = await getDocs(collection(db, "vendas"));
 
+  // ✅ status certo (sem pendente/aprovado/reprovado)
   let status = { ativa:0, producao:0, entregue:0 };
+
   let pagamentos = {};
   let vendasPorMes = {};
+  let valoresPorMes = {}; // ✅ AGORA EXISTE ANTES DO GRÁFICO
+
   let totalVendas = 0;
   let somaValores = 0;
 
   snapshot.forEach(doc => {
     const v = doc.data();
 
+    // status
     if (status.hasOwnProperty(v.status)) {
       status[v.status]++;
     }
 
+    // pagamento
     const pg = v.pagamento?.tipo || v.pagamento;
     if (pg) pagamentos[pg] = (pagamentos[pg] || 0) + 1;
 
+    // vendas por mês
     const mes = v.dataPedido?.slice(0,7);
     if (mes) vendasPorMes[mes] = (vendasPorMes[mes] || 0) + 1;
 
+    // valor total
     const valor = Number(v.valor || v.total || v.produto?.total || 0);
     if (valor > 0) {
       somaValores += valor;
       totalVendas++;
+
+      // ✅ valores por mês
+      if (mes) valoresPorMes[mes] = (valoresPorMes[mes] || 0) + valor;
     }
   });
 
   document.getElementById("totalVendas").textContent = totalVendas;
   document.getElementById("valorTotal").textContent =
     somaValores.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+
   document.getElementById("ticketMedio").textContent =
     totalVendas ? (somaValores/totalVendas).toLocaleString("pt-BR",{style:"currency",currency:"BRL"}) : "R$ 0,00";
 
-// ===== CHART DEFAULTS (visual) =====
-Chart.defaults.color = "rgba(255,255,255,0.85)";
-Chart.defaults.font.family = "'Segoe UI', Arial, sans-serif";
-Chart.defaults.plugins.legend.labels.usePointStyle = true;
-Chart.defaults.plugins.legend.labels.boxWidth = 10;
-
-// ===== STATUS (sem legenda padrão, porque você já tem legenda fixa no HTML) =====
-new Chart(document.getElementById("statusChart"),{
-  type:"doughnut",
-  data:{
-    labels:["Ativa","Produção","Entregue"],
-    datasets:[{
-      data:[ status.ativa, status.producao, status.entregue ],
-      backgroundColor:[ "#2196f3", "#ff9800", "#4caf50" ],
-      borderColor: "rgba(255,255,255,0.75)",
-      borderWidth: 2,
-      hoverOffset: 6
-    }]
-  },
-  options:{
-    cutout: "68%",
-    plugins:{
-      legend:{ display:false },  // importante!
-      tooltip:{ enabled:true }
-    }
-  }
-});
-
-// ===== PAGAMENTO =====
-new Chart(document.getElementById("pagamentoChart"),{
-  type:"pie",
-  data:{
-    labels:Object.keys(pagamentos),
-    datasets:[{
-      data:Object.values(pagamentos),
-      borderColor: "rgba(255,255,255,0.75)",
-      borderWidth: 2
-    }]
-  },
-  options:{
-    plugins:{
-      legend:{ position:"top" }
-    }
-  }
-});
-
-// ===== QUANTIDADE =====
-new Chart(document.getElementById("quantidadeChart"),{
-  type:"bar",
-  data:{
-    labels:Object.keys(vendasPorMes),
-    datasets:[{
-      label:"Vendas",
-      data:Object.values(vendasPorMes),
-      backgroundColor:"rgba(33,150,243,0.85)",
-      borderRadius: 10
-    }]
-  },
-  options:{
-    scales:{
-      x:{ grid:{ display:false } },
-      y:{ grid:{ color:"rgba(255,255,255,0.08)" }, ticks:{ precision:0 } }
+  // ===== STATUS (sem legenda padrão) =====
+  new Chart(document.getElementById("statusChart"),{
+    type:"doughnut",
+    data:{
+      labels:["Ativa","Produção","Entregue"],
+      datasets:[{
+        data:[ status.ativa, status.producao, status.entregue ],
+        backgroundColor:[ "#2196f3", "#ff9800", "#4caf50" ],
+        borderColor: "rgba(255,255,255,0.75)",
+        borderWidth: 2,
+        hoverOffset: 6
+      }]
     },
-    plugins:{ legend:{ display:false } }
-  }
-});
+    options:{
+      cutout: "68%",
+      plugins:{
+        legend:{ display:false },
+        tooltip:{ enabled:true }
+      }
+    }
+  });
 
-// ===== VALORES =====
-new Chart(document.getElementById("valoresChart"),{
-  type:"bar",
-  data:{
-    labels:Object.keys(valoresPorMes),
-    datasets:[{
-      label:"Valor",
-      data:Object.values(valoresPorMes),
-      backgroundColor:"rgba(76,175,80,0.85)",
-      borderRadius: 10
-    }]
-  },
-  options:{
-    scales:{
-      x:{ grid:{ display:false } },
-      y:{ grid:{ color:"rgba(255,255,255,0.08)" } }
+  // ===== PAGAMENTO =====
+  new Chart(document.getElementById("pagamentoChart"),{
+    type:"pie",
+    data:{
+      labels:Object.keys(pagamentos),
+      datasets:[{
+        data:Object.values(pagamentos),
+        borderColor: "rgba(255,255,255,0.75)",
+        borderWidth: 2
+      }]
     },
-    plugins:{ legend:{ display:false } }
-  }
-});
+    options:{
+      plugins:{ legend:{ position:"top" } }
+    }
+  });
+
+  // ===== QUANTIDADE =====
+  new Chart(document.getElementById("quantidadeChart"),{
+    type:"bar",
+    data:{
+      labels:Object.keys(vendasPorMes),
+      datasets:[{
+        label:"Vendas",
+        data:Object.values(vendasPorMes),
+        backgroundColor:"rgba(33,150,243,0.85)",
+        borderRadius: 10
+      }]
+    },
+    options:{
+      scales:{
+        x:{ grid:{ display:false } },
+        y:{ grid:{ color:"rgba(255,255,255,0.08)" }, ticks:{ precision:0 } }
+      },
+      plugins:{ legend:{ display:false } }
+    }
+  });
+
+  // ===== VALORES =====
+  new Chart(document.getElementById("valoresChart"),{
+    type:"bar",
+    data:{
+      labels:Object.keys(valoresPorMes),
+      datasets:[{
+        label:"Valor",
+        data:Object.values(valoresPorMes),
+        backgroundColor:"rgba(76,175,80,0.85)",
+        borderRadius: 10
+      }]
+    },
+    options:{
+      scales:{
+        x:{ grid:{ display:false } },
+        y:{ grid:{ color:"rgba(255,255,255,0.08)" } }
+      },
+      plugins:{ legend:{ display:false } }
+    }
+  });
 }
 </script>
 
