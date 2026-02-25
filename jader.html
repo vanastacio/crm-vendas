@@ -29,6 +29,7 @@ body::before{
   z-index:-1;
 }
 
+/* ===== LAYOUT ===== */
 .container{
   max-width:1280px;
   margin:auto;
@@ -68,7 +69,7 @@ body::before{
   backdrop-filter:blur(12px);
   cursor:pointer;
   color:#fff;
-  font-weight:900;
+  font-weight:800;
   transition:.25s ease;
 }
 
@@ -186,6 +187,7 @@ body::before{
   display:inline-block;
   box-shadow:0 0 0 2px rgba(255,255,255,0.08);
 }
+
 .dot.blue{ background:#2196f3; }
 .dot.orange{ background:#ff9800; }
 .dot.green{ background:#4caf50; }
@@ -199,14 +201,15 @@ body::before{
   font-weight:900;
 }
 
-.valor-verde{
+#valorTotal, #ticketMedio{
   color:#79ff9a;
 }
 
 /* canvas */
 canvas{
   width:100% !important;
-  max-height:260px;
+  height:240px !important;      /* fixa altura pra ficar como o mock */
+  max-height:240px;
 }
 
 /* cards inferiores mais “baixos” como no mock */
@@ -271,49 +274,59 @@ canvas{
   </div>
 
   <!-- DASHBOARD -->
-<div class="dashboard">
+  <div class="dashboard">
 
-  <div class="card card--wide">
-    <h2>Status das Vendas</h2>
-    <div class="status-wrap">
-      <canvas id="statusChart"></canvas>
-      <div class="legend">
-        <div class="legend-item"><span class="dot blue"></span> Ativa</div>
-        <div class="legend-item"><span class="dot orange"></span> Produção</div>
-        <div class="legend-item"><span class="dot green"></span> Entregue</div>
+    <!-- STATUS (CARD GRANDE) -->
+    <div class="card card--wide">
+      <h2>Status das Vendas</h2>
+
+      <div class="status-wrap">
+        <div>
+          <canvas id="statusChart"></canvas>
+        </div>
+
+        <div class="legend">
+          <div class="legend-item"><span class="dot blue"></span> Ativa</div>
+          <div class="legend-item"><span class="dot orange"></span> Produção</div>
+          <div class="legend-item"><span class="dot green"></span> Entregue</div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="card">
-    <h2>Formas de Pagamento</h2>
-    <canvas id="pagamentoChart"></canvas>
-  </div>
+    <!-- FORMAS DE PAGAMENTO -->
+    <div class="card">
+      <h2>Formas de Pagamento</h2>
+      <canvas id="pagamentoChart"></canvas>
+    </div>
 
-  <div class="card">
-    <h2>Quantidade de Vendas</h2>
-    <canvas id="quantidadeChart"></canvas>
-    <div class="resumo">
-      <span>Total:</span>
-      <span id="totalVendas">0</span>
+    <!-- QUANTIDADE -->
+    <div class="card">
+      <h2>Quantidade de Vendas</h2>
+      <canvas id="quantidadeChart"></canvas>
+      <div class="resumo">
+        <span>Total:</span>
+        <span id="totalVendas">0</span>
+      </div>
     </div>
-  </div>
 
-  <div class="card">
-    <h2>Valores de Vendas</h2>
-    <canvas id="valoresChart"></canvas>
-    <div class="resumo">
-      <span>Total Geral:</span>
-      <span id="valorTotal">R$ 0,00</span>
+    <!-- VALORES -->
+    <div class="card">
+      <h2>Valores de Vendas</h2>
+      <canvas id="valoresChart"></canvas>
+      <div class="resumo">
+        <span>Total Geral:</span>
+        <span id="valorTotal">R$ 0,00</span>
+      </div>
+      <div class="resumo">
+        <span>Ticket Médio:</span>
+        <span id="ticketMedio">R$ 0,00</span>
+      </div>
     </div>
-    <div class="resumo">
-      <span>Ticket Médio:</span>
-      <span id="ticketMedio">R$ 0,00</span>
-    </div>
+
   </div>
 
 </div>
-  
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -332,7 +345,20 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 🔐 Proteção de acesso
+let charts = [];
+
+function destroyCharts(){
+  charts.forEach(c => { try { c.destroy(); } catch(e){} });
+  charts = [];
+}
+
+function applyChartDefaults(){
+  Chart.defaults.color = "rgba(255,255,255,0.85)";
+  Chart.defaults.font.family = "'Segoe UI', Arial, sans-serif";
+  Chart.defaults.plugins.legend.labels.usePointStyle = true;
+  Chart.defaults.plugins.legend.labels.boxWidth = 10;
+}
+
 onAuthStateChanged(auth, user => {
   if (!user) {
     location.href = "login.html";
@@ -341,38 +367,42 @@ onAuthStateChanged(auth, user => {
   carregarDashboard();
 });
 
-// 🚪 Logout
 document.getElementById("btnSair").onclick = async () => {
   await signOut(auth);
   location.href = "login.html";
 };
 
-function aplicarDefaultsCharts(){
-  Chart.defaults.color = "rgba(255,255,255,0.85)";
-  Chart.defaults.font.family = "'Segoe UI', Arial, sans-serif";
-  Chart.defaults.plugins.legend.labels.usePointStyle = true;
-  Chart.defaults.plugins.legend.labels.boxWidth = 10;
-}
-
 async function carregarDashboard() {
-  aplicarDefaultsCharts();
+  applyChartDefaults();
+  destroyCharts();
 
   const snapshot = await getDocs(collection(db, "vendas"));
 
-  let status = { ativa:0, producao:0, entregue:0 };
-  let vendasPorMes = {};
-  let valoresPorMes = {};
+  const status = { ativa:0, producao:0, entregue:0 };
+  const pagamentos = {};
+  const vendasPorMes = {};
+  const valoresPorMes = {};
+
   let totalVendas = 0;
   let somaValores = 0;
 
-  snapshot.forEach(docSnap => {
-    const v = docSnap.data();
+  snapshot.forEach(doc => {
+    const v = doc.data();
 
-    if (status.hasOwnProperty(v.status)) status[v.status]++;
+    // status
+    if (v.status && Object.prototype.hasOwnProperty.call(status, v.status)) {
+      status[v.status]++;
+    }
 
+    // pagamento
+    const pg = v.pagamento?.tipo || v.pagamento;
+    if (pg) pagamentos[pg] = (pagamentos[pg] || 0) + 1;
+
+    // mês
     const mes = v.dataPedido?.slice(0,7);
     if (mes) vendasPorMes[mes] = (vendasPorMes[mes] || 0) + 1;
 
+    // valor
     const valor = Number(v.valor || v.total || v.produto?.total || 0);
     if (valor > 0) {
       somaValores += valor;
@@ -381,22 +411,20 @@ async function carregarDashboard() {
     }
   });
 
-  const valorTotalFmt = somaValores.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-  const ticketFmt = totalVendas
-    ? (somaValores/totalVendas).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
-    : "R$ 0,00";
+  // textos (blindado)
+  const elTotal = document.getElementById("totalVendas");
+  if (elTotal) elTotal.textContent = totalVendas;
 
-  // textos (linha 1 e linha 2)
-  document.getElementById("totalVendas1").textContent = totalVendas;
-  document.getElementById("valorTotal1").textContent = valorTotalFmt;
-  document.getElementById("ticketMedio1").textContent = ticketFmt;
+  const elValor = document.getElementById("valorTotal");
+  if (elValor) elValor.textContent =
+    somaValores.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 
-  document.getElementById("totalVendas2").textContent = totalVendas;
-  document.getElementById("valorTotal2").textContent = valorTotalFmt;
-  document.getElementById("ticketMedio2").textContent = ticketFmt;
+  const elTicket = document.getElementById("ticketMedio");
+  if (elTicket) elTicket.textContent =
+    totalVendas ? (somaValores/totalVendas).toLocaleString("pt-BR",{style:"currency",currency:"BRL"}) : "R$ 0,00";
 
-  // STATUS (sem legenda padrão; a legenda é fixa no HTML)
-  new Chart(document.getElementById("statusChart"),{
+  // STATUS (sem legenda padrão)
+  charts.push(new Chart(document.getElementById("statusChart"),{
     type:"doughnut",
     data:{
       labels:["Ativa","Produção","Entregue"],
@@ -409,13 +437,33 @@ async function carregarDashboard() {
       }]
     },
     options:{
+      responsive:true,
+      maintainAspectRatio:false,
       cutout:"68%",
       plugins:{ legend:{ display:false } }
     }
-  });
+  }));
 
-  // QUANTIDADE (mesmo dataset nos 2 gráficos)
-  const quantidadeCfg = {
+  // PAGAMENTO
+  charts.push(new Chart(document.getElementById("pagamentoChart"),{
+    type:"pie",
+    data:{
+      labels:Object.keys(pagamentos),
+      datasets:[{
+        data:Object.values(pagamentos),
+        borderColor:"rgba(255,255,255,0.75)",
+        borderWidth:2
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{ legend:{ position:"top" } }
+    }
+  }));
+
+  // QUANTIDADE
+  charts.push(new Chart(document.getElementById("quantidadeChart"),{
     type:"bar",
     data:{
       labels:Object.keys(vendasPorMes),
@@ -427,18 +475,18 @@ async function carregarDashboard() {
       }]
     },
     options:{
+      responsive:true,
+      maintainAspectRatio:false,
       scales:{
         x:{ grid:{ display:false } },
         y:{ grid:{ color:"rgba(255,255,255,0.08)" }, ticks:{ precision:0 } }
       },
       plugins:{ legend:{ display:false } }
     }
-  };
-  new Chart(document.getElementById("quantidadeChart1"), quantidadeCfg);
-  new Chart(document.getElementById("quantidadeChart2"), quantidadeCfg);
+  }));
 
-  // VALORES (mesmo dataset nos 2 gráficos)
-  const valoresCfg = {
+  // VALORES
+  charts.push(new Chart(document.getElementById("valoresChart"),{
     type:"bar",
     data:{
       labels:Object.keys(valoresPorMes),
@@ -450,15 +498,15 @@ async function carregarDashboard() {
       }]
     },
     options:{
+      responsive:true,
+      maintainAspectRatio:false,
       scales:{
         x:{ grid:{ display:false } },
         y:{ grid:{ color:"rgba(255,255,255,0.08)" } }
       },
       plugins:{ legend:{ display:false } }
     }
-  };
-  new Chart(document.getElementById("valoresChart1"), valoresCfg);
-  new Chart(document.getElementById("valoresChart2"), valoresCfg);
+  }));
 }
 </script>
 
