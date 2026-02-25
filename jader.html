@@ -220,6 +220,58 @@ canvas{
   .status-wrap{ grid-template-columns:1fr; }
   .title{ font-size:32px; }
 }
+  /* ===== REFINO PRA FICAR IGUAL À IMAGEM ===== */
+.container{
+  max-width: 1280px;          /* mais “cara de dashboard” */
+  padding: 34px 26px;
+}
+
+.title{
+  font-size: 44px;
+  font-weight: 900;
+}
+
+.menu{
+  gap: 18px;
+  margin-top: 14px;
+}
+
+.menu button{
+  border-radius: 14px;
+  padding: 18px 18px;
+  font-size: 16px;
+  background: linear-gradient(135deg,#0d63c9,#0b4da6);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.45);
+}
+
+.card{
+  background: rgba(0,0,0,0.18);         /* mais transparente */
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow: 0 18px 46px rgba(0,0,0,0.45);
+}
+
+.card--wide{
+  padding: 18px;
+}
+
+.card h2{
+  font-size: 22px;
+  font-weight: 900;
+}
+
+canvas{
+  max-height: 240px;  /* mais parecido com a imagem */
+}
+
+/* deixa os cards de baixo mais “baixos” como na imagem */
+.dashboard > .card:not(.card--wide){
+  min-height: 320px;
+}
+
+/* o card do status fica bem “horizontal” */
+.card--wide canvas{
+  max-height: 260px;
+}
 </style>
 </head>
 
@@ -397,58 +449,93 @@ async function carregarDashboard() {
   document.getElementById("ticketMedio").textContent =
     totalVendas ? (somaValores/totalVendas).toLocaleString("pt-BR",{style:"currency",currency:"BRL"}) : "R$ 0,00";
 
-  new Chart(document.getElementById("statusChart"),{
-    type:"doughnut",
-    data:{
-      labels:["Ativa","Produção","Entregue"],
-      datasets:[{
-        data:[ status.ativa, status.producao, status.entregue ],
-        backgroundColor:[ "#2196f3", "#ff9800", "#4caf50" ]
-      }]
-    }
-  });
+// ===== CHART DEFAULTS (visual) =====
+Chart.defaults.color = "rgba(255,255,255,0.85)";
+Chart.defaults.font.family = "'Segoe UI', Arial, sans-serif";
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+Chart.defaults.plugins.legend.labels.boxWidth = 10;
 
-  new Chart(document.getElementById("pagamentoChart"),{
-    type:"pie",
-    data:{
-      labels:Object.keys(pagamentos),
-      datasets:[{ data:Object.values(pagamentos) }]
+// ===== STATUS (sem legenda padrão, porque você já tem legenda fixa no HTML) =====
+new Chart(document.getElementById("statusChart"),{
+  type:"doughnut",
+  data:{
+    labels:["Ativa","Produção","Entregue"],
+    datasets:[{
+      data:[ status.ativa, status.producao, status.entregue ],
+      backgroundColor:[ "#2196f3", "#ff9800", "#4caf50" ],
+      borderColor: "rgba(255,255,255,0.75)",
+      borderWidth: 2,
+      hoverOffset: 6
+    }]
+  },
+  options:{
+    cutout: "68%",
+    plugins:{
+      legend:{ display:false },  // importante!
+      tooltip:{ enabled:true }
     }
-  });
+  }
+});
 
-  new Chart(document.getElementById("quantidadeChart"),{
-    type:"bar",
-    data:{
-      labels:Object.keys(vendasPorMes),
-      datasets:[{
-        label:"Vendas",
-        data:Object.values(vendasPorMes),
-        backgroundColor:"#2196f3"
-      }]
+// ===== PAGAMENTO =====
+new Chart(document.getElementById("pagamentoChart"),{
+  type:"pie",
+  data:{
+    labels:Object.keys(pagamentos),
+    datasets:[{
+      data:Object.values(pagamentos),
+      borderColor: "rgba(255,255,255,0.75)",
+      borderWidth: 2
+    }]
+  },
+  options:{
+    plugins:{
+      legend:{ position:"top" }
     }
-  });
+  }
+});
 
-  let valoresPorMes = {};
-  snapshot.forEach(doc => {
-    const v = doc.data();
-    const mes = v.dataPedido?.slice(0,7);
-    const valor = Number(v.valor || v.total || v.produto?.total || 0);
-    if (mes && valor > 0) {
-      valoresPorMes[mes] = (valoresPorMes[mes] || 0) + valor;
-    }
-  });
+// ===== QUANTIDADE =====
+new Chart(document.getElementById("quantidadeChart"),{
+  type:"bar",
+  data:{
+    labels:Object.keys(vendasPorMes),
+    datasets:[{
+      label:"Vendas",
+      data:Object.values(vendasPorMes),
+      backgroundColor:"rgba(33,150,243,0.85)",
+      borderRadius: 10
+    }]
+  },
+  options:{
+    scales:{
+      x:{ grid:{ display:false } },
+      y:{ grid:{ color:"rgba(255,255,255,0.08)" }, ticks:{ precision:0 } }
+    },
+    plugins:{ legend:{ display:false } }
+  }
+});
 
-  new Chart(document.getElementById("valoresChart"),{
-    type:"bar",
-    data:{
-      labels:Object.keys(valoresPorMes),
-      datasets:[{
-        label:"Valor",
-        data:Object.values(valoresPorMes),
-        backgroundColor:"#4caf50"
-      }]
-    }
-  });
+// ===== VALORES =====
+new Chart(document.getElementById("valoresChart"),{
+  type:"bar",
+  data:{
+    labels:Object.keys(valoresPorMes),
+    datasets:[{
+      label:"Valor",
+      data:Object.values(valoresPorMes),
+      backgroundColor:"rgba(76,175,80,0.85)",
+      borderRadius: 10
+    }]
+  },
+  options:{
+    scales:{
+      x:{ grid:{ display:false } },
+      y:{ grid:{ color:"rgba(255,255,255,0.08)" } }
+    },
+    plugins:{ legend:{ display:false } }
+  }
+});
 }
 </script>
 
