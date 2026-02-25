@@ -132,7 +132,40 @@ body {
   border-radius:50%;
   padding:4px 8px;
 }
+/* ===== STATUS VISUAL DOS CARDS ===== */
 
+.card-ativo{
+  background: linear-gradient(135deg, #1e88e5, #1565c0);
+  color:#fff;
+}
+
+.card-producao{
+  background: linear-gradient(135deg, #f9a825, #f57f17);
+  color:#000;
+}
+
+.card-entregue{
+  background: linear-gradient(135deg, #43a047, #2e7d32);
+  color:#fff;
+}
+
+.card-ativo b,
+.card-producao b,
+.card-entregue b{
+  color:inherit;
+}
+
+/* etiqueta de status */
+.tag-status{
+  display:inline-block;
+  margin-top:8px;
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  background: rgba(255,255,255,0.25);
+}
+  
 </style>
 </head>
 <body>
@@ -186,6 +219,7 @@ import {
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
@@ -271,8 +305,13 @@ function renderizarCards(lista){
 
     const total = calcularTotal(v);
 
+    const classeStatus =
+      v.status === "producao" ? "card-producao" :
+      v.status === "entregue" ? "card-entregue" :
+      "card-ativo";
+
     pendentesDiv.innerHTML+=`
-      <div class="card-pedido" onclick="expandirCard(this)">
+      <div class="card-pedido ${classeStatus}" onclick="expandirCard(this)">
         <b>Pedido:</b> ${v.pedido}<br>
         <b>Cliente:</b> ${v.cliente?.nome}<br>
         <b>Vendedor:</b> ${v.vendedorNome}<br>
@@ -289,14 +328,19 @@ function renderizarCards(lista){
           <b>Status:</b> ${v.status}<br>
           <b>Observações:</b> ${v.observacoes || "-"}
           <br><br>
-
-          ${
-            v.status !== "producao"
-            ? `<button onclick="event.stopPropagation(); enviarParaProducao('${v.id}')">
-                Enviar para Produção
-              </button>`
-            : `<i>Já em produção</i>`
-          }
+           
+         ${
+  v.status !== "producao" && v.status !== "entregue"
+    ? `<button class="btn-producao"
+        onclick="event.stopPropagation(); enviarParaProducao('${v.id}')">
+        Enviar para Produção
+      </button>`
+    : (v.status === "producao"
+        ? `<span class="tag-status tag-producao">Em produção</span>`
+        : `<span class="tag-status tag-entregue">Entregue</span>`
+      )
+}
+           
         </div>
       </div>
     `;
@@ -401,28 +445,25 @@ function ativarNotificacaoTempoReal(){
     badge.innerText=contadorNotificacao;
   });
 }
-
-window.limparNotificacao=()=>{
-  contadorNotificacao=0;
+window.limparNotificacao = () => {
+  contadorNotificacao = 0;
   const badge = document.getElementById("badge");
-  badge.style.display="none";
+  badge.style.display = "none";
 };
 
-  import { updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
+/* ✅ AQUI SIM — PASSO 4 */
 window.enviarParaProducao = async (id) => {
-
   const confirmar = confirm("Deseja enviar este pedido para PRODUÇÃO?");
-  if(!confirmar) return;
+  if (!confirmar) return;
 
-  await updateDoc(doc(db,"vendas",id),{
+  await updateDoc(doc(db, "vendas", id), {
     status: "producao"
   });
 
   alert("Pedido enviado para produção!");
   carregarPedidos();
 };
-
+  
 </script>
 </body>
 </html>
