@@ -273,24 +273,56 @@ canvas{
   </div>
 
   <!-- DASHBOARD -->
-  <div class="dashboard">
+ <div class="dashboard">
 
-    <!-- STATUS (GRANDE) -->
-    <div class="card card--wide">
-      <h2>Status das Vendas</h2>
+  <!-- STATUS (CARD GRANDE) -->
+  <div class="card card--wide">
+    <h2>Status das Vendas</h2>
 
-      <div class="status-wrap">
-        <div>
-          <canvas id="statusChart"></canvas>
-        </div>
+    <div class="status-wrap">
+      <div>
+        <canvas id="statusChart"></canvas>
+      </div>
 
-        <div class="legend">
-          <div class="legend-item"><span class="dot blue"></span> Ativa</div>
-          <div class="legend-item"><span class="dot orange"></span> Produção</div>
-          <div class="legend-item"><span class="dot green"></span> Entregue</div>
-        </div>
+      <div class="legend">
+        <div class="legend-item"><span class="dot blue"></span> Ativa</div>
+        <div class="legend-item"><span class="dot orange"></span> Produção</div>
+        <div class="legend-item"><span class="dot green"></span> Entregue</div>
       </div>
     </div>
+  </div>
+
+  <!-- FORMAS DE PAGAMENTO -->
+  <div class="card">
+    <h2>Formas de Pagamento</h2>
+    <canvas id="pagamentoChart"></canvas>
+  </div>
+
+  <!-- QUANTIDADE -->
+  <div class="card">
+    <h2>Quantidade de Vendas</h2>
+    <canvas id="quantidadeChart"></canvas>
+    <div class="resumo">
+      <span>Total:</span>
+      <span id="totalVendas">0</span>
+    </div>
+  </div>
+
+  <!-- VALORES -->
+  <div class="card">
+    <h2>Valores de Vendas</h2>
+    <canvas id="valoresChart"></canvas>
+    <div class="resumo">
+      <span>Total Geral:</span>
+      <span id="valorTotal">R$ 0,00</span>
+    </div>
+    <div class="resumo">
+      <span>Ticket Médio:</span>
+      <span id="ticketMedio">R$ 0,00</span>
+    </div>
+  </div>
+
+</div>
 
     <!-- QUANTIDADE -->
     <div class="card">
