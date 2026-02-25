@@ -318,7 +318,7 @@ function normaliza(s){
 }
 
 async function carregar(){
-  elLista.innerHTML = <div class="vazio">Carregando pedidos em produção...</div>;
+ elLista.innerHTML = `<div class="vazio">Carregando pedidos em produção...</div>`;
 
   // pega somente status = "producao"
   const q = query(collection(db,"vendas"), where("status","==","producao"));
@@ -361,9 +361,10 @@ function render(){
   const filtrados = dados.filter(passaFiltro);
   elQtd.textContent = filtrados.length;
 
-  if (!filtrados.length){
-    elLista.innerHTML = <div class="vazio">Nenhum pedido em produção com esse filtro.</div>;
-    return;
+ if (!filtrados.length){
+  elLista.innerHTML = `<div class="vazio">Nenhum pedido em produção com esse filtro.</div>`;
+  return;
+}
   }
 
   elLista.innerHTML = filtrados.map(v => {
