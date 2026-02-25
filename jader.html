@@ -272,57 +272,31 @@ canvas{
     </button>
   </div>
 
-  <!-- DASHBOARD -->
- <div class="dashboard">
+  <!-- DASHBOARD (SÓ UMA VEZ) -->
+  <div class="dashboard">
 
-  <!-- STATUS (CARD GRANDE) -->
-  <div class="card card--wide">
-    <h2>Status das Vendas</h2>
+    <!-- STATUS (GRANDE) -->
+    <div class="card card--wide">
+      <h2>Status das Vendas</h2>
 
-    <div class="status-wrap">
-      <div>
-        <canvas id="statusChart"></canvas>
+      <div class="status-wrap">
+        <div>
+          <canvas id="statusChart"></canvas>
+        </div>
+
+        <div class="legend">
+          <div class="legend-item"><span class="dot blue"></span> Ativa</div>
+          <div class="legend-item"><span class="dot orange"></span> Produção</div>
+          <div class="legend-item"><span class="dot green"></span> Entregue</div>
+        </div>
       </div>
-
-      <div class="legend">
-        <div class="legend-item"><span class="dot blue"></span> Ativa</div>
-        <div class="legend-item"><span class="dot orange"></span> Produção</div>
-        <div class="legend-item"><span class="dot green"></span> Entregue</div>
-      </div>
     </div>
-  </div>
 
-  <!-- FORMAS DE PAGAMENTO -->
-  <div class="card">
-    <h2>Formas de Pagamento</h2>
-    <canvas id="pagamentoChart"></canvas>
-  </div>
-
-  <!-- QUANTIDADE -->
-  <div class="card">
-    <h2>Quantidade de Vendas</h2>
-    <canvas id="quantidadeChart"></canvas>
-    <div class="resumo">
-      <span>Total:</span>
-      <span id="totalVendas">0</span>
+    <!-- FORMAS DE PAGAMENTO -->
+    <div class="card">
+      <h2>Formas de Pagamento</h2>
+      <canvas id="pagamentoChart"></canvas>
     </div>
-  </div>
-
-  <!-- VALORES -->
-  <div class="card">
-    <h2>Valores de Vendas</h2>
-    <canvas id="valoresChart"></canvas>
-    <div class="resumo">
-      <span>Total Geral:</span>
-      <span id="valorTotal">R$ 0,00</span>
-    </div>
-    <div class="resumo">
-      <span>Ticket Médio:</span>
-      <span id="ticketMedio">R$ 0,00</span>
-    </div>
-  </div>
-
-</div>
 
     <!-- QUANTIDADE -->
     <div class="card">
@@ -348,34 +322,10 @@ canvas{
       <canvas id="valoresChart"></canvas>
     </div>
 
-    <!-- (extras pra ficar idêntico ao mock: repetição visual) -->
-    <div class="card">
-      <h2>Quantidade de Vendas</h2>
-      <div class="resumo">
-        <span>Total:</span>
-        <span id="totalVendas2">0</span>
-      </div>
-      <canvas id="quantidadeChart2"></canvas>
-    </div>
+  </div><!-- /dashboard -->
 
-    <div class="card">
-      <h2>Valores de Vendas</h2>
-      <div class="resumo">
-        <span>Total Geral:</span>
-        <span id="valorTotal2">R$ 0,00</span>
-      </div>
-      <div class="resumo">
-        <span>Ticket Médio:</span>
-        <span id="ticketMedio2">R$ 0,00</span>
-      </div>
-      <canvas id="valoresChart2"></canvas>
-    </div>
+</div><!-- /container -->
 
-  </div>
-
-</div>
-
-<!-- ✅ SCRIPT: lógica igual (só ajuste visual do chart e inclui 2 gráficos extras) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -445,15 +395,11 @@ async function carregarDashboard() {
     }
   });
 
-  // textos
   document.getElementById("totalVendas").textContent = totalVendas;
-  document.getElementById("valorTotal").textContent = somaValores.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-  document.getElementById("ticketMedio").textContent = totalVendas ? (somaValores/totalVendas).toLocaleString("pt-BR",{style:"currency",currency:"BRL"}) : "R$ 0,00";
-
-  // duplicados (para ficar igual ao mock)
-  document.getElementById("totalVendas2").textContent = totalVendas;
-  document.getElementById("valorTotal2").textContent = document.getElementById("valorTotal").textContent;
-  document.getElementById("ticketMedio2").textContent = document.getElementById("ticketMedio").textContent;
+  document.getElementById("valorTotal").textContent =
+    somaValores.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  document.getElementById("ticketMedio").textContent =
+    totalVendas ? (somaValores/totalVendas).toLocaleString("pt-BR",{style:"currency",currency:"BRL"}) : "R$ 0,00";
 
   // STATUS (sem legenda padrão)
   new Chart(document.getElementById("statusChart"),{
@@ -474,8 +420,22 @@ async function carregarDashboard() {
     }
   });
 
+  // PAGAMENTO
+  new Chart(document.getElementById("pagamentoChart"),{
+    type:"pie",
+    data:{
+      labels:Object.keys(pagamentos),
+      datasets:[{
+        data:Object.values(pagamentos),
+        borderColor:"rgba(255,255,255,0.75)",
+        borderWidth:2
+      }]
+    },
+    options:{ plugins:{ legend:{ position:"top" } } }
+  });
+
   // QUANTIDADE
-  const quantidadeCfg = {
+  new Chart(document.getElementById("quantidadeChart"),{
     type:"bar",
     data:{
       labels:Object.keys(vendasPorMes),
@@ -493,12 +453,10 @@ async function carregarDashboard() {
       },
       plugins:{ legend:{ display:false } }
     }
-  };
-  new Chart(document.getElementById("quantidadeChart"), quantidadeCfg);
-  new Chart(document.getElementById("quantidadeChart2"), quantidadeCfg);
+  });
 
   // VALORES
-  const valoresCfg = {
+  new Chart(document.getElementById("valoresChart"),{
     type:"bar",
     data:{
       labels:Object.keys(valoresPorMes),
@@ -516,9 +474,7 @@ async function carregarDashboard() {
       },
       plugins:{ legend:{ display:false } }
     }
-  };
-  new Chart(document.getElementById("valoresChart"), valoresCfg);
-  new Chart(document.getElementById("valoresChart2"), valoresCfg);
+  });
 }
 </script>
 
