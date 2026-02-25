@@ -286,13 +286,23 @@ function renderizarCards(lista){
           <b>Frete:</b> ${formatarValor(v.frete)}<br>
           <b>Montagem:</b> ${formatarValor(v.montagem)}<br>
           <b>Pagamento:</b> ${v.pagamento?.tipo}<br>
+          <b>Status:</b> ${v.status}<br>
           <b>Observações:</b> ${v.observacoes || "-"}
+          <br><br>
+
+          ${
+            v.status !== "producao"
+            ? `<button onclick="event.stopPropagation(); enviarParaProducao('${v.id}')">
+                Enviar para Produção
+              </button>`
+            : <i>Já em produção</i>
+          }
         </div>
       </div>
     `;
   });
 }
-
+  
 /* ===== EXPANSÃO ===== */
 window.expandirCard=(card)=>{
 
@@ -396,6 +406,21 @@ window.limparNotificacao=()=>{
   contadorNotificacao=0;
   const badge = document.getElementById("badge");
   badge.style.display="none";
+};
+
+  import { updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+window.enviarParaProducao = async (id) => {
+
+  const confirmar = confirm("Deseja enviar este pedido para PRODUÇÃO?");
+  if(!confirmar) return;
+
+  await updateDoc(doc(db,"vendas",id),{
+    status: "producao"
+  });
+
+  alert("Pedido enviado para produção!");
+  carregarPedidos();
 };
 
 </script>
