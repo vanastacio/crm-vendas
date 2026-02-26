@@ -179,14 +179,17 @@ btnLogin.onclick = async () => {
       senha.value
     );
 
-    const user = cred.user;
+   const user = cred.user;
 
-    if (user.email === EMAIL_JADER) {
-      window.location.href = "jader.html";
-    } else {
-      window.location.href = "index.html";
-    }
+if (user.email === EMAIL_JADER) {
+  window.location.href = "jader.html";
 
+} else if (user.email === "producao@hotmail.com") {
+  window.location.href = "producao-func.html";
+
+} else {
+  window.location.href = "index.html";
+}
   } catch (e) {
     loginError.textContent = "Email ou senha inválidos.";
   }
