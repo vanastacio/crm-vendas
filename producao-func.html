@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Produção - Funcionários</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<style>
+  body{
+    margin:0;
+    font-family:'Segoe UI', Arial, sans-serif;
+    background:url("fundo.jpg") no-repeat center center fixed;
+    background-size:cover;
+    color:#fff;
+  }
+
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:
+      radial-gradient(circle at 30% 12%, rgba(33,150,243,0.18), transparent 45%),
+      radial-gradient(circle at 80% 35%, rgba(76,175,80,0.10), transparent 45%),
+      rgba(0,0,0,0.22);
+    z-index:-1;
+  }
+
+  .container{
+    max-width:1280px;
+    margin:auto;
+    padding:26px 22px 40px;
+  }
+
+  .topo{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    margin-bottom:16px;
+  }
+
+  .titulo{
+    font-size:34px;
+    font-weight:900;
+    margin:0;
+    letter-spacing:.2px;
+  }
+
+  .top-actions{
+    display:flex;
+    gap:10px;
+    align-items:center;
+  }
+
+  .btn-pill{
+    padding:10px 16px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,0.18);
+    background:rgba(0,0,0,0.25);
+    backdrop-filter:blur(12px);
+    color:#fff;
+    font-weight:800;
+    cursor:pointer;
+    transition:.2s ease;
+    white-space:nowrap;
+  }
+  .btn-pill:hover{
+    transform:translateY(-1px);
+    background:rgba(255,255,255,0.12);
+  }
+
+  .linha{
+    height:1px;
+    background:rgba(255,255,255,0.14);
+    margin:14px 0 18px;
+  }
+
+  .barra{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+
+  .input{
+    padding:10px 14px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,0.16);
+    background:rgba(0,0,0,0.22);
+    color:#fff;
+    outline:none;
+    backdrop-filter:blur(10px);
+  }
+
+  .btn-primario{
+    padding:11px 16px;
+    border:none;
+    border-radius:14px;
+    cursor:pointer;
+    color:#fff;
+    font-weight:900;
+    background:linear-gradient(135deg,#0d63c9,#0b4da6);
+    box-shadow:0 10px 24px rgba(0,0,0,0.35);
+    transition:.2s ease;
+  }
+  .btn-primario:hover{
+    transform:translateY(-2px);
+    box-shadow:0 14px 30px rgba(0,0,0,0.45);
+  }
+
+  .badge{
+    padding:10px 14px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,0.16);
+    background:rgba(0,0,0,0.18);
+    backdrop-filter:blur(10px);
+    font-weight:900;
+  }
+
+  .cards{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:16px;
+  }
+
+  .card{
+    background:rgba(0,0,0,0.18);
+    border:1px solid rgba(255,255,255,0.16);
+    border-radius:18px;
+    padding:16px;
+    backdrop-filter:blur(14px);
+    box-shadow:0 18px 46px rgba(0,0,0,0.35);
+    transition:.2s ease;
+  }
+  .card:hover{ transform:translateY(-2px); }
+
+  .card-top{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    align-items:flex-start;
+    margin-bottom:10px;
+  }
+
+  .pedido{
+    font-size:18px;
+    font-weight:900;
+    margin:0;
+  }
+
+  .status{
+    font-size:12px;
+    font-weight:900;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,0.16);
+    background:rgba(255,152,0,0.18);
+  }
+
+  .linha-info{
+    font-size:14px;
+    opacity:.92;
+    margin:6px 0;
+  }
+
+  .valor{
+    font-weight:900;
+    font-size:16px;
+    margin-top:10px;
+  }
+
+  .acoes{
+    display:flex;
+    gap:10px;
+    margin-top:14px;
+    flex-wrap:wrap;
+  }
+
+  .btn-ok{
+    flex:1;
+    padding:10px 12px;
+    border-radius:14px;
+    border:none;
+    cursor:pointer;
+    font-weight:900;
+    color:#0b1b0f;
+    background:linear-gradient(135deg, #56ff8a, #2ecc71);
+    box-shadow:0 10px 24px rgba(0,0,0,0.25);
+    transition:.2s ease;
+    min-width:160px;
+  }
+  .btn-ok:hover{ transform:translateY(-2px); }
+
+  .btn-sec{
+    flex:1;
+    padding:10px 12px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,0.16);
+    cursor:pointer;
+    font-weight:900;
+    color:#fff;
+    background:rgba(0,0,0,0.20);
+    backdrop-filter:blur(10px);
+    transition:.2s ease;
+    min-width:160px;
+  }
+  .btn-sec:hover{ transform:translateY(-2px); background:rgba(255,255,255,0.10); }
+
+  .vazio{
+    grid-column:1/-1;
+    text-align:center;
+    padding:28px 18px;
+    border:1px dashed rgba(255,255,255,0.22);
+    border-radius:18px;
+    background:rgba(0,0,0,0.18);
+    backdrop-filter:blur(12px);
+    font-weight:900;
+    opacity:.9;
+  }
+
+  /* anexos */
+  .anexos{
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px solid rgba(255,255,255,0.14);
+  }
+  .anexos h3{
+    margin:0 0 10px;
+    font-size:14px;
+    font-weight:900;
+    opacity:.95;
+    letter-spacing:.2px;
+  }
+  .upload-row{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+    margin-bottom:10px;
+  }
+  .file{
+    flex:1;
+    min-width:220px;
+    padding:10px 12px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,0.16);
+    background:rgba(0,0,0,0.22);
+    color:#fff;
+    backdrop-filter:blur(10px);
+  }
+  .lista-anexos{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .item-anexo{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 12px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,0.14);
+    background:rgba(0,0,0,0.18);
+    backdrop-filter:blur(10px);
+  }
+  .item-anexo .nome{
+    font-weight:900;
+    font-size:13px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    max-width:320px;
+  }
+  .item-anexo .meta{
+    font-size:12px;
+    opacity:.85;
+    white-space:nowrap;
+  }
+  .item-anexo .acoes-anexo{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .link{
+    color:#fff;
+    text-decoration:none;
+    font-weight:900;
+    border:1px solid rgba(255,255,255,0.16);
+    padding:8px 10px;
+    border-radius:12px;
+    background:rgba(255,255,255,0.08);
+    transition:.2s ease;
+  }
+  .link:hover{ background:rgba(255,255,255,0.15); transform:translateY(-1px); }
+
+  .btn-del{
+    border:none;
+    cursor:pointer;
+    font-weight:900;
+    border-radius:12px;
+    padding:8px 10px;
+    color:#fff;
+    background:rgba(229,57,53,0.25);
+    border:1px solid rgba(229,57,53,0.35);
+    transition:.2s ease;
+  }
+  .btn-del:hover{ background:rgba(229,57,53,0.35); transform:translateY(-1px); }
+
+  @media(max-width:1100px){
+    .cards{ grid-template-columns:repeat(2,1fr); }
+  }
+  @media(max-width:740px){
+    .cards{ grid-template-columns:1fr; }
+    .titulo{ font-size:28px; }
+    .item-anexo .nome{ max-width:180px; }
+  }
+</style>
+</head>
+
+<body>
+  <div class="container">
+
+    <div class="topo">
+      <h1 class="titulo">Produção (Funcionários)</h1>
+      <div class="top-actions">
+        <button class="btn-pill" id="btnVoltar" type="button">⬅ Voltar</button>
+        <button class="btn-pill" id="btnSair" type="button">Sair</button>
+      </div>
+    </div>
+
+    <div class="linha"></div>
+
+    <div class="barra">
+      <input class="input" id="busca" type="text" placeholder="Buscar (pedido / cliente / vendedor)" />
+      <input class="input" id="dataIni" type="date" />
+      <input class="input" id="dataFim" type="date" />
+      <button class="btn-primario" id="btnFiltrar" type="button">Filtrar</button>
+      <button class="btn-pill" id="btnLimpar" type="button">Limpar</button>
+      <div class="badge">Em produção: <span id="qtd">0</span></div>
+    </div>
+
+    <div class="cards" id="lista"></div>
+  </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore, collection, getDocs, query, where, updateDoc, doc, getDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getStorage, ref as sRef, uploadBytesResumable, getDownloadURL, deleteObject
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
+  authDomain: "crm-vendas-43b6b.firebaseapp.com",
+  projectId: "crm-vendas-43b6b",
+  storageBucket: "crm-vendas-43b6b.appspot.com",
+  messagingSenderId: "645002761099",
+  appId: "1:645002761099:web:f194f70c351d1074ac158e"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+const elLista = document.getElementById("lista");
+const elQtd = document.getElementById("qtd");
+const elBusca = document.getElementById("busca");
+const elIni = document.getElementById("dataIni");
+const elFim = document.getElementById("dataFim");
+
+let dados = [];
+let userInfo = { uid:"", nome:"", email:"", role:"" };
+
+document.getElementById("btnVoltar").onclick = () => location.href = "jader.html";
+document.getElementById("btnSair").onclick = async () => {
+  await signOut(auth);
+  location.href = "login.html";
+};
+
+document.getElementById("btnFiltrar").onclick = () => render();
+document.getElementById("btnLimpar").onclick = () => {
+  elBusca.value = "";
+  elIni.value = "";
+  elFim.value = "";
+  render();
+};
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    location.href = "login.html";
+    return;
+  }
+
+  userInfo.uid = user.uid;
+  userInfo.nome = user.displayName || "";
+  userInfo.email = user.email || "";
+
+  // valida role (UX) — regra oficial é no Firestore Rules
+  const uSnap = await getDoc(doc(db,"usuarios", user.uid));
+  userInfo.role = uSnap.exists() ? (uSnap.data().role || "") : "";
+
+  // permite jader também (se você quiser testar com o jader)
+  const isJader = (userInfo.email === "jader@hotmail.com") || (userInfo.role === "jader");
+  const isProd = (userInfo.role === "producao");
+
+  if (!isProd && !isJader) {
+    alert("Acesso negado: usuário não é do setor de produção.");
+    location.href = "login.html";
+    return;
+  }
+
+  await carregar();
+});
+
+function moedaBRL(n){
+  return (Number(n)||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+}
+function normaliza(s){
+  return String(s||"").toLowerCase().trim();
+}
+function totalVenda(v){
+  // mantém seu padrão: total já vem pronto; se não tiver, soma
+  if (typeof v.total === "number") return v.total;
+  const produto = v.produto?.valor ?? 0;
+  const frete = v.frete ?? 0;
+  const montagem = v.montagem ?? 0;
+  return (produto + frete + montagem);
+}
+
+async function carregar(){
+  elLista.innerHTML = <div class="vazio">Carregando pedidos em produção...</div>;
+
+  const q = query(collection(db,"vendas"), where("status","==","producao"));
+  const snap = await getDocs(q);
+
+  dados = [];
+  snap.forEach(d => dados.push({ id: d.id, ...d.data() }));
+
+  render();
+}
+
+function passaFiltro(item){
+  const b = normaliza(elBusca.value);
+  const ini = elIni.value ? new Date(elIni.value + "T00:00:00") : null;
+  const fim = elFim.value ? new Date(elFim.value + "T23:59:59") : null;
+
+  const pedido = normaliza(item.pedido);
+  const cliente = normaliza(item.cliente?.nome);
+  const vendedor = normaliza(item.vendedorNome);
+
+  if (b){
+    const ok = pedido.includes(b) || cliente.includes(b) || vendedor.includes(b);
+    if (!ok) return false;
+  }
+
+  if (ini || fim){
+    const dp = item.dataPedido ? new Date(item.dataPedido + "T12:00:00") : null;
+    if (!dp) return false;
+    if (ini && dp < ini) return false;
+    if (fim && dp > fim) return false;
+  }
+
+  return true;
+}
+
+function render(){
+  const filtrados = dados.filter(passaFiltro);
+  elQtd.textContent = filtrados.length;
+
+  if (!filtrados.length){
+    elLista.innerHTML = <div class="vazio">Nenhum pedido em produção com esse filtro.</div>;
+    return;
+  }
+
+  elLista.innerHTML = filtrados.map(v => {
+    const nomeCliente = v.cliente?.nome || "-";
+    const contato = v.cliente?.contato || "-";
+    const cidade = v.cliente?.cidade || "-";
+    const modelo = v.produto?.modelo || "-";
+    const cor = v.produto?.cor || "-";
+    const tamanho = v.produto?.tamanho || "-";
+    const total = totalVenda(v);
+
+    const anexos = Array.isArray(v.anexosProducao) ? v.anexosProducao : [];
+    const anexosHtml = anexos.length
+      ? anexos.map(a => `
+          <div class="item-anexo">
+            <div>
+              <div class="nome" title="${a.nome || "arquivo"}">${a.nome || "arquivo"}</div>
+              <div class="meta">${(a.tipo || "arquivo")} • ${a.criadoEm || ""}</div>
+            </div>
+            <div class="acoes-anexo">
+              <a class="link" href="${a.url}" target="_blank" rel="noopener">Abrir</a>
+              <button class="btn-del" type="button" data-del="${v.id}" data-path="${a.path || ""}" data-aid="${a.id || ""}">Apagar</button>
+            </div>
+          </div>
+        `).join("")
+      : <div class="item-anexo"><div class="meta">Sem anexos ainda.</div></div>;
+
+    return `
+      <div class="card">
+        <div class="card-top">
+          <div>
+            <p class="pedido">Pedido #${v.pedido ?? "-"}</p>
+            <div class="linha-info">Cliente: <b>${nomeCliente}</b></div>
+          </div>
+          <div class="status">PRODUÇÃO</div>
+        </div>
+
+        <div class="linha-info">Vendedor: <b>${v.vendedorNome || "-"}</b></div>
+        <div class="linha-info">Pedido: <b>${v.dataPedido || "-"}</b> • Entrega: <b>${v.dataEntrega || "-"}</b></div>
+        <div class="linha-info">Produto: <b>${modelo}</b></div>
+        <div class="linha-info">Tamanho: <b>${tamanho}</b> • Cor: <b>${cor}</b></div>
+        <div class="linha-info">Contato: <b>${contato}</b> • Cidade: <b>${cidade}</b></div>
+
+        <div class="valor">Total: ${moedaBRL(total)}</div>
+
+        <div class="anexos">
+          <h3>Anexos da Produção</h3>
+
+          <div class="upload-row">
+            <input class="file" type="file" multiple
+              data-up="${v.id}"
+              accept="image/,video/,application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar"
+            />
+            <button class="btn-primario" type="button" data-btnup="${v.id}">Enviar</button>
+            <button class="btn-sec" type="button" data-refresh="${v.id}">Recarregar</button>
+          </div>
+
+          <div class="lista-anexos" data-lista="${v.id}">
+            ${anexosHtml}
+          </div>
+        </div>
+
+        <div class="acoes">
+          <button class="btn-ok" type="button" data-concluir="${v.id}">
+            Produção concluída
+          </button>
+          <button class="btn-sec" type="button" data-copiar="${contato}">
+            Copiar Contato
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  // upload
+  elLista.querySelectorAll("[data-btnup]").forEach(btn => {
+    btn.onclick = async () => {
+      const vendaId = btn.getAttribute("data-btnup");
+      const input = elLista.querySelector(input[data-up="${vendaId}"]);
+      if (!input || !input.files || !input.files.length) {
+        alert("Selecione um ou mais arquivos.");
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = "Enviando...";
+      try{
+        await enviarArquivos(vendaId, Array.from(input.files));
+        input.value = "";
+        await recarregarVenda(vendaId);
+      }catch(e){
+        console.error(e);
+        alert("Erro ao enviar. Veja o console.");
+      }finally{
+        btn.disabled = false;
+        btn.textContent = "Enviar";
+      }
+    };
+  });
+
+  // refresh venda
+  elLista.querySelectorAll("[data-refresh]").forEach(btn => {
+    btn.onclick = async () => {
+      const vendaId = btn.getAttribute("data-refresh");
+      btn.disabled = true;
+      btn.textContent = "Atualizando...";
+      try{
+        await recarregarVenda(vendaId);
+      }finally{
+        btn.disabled = false;
+        btn.textContent = "Recarregar";
+      }
+    };
+  });
+
+  // apagar anexo
+  elLista.querySelectorAll("[data-del]").forEach(btn => {
+    btn.onclick = async () => {
+      const vendaId = btn.getAttribute("data-del");
+      const path = btn.getAttribute("data-path") || "";
+      const anexoId = btn.getAttribute("data-aid") || "";
+      if (!path || !anexoId) return;
+
+      const ok = confirm("Apagar esse anexo? Isso não tem volta.");
+      if (!ok) return;
+
+      btn.disabled = true;
+      btn.textContent = "Apagando...";
+      try{
+        await apagarAnexo(vendaId, path, anexoId);
+        await recarregarVenda(vendaId);
+      }catch(e){
+        console.error(e);
+        alert("Erro ao apagar. Veja o console.");
+      }finally{
+        btn.disabled = false;
+        btn.textContent = "Apagar";
+      }
+    };
+  });
+
+  // concluir produção
+  elLista.querySelectorAll("[data-concluir]").forEach(btn => {
+    btn.onclick = async () => {
+      const id = btn.getAttribute("data-concluir");
+      if (!id) return;
+
+      const ok = confirm("Confirmar: produção concluída? Isso vai sair da lista da produção.");
+      if (!ok) return;
+
+      btn.disabled = true;
+      btn.textContent = "Atualizando...";
+
+      try{
+        await updateDoc(doc(db,"vendas", id), {
+          status: "producao_concluida",
+          producaoConcluidaEm: serverTimestamp(),
+          producaoConcluidaPor: {
+            uid: userInfo.uid,
+            email: userInfo.email,
+            nome: userInfo.nome
+          },
+          atualizadoEmProducao: serverTimestamp()
+        });
+
+        // remove da lista local e renderiza
+        dados = dados.filter(x => x.id !== id);
+        render();
+      }catch(e){
+        console.error(e);
+        alert("Erro ao marcar concluído. Veja o console.");
+        btn.disabled = false;
+        btn.textContent = "Produção concluída";
+      }
+    };
+  });
+
+  // copiar contato
+  elLista.querySelectorAll("[data-copiar]").forEach(btn => {
+    btn.onclick = async () => {
+      const txt = btn.getAttribute("data-copiar") || "";
+      try{
+        await navigator.clipboard.writeText(txt);
+        btn.textContent = "Copiado ✅";
+        setTimeout(()=> btn.textContent = "Copiar Contato", 900);
+      }catch{
+        alert("Não consegui copiar. Copie manualmente: " + txt);
+      }
+    };
+  });
+}
+
+async function recarregarVenda(vendaId){
+  // busca doc atualizado e atualiza no array
+  const snap = await getDoc(doc(db,"vendas", vendaId));
+  if (!snap.exists()) return;
+
+  const novo = { id: snap.id, ...snap.data() };
+  const idx = dados.findIndex(x => x.id === vendaId);
+  if (idx >= 0) dados[idx] = novo;
+  render();
+}
+
+function formatarDataISO(){
+  // só pra mostrar no card do anexo
+  const d = new Date();
+  const dd = String(d.getDate()).padStart(2,"0");
+  const mm = String(d.getMonth()+1).padStart(2,"0");
+  const aa = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2,"0");
+  const mi = String(d.getMinutes()).padStart(2,"0");
+  return ${dd}/${mm}/${aa} ${hh}:${mi};
+}
+
+function gerarId(){
+  return ${Date.now()}_${Math.random().toString(16).slice(2)};
+}
+
+async function enviarArquivos(vendaId, files){
+  // pega venda atual (pra anexos)
+  const vendaRef = doc(db,"vendas", vendaId);
+  const vendaSnap = await getDoc(vendaRef);
+  if (!vendaSnap.exists()) throw new Error("Venda não encontrada.");
+
+  const venda = vendaSnap.data();
+  const anexos = Array.isArray(venda.anexosProducao) ? venda.anexosProducao : [];
+
+  for (const file of files){
+    const anexoId = gerarId();
+    const safeName = (file.name || "arquivo").replace(/[^\w.\-() ]/g, "_");
+    const path = vendas/${vendaId}/producao/${anexoId}_${safeName};
+    const storageRef = sRef(storage, path);
+
+    await new Promise((resolve, reject) => {
+      const task = uploadBytesResumable(storageRef, file);
+      task.on("state_changed",
+        () => {},
+        (err) => reject(err),
+        async () => {
+          try{
+            const url = await getDownloadURL(task.snapshot.ref);
+            anexos.push({
+              id: anexoId,
+              nome: file.name || "arquivo",
+              tipo: file.type || "arquivo",
+              size: file.size || 0,
+              url,
+              path,
+              criadoEm: formatarDataISO(),
+              criadoPor: {
+                uid: userInfo.uid,
+                email: userInfo.email,
+                nome: userInfo.nome
+              }
+            });
+            resolve();
+          }catch(e){
+            reject(e);
+          }
+        }
+      );
+    });
+  }
+
+  await updateDoc(vendaRef, {
+    anexosProducao: anexos,
+    atualizadoEmProducao: serverTimestamp()
+  });
+}
+
+async function apagarAnexo(vendaId, path, anexoId){
+  const vendaRef = doc(db,"vendas", vendaId);
+  const vendaSnap = await getDoc(vendaRef);
+  if (!vendaSnap.exists()) throw new Error("Venda não encontrada.");
+
+  // apaga do storage
+  await deleteObject(sRef(storage, path));
+
+  // remove do array
+  const venda = vendaSnap.data();
+  const anexos = Array.isArray(venda.anexosProducao) ? venda.anexosProducao : [];
+  const novo = anexos.filter(a => a.id !== anexoId);
+
+  await updateDoc(vendaRef, {
+    anexosProducao: novo,
+    atualizadoEmProducao: serverTimestamp()
+  });
+}
+</script>
+</body>
+</html>
