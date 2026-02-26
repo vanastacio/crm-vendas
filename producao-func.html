@@ -554,7 +554,7 @@ function render(){
   elLista.querySelectorAll("[data-btnup]").forEach(btn => {
     btn.onclick = async () => {
       const vendaId = btn.getAttribute("data-btnup");
-      const input = elLista.querySelector(input[data-up="${vendaId}"]);
+      const input = elLista.querySelector(`input[data-up="${vendaId}"]`);
       if (!input || !input.files || !input.files.length) {
         alert("Selecione um ou mais arquivos.");
         return;
