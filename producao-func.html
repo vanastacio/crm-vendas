@@ -404,6 +404,8 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) {
     location.href = "login.html";
     return;
+  }
+  
     // 🔎 DEBUG – verificar usuário e role
   const uref = doc(db, "usuarios", user.uid);
   const usnap = await getDoc(uref);
@@ -412,7 +414,6 @@ onAuthStateChanged(auth, async (user) => {
   console.log("EMAIL:", user.email);
   console.log("USUARIO DOC EXISTS?", usnap.exists());
   console.log("DADOS USUARIO:", usnap.exists() ? usnap.data() : null);
-  }
 
   userInfo.uid = user.uid;
   userInfo.nome = user.displayName || "";
