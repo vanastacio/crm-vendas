@@ -686,7 +686,7 @@ function formatarDataISO(){
   const aa = d.getFullYear();
   const hh = String(d.getHours()).padStart(2,"0");
   const mi = String(d.getMinutes()).padStart(2,"0");
-  return ${dd}/${mm}/${aa} ${hh}:${mi};
+  return `${dd}/${mm}/${aa} ${hh}:${mi}`;
 }
 
 function gerarId(){
