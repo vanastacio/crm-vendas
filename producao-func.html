@@ -365,8 +365,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-  window.__auth = auth;
 const db = getFirestore(app);
+  window.__auth = auth;
+  window.__db = db;
 const storage = getStorage(app);
 
 const elLista = document.getElementById("lista");
