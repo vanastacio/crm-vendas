@@ -434,7 +434,7 @@ function totalVenda(v){
 }
 
 async function carregar(){
-  elLista.innerHTML = <div class="vazio">Carregando pedidos em produção...</div>;
+  elLista.innerHTML = `<div class="vazio">Carregando pedidos em produção...</div>`;
 
   const q = query(collection(db,"vendas"), where("status","==","producao"));
   const snap = await getDocs(q);
