@@ -705,7 +705,7 @@ async function enviarArquivos(vendaId, files){
   for (const file of files){
     const anexoId = gerarId();
     const safeName = (file.name || "arquivo").replace(/[^\w.\-() ]/g, "_");
-    const path = vendas/${vendaId}/producao/${anexoId}_${safeName};
+    const path = `vendas/${vendaId}/producao/${anexoId}_${safeName}`;
     const storageRef = sRef(storage, path);
 
     await new Promise((resolve, reject) => {
