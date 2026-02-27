@@ -408,9 +408,18 @@ function render(){
         <div class="valor">Total: ${moedaBRL(total)}</div>
 
         <div class="acoes">
-          <button class="btn-ok" type="button" data-id="${v.id}">Marcar como Entregue</button>
-          <button class="btn-sec" type="button" data-copiar="${contato}">Copiar Contato</button>
-        </div>
+  ${
+    v.status === "producao_concluida"
+    ? `<button class="btn-ok" type="button" data-id="${v.id}">
+         Marcar como Entregue
+       </button>`
+    : ``
+  }
+
+  <button class="btn-sec" type="button" data-copiar="${contato}">
+    Copiar Contato
+  </button>
+</div>
       </div>
     `;
   }).join("");
