@@ -240,6 +240,39 @@
     .cards{ grid-template-columns:1fr; }
     .titulo{ font-size:28px; }
   }
+
+.anexos{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:8px;
+}
+
+.anexo{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.16);
+  background:rgba(0,0,0,0.18);
+  color:#fff;
+  text-decoration:none;
+  font-weight:800;
+  font-size:13px;
+}
+
+.anexo:hover{
+  background:rgba(255,255,255,0.10);
+  transform:translateY(-1px);
+}
+
+.anexo-vazio{
+  opacity:.85;
+  font-weight:800;
+  font-size:13px;
+}
+  
 </style>
 </head>
 
@@ -392,6 +425,19 @@ function render(){
     return `
       <div class="card">
         <div class="card-top">
+        <div class="linha-info"><b>Anexos da produção:</b></div>
+
+<div class="anexos">
+  ${
+    (v.anexosProducao && v.anexosProducao.length)
+      ? v.anexosProducao.map(a => `
+          <a class="anexo" href="${a.url}" target="_blank" rel="noopener">
+            📎 ${a.nome || "Arquivo"}
+          </a>
+        `).join("")
+      : `<div class="anexo-vazio">Nenhum anexo enviado</div>`
+  }
+</div>
           <div>
             <p class="pedido">Pedido #${v.pedido ?? "-"}</p>
             <div class="linha-info">Cliente: <b>${nomeCliente}</b></div>
