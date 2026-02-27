@@ -90,10 +90,10 @@ body::before{
   font-size:20px;
 }
 
-/* ===== MENU (3 botões iguais ao mock) ===== */
+/* ===== MENU (AGORA 4 BOTÕES) ===== */
 .menu{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:repeat(4,1fr);
   gap:18px;
   margin:14px 0 18px;
 }
@@ -192,7 +192,7 @@ body::before{
 .dot.orange{ background:#ff9800; }
 .dot.green{ background:#4caf50; }
 
-/* ===== RESUMO ===== */
+/* ===== RESUMO (padrão) ===== */
 .resumo{
   display:flex;
   justify-content:space-between;
@@ -205,11 +205,16 @@ body::before{
   color:#79ff9a;
 }
 
-/* canvas */
+/* ===== CANVAS (padrão do mock) ===== */
 canvas{
   width:100% !important;
-  height:240px !important;      /* fixa altura pra ficar como o mock */
+  height:240px !important;
   max-height:240px;
+}
+
+.card--wide canvas{
+  height:260px !important;
+  max-height:260px;
 }
 
 /* cards inferiores mais “baixos” como no mock */
@@ -217,63 +222,70 @@ canvas{
   min-height:320px;
 }
 
+/* ===== VALORES (IGUAL AO MOCK: 2 CAIXAS + GRÁFICO) ===== */
+.card-valores .valores-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:10px;
+}
+
+.card-valores .valores-title{
+  margin:0;
+}
+
+.card-valores .valores-stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  width:100%;
+  margin:6px 0 12px;
+}
+
+.card-valores .stat-box{
+  background:rgba(0,0,0,0.18);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:16px;
+  padding:12px 14px;
+}
+
+.card-valores .stat-label{
+  font-size:13px;
+  font-weight:900;
+  opacity:.9;
+  margin-bottom:6px;
+}
+
+.card-valores .stat-value{
+  font-size:18px;
+  font-weight:900;
+}
+
+.card-valores #valorTotal,
+.card-valores #ticketMedio{
+  color:#79ff9a;
+}
+
+/* gráfico do valores um pouco maior como no mock */
+.card-valores #valoresChart{
+  height:260px !important;
+  max-height:260px !important;
+}
+
 /* responsivo */
 @media (max-width:1000px){
-  .menu{ grid-template-columns:1fr; }
+  .menu{ grid-template-columns:1fr 1fr; }
   .dashboard{ grid-template-columns:1fr; }
   .card--wide{ grid-column:span 1; }
   .status-wrap{ grid-template-columns:1fr; }
   .title{ font-size:32px; }
 }
 
- .valores-split{
-  display:flex;
-  gap:20px;
-  align-items:stretch;
+@media (max-width:560px){
+  .menu{ grid-template-columns:1fr; }
+  .card-valores .valores-stats{ grid-template-columns:1fr; }
 }
-
-.valores-col{
-  flex:1;
-  background:rgba(0,0,0,0.18);
-  border:1px solid rgba(255,255,255,0.12);
-  border-radius:16px;
-  padding:20px;
-  display:flex;
-  flex-direction:column;
-}
-
-.valores-col h2{
-  font-size:22px;
-  font-weight:900;
-  margin-bottom:10px;
-}
-
-.valores-col canvas{
-  height:220px !important;
-  margin-top:10px;
-}
-
-.mini-resumo{
-  font-weight:900;
-  margin-top:6px;
-}
-
-@media(max-width:1000px){
-  .valores-split{
-    flex-direction:column;
-  }
-}
-
-#valoresChart {
-  max-height: 300px !important;
-  height: 300px !important;
-}
-
-.card canvas {
-  display: block;
-  margin: 0 auto;
-}
-  
 </style>
 </head>
 
@@ -308,13 +320,13 @@ canvas{
     </button>
 
     <button onclick="location.href='producao.html'">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24">
-      <path d="M4 4h16v4H4V4Zm0 6h16v10H4V10Zm2 2v6h12v-6H6Z"/>
-    </svg>
-  </span>
-  Produção
-</button>
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M4 4h16v4H4V4Zm0 6h16v10H4V10Zm2 2v6h12v-6H6Z"/>
+        </svg>
+      </span>
+      Produção
+    </button>
 
     <button type="button">
       <span class="icon" aria-hidden="true">
@@ -367,35 +379,30 @@ canvas{
       </div>
     </div>
 
-   <!-- VALORES (NOVO - 2 GRÁFICOS COMO NO EXEMPLO) -->
-<div class="card valores-col">
-  <div class="valores-split">
+    <!-- VALORES (CORRIGIDO: IGUAL AO MOCK / SEM INVENTAR IDs) -->
+    <div class="card card-valores">
+      <div class="valores-head">
+        <h2 class="valores-title">Valores de Vendas</h2>
+      </div>
 
-    <!-- DIREITA: Valores -->
-<div class="valores-col">
-  <h2 class="titulo-vertical">Valores de Vendas</h2>
+      <div class="valores-stats">
+        <div class="stat-box">
+          <div class="stat-label">Total Geral</div>
+          <div class="stat-value" id="valorTotal">R$ 0,00</div>
+        </div>
 
-  <div class="mini-resumo">
-    <span>Total Geral:</span>
-    <span id="valorTotal">R$ 0,00</span>
-  </div>
+        <div class="stat-box">
+          <div class="stat-label">Ticket Médio</div>
+          <div class="stat-value" id="ticketMedio">R$ 0,00</div>
+        </div>
+      </div>
 
-  <div class="mini-resumo">
-    <span>Ticket Médio:</span>
-    <span id="ticketMedio">R$ 0,00</span>
-  </div>
-
-  <canvas id="valoresChart"></canvas>
-</div>
-    
-    <!-- ESQUERDA: Quantidade -->
-    <div class="valores-col">
-      <h2 class="titulo-vertical">Quantidade de Vendas</h2>
-      <div class="mini-resumo">Total: <span id="qtdTotal">0</span></div>
-      <canvas id="qtdChart"></canvas>
+      <canvas id="valoresChart"></canvas>
     </div>
-  </div>
-</div>
+
+  </div><!-- /dashboard -->
+
+</div><!-- /container -->
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
