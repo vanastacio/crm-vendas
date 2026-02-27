@@ -225,6 +225,50 @@ canvas{
   .status-wrap{ grid-template-columns:1fr; }
   .title{ font-size:32px; }
 }
+
+  .valores-split{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:18px;
+  align-items:stretch;
+}
+
+.valores-col{
+  position:relative;
+  background:rgba(0,0,0,0.12);
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:14px;
+  padding:14px;
+  min-height:320px;
+}
+
+.titulo-vertical{
+  position:absolute;
+  top:18px;
+  right:12px;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size:22px;
+  font-weight:900;
+  opacity:0.95;
+  margin:0;
+}
+
+.mini-resumo{
+  font-weight:900;
+  margin-bottom:10px;
+}
+
+@media(max-width:900px){
+  .valores-split{ grid-template-columns: 1fr; }
+  .titulo-vertical{
+    position:static;
+    writing-mode:horizontal-tb;
+    transform:none;
+    margin-bottom:10px;
+  }
+}
+  
 </style>
 </head>
 
@@ -318,19 +362,27 @@ canvas{
       </div>
     </div>
 
-    <!-- VALORES -->
-    <div class="card">
-      <h2>Valores de Vendas</h2>
-      <canvas id="valoresChart"></canvas>
-      <div class="resumo">
-        <span>Total Geral:</span>
-        <span id="valorTotal">R$ 0,00</span>
-      </div>
-      <div class="resumo">
-        <span>Ticket Médio:</span>
-        <span id="ticketMedio">R$ 0,00</span>
-      </div>
+   <!-- VALORES (NOVO - 2 GRÁFICOS COMO NO EXEMPLO) -->
+<div class="card">
+  <div class="valores-split">
+    
+    <!-- ESQUERDA: Quantidade -->
+    <div class="valores-col">
+      <h2 class="titulo-vertical">Quantidade de Vendas</h2>
+      <div class="mini-resumo">Total: <span id="qtdTotal">0</span></div>
+      <canvas id="qtdChart"></canvas>
     </div>
+
+    <!-- DIREITA: Valores -->
+    <div class="valores-col">
+      <h2 class="titulo-vertical">Valores de Vendas</h2>
+      <div class="mini-resumo">Total Geral: <span id="valorTotal">R$ 0,00</span></div>
+      <div class="mini-resumo">Ticket Médio: <span id="ticketMedio">R$ 0,00</span></div>
+      <canvas id="valoresChart"></canvas>
+    </div>
+
+  </div>
+</div>
 
   </div>
 
