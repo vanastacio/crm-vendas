@@ -527,10 +527,14 @@ async function carregarDashboard() {
     data:{
       labels:Object.keys(pagamentos),
       datasets:[{
-        data:Object.values(pagamentos),
-        borderColor:"rgba(255,255,255,0.75)",
-        borderWidth:2
-      }]
+  data:Object.values(pagamentos),
+  backgroundColor: [
+    "#2196f3", "#ff9800", "#4caf50", "#9c27b0",
+    "#00bcd4", "#ffc107", "#f44336", "#795548"
+  ],
+  borderColor:"rgba(255,255,255,0.75)",
+  borderWidth:2
+}]
     },
     options:{
       responsive:true,
