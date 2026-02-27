@@ -321,7 +321,7 @@ async function carregar(){
  elLista.innerHTML = `<div class="vazio">Carregando pedidos em produção...</div>`;
 
   // pega somente status = "producao"
-  const q = query(collection(db,"vendas"), where("status","==","producao"));
+  const q = query(collection(db,"vendas"), where("status", "in", ["producao", "producao_concluida"]));
   const snap = await getDocs(q);
 
   dados = [];
