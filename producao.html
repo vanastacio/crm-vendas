@@ -374,6 +374,7 @@ function render(){
     const cor = v.produto?.cor || "-";
     const tamanho = v.produto?.tamanho || "-";
     const total = v.total ?? v.valor ?? 0;
+    const statusTxt = (v.status === "producao_concluida") ? "PRODUÇÃO CONCLUÍDA" : "PRODUÇÃO";
 
     return `
       <div class="card">
@@ -382,7 +383,7 @@ function render(){
             <p class="pedido">Pedido #${v.pedido ?? "-"}</p>
             <div class="linha-info">Cliente: <b>${nomeCliente}</b></div>
           </div>
-          <div class="status">PRODUÇÃO</div>
+          <div class="status">${statusTxt}</div>
         </div>
 
         <div class="linha-info">Vendedor: <b>${v.vendedorNome || "-"}</b></div>
