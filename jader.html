@@ -487,10 +487,6 @@ async function carregarDashboard() {
     const pg = v.pagamento?.tipo || v.pagamento;
     if (pg) pagamentos[pg] = (pagamentos[pg] || 0) + 1;
 
-    // mês
-    const mes = v.dataPedido?.slice(0,7);
-    if (mes) vendasPorMes[mes] = (vendasPorMes[mes] || 0) + 1;
-
     // valor
     const valor = Number(v.valor || v.total || v.produto?.total || 0);
     if (valor > 0) {
