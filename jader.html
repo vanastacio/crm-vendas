@@ -464,8 +464,17 @@ async function carregarDashboard() {
   let totalVendas = 0;
   let somaValores = 0;
 
+  const agora = new Date();
+  const mesAtual = String(agora.getMonth()
+  + 1).padStart(2, "0");
+  const mesAtualKey = `$
+  {agora.getFullYear()}-${mesAtual}`; 
+ // ex: "2026-03"
+
   snapshot.forEach(doc => {
     const v = doc.data();
+    if (mes !== mesAtualKey) return; 
+    // ignora tudo que não é do mês atual
 
     // status
     if (v.status && Object.prototype.hasOwnProperty.call(status, v.status)) {
