@@ -286,6 +286,30 @@ canvas{
   .menu{ grid-template-columns:1fr; }
   .card-valores .valores-stats{ grid-template-columns:1fr; }
 }
+
+  .filtros{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin: 10px 0 18px;
+}
+
+.filtro-label{
+  font-weight:900;
+  opacity:.95;
+}
+
+.filtro-select{
+  padding:10px 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.16);
+  background:rgba(0,0,0,0.22);
+  color:#fff;
+  outline:none;
+  backdrop-filter:blur(10px);
+  font-weight:900;
+}
+  
 </style>
 </head>
 
@@ -342,6 +366,12 @@ canvas{
       Estoque
     </button>
   </div>
+
+  <!-- FILTRO DE MÊS -->
+<div class="filtros">
+  <label for="mesSelect" class="filtro-label">Mês:</label>
+  <select id="mesSelect" class="filtro-select"></select>
+</div>
 
   <!-- DASHBOARD -->
   <div class="dashboard">
@@ -423,6 +453,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+let vendasCache = []; // guarda todas as vendas em memória
+const mesSelect = document.getElementById("mesSelect");
+  
 let charts = [];
 
 function destroyCharts(){
@@ -437,24 +470,27 @@ function applyChartDefaults(){
   Chart.defaults.plugins.legend.labels.boxWidth = 10;
 }
 
-onAuthStateChanged(auth, user => {
-  if (!user) {
-    location.href = "login.html";
-    return;
-  }
-  carregarDashboard();
-});
+  function montarMesesNoSelect() {
+  if (!mesSelect) return;
 
-document.getElementById("btnSair").onclick = async () => {
-  await signOut(auth);
-  location.href = "login.html";
-};
+  const meses = [...new Set(
+    vendasCache
+      .map(v => String(v.dataPedido || "").slice(0,7))
+      .filter(m => m && m.length === 7)
+  )].sort(); // crescente
 
-async function carregarDashboard() {
+  // opcional: mais recente primeiro
+  meses.reverse();
+
+  mesSelect.innerHTML = meses.map(m => `<option value="${m}">${m}</option>`).join("");
+
+  // se não tiver nada, evita quebrar
+  if (!mesSelect.value && meses.length) mesSelect.value = meses[0];
+}
+
+  function renderDashboard(mesFiltro) {
   applyChartDefaults();
   destroyCharts();
-
-  const snapshot = await getDocs(collection(db, "vendas"));
 
   const status = { ativa:0, producao:0, entregue:0 };
   const pagamentos = {};
@@ -464,15 +500,10 @@ async function carregarDashboard() {
   let totalVendas = 0;
   let somaValores = 0;
 
- const agora = new Date();
-const mesAtual = String(agora.getMonth() + 1).padStart(2, "0");
-const mesAtualKey = `${agora.getFullYear()}-${mesAtual}`; // ex: "2026-03"
-
-  snapshot.forEach(doc => {
-    const v = doc.data();
-    const mes = String(v.dataPedido || "").slice(0, 7);
-if (!mes) return; // ignora vendas sem dataPedido
-if (mes !== mesAtualKey) return;
+  vendasCache.forEach(v => {
+    const mes = String(v.dataPedido || "").slice(0,7);
+    if (!mes) return;
+    if (mesFiltro && mes !== mesFiltro) return;
 
     // status
     if (v.status && Object.prototype.hasOwnProperty.call(status, v.status)) {
@@ -483,28 +514,31 @@ if (mes !== mesAtualKey) return;
     const pg = v.pagamento?.tipo || v.pagamento;
     if (pg) pagamentos[pg] = (pagamentos[pg] || 0) + 1;
 
-    // valor
-    const valor = Number(v.valor || v.total || v.produto?.total || 0);
-    if (valor > 0) {
+    // quantidade por mês (se você quiser só o mês filtrado, pode usar só um ponto)
+    vendasPorMes[mes] = (vendasPorMes[mes] || 0) + 1;
+
+    // valor (blindado)
+    const valor = Number(v.total ?? v.valor ?? v.produto?.total ?? 0);
+    if (Number.isFinite(valor) && valor > 0) {
       somaValores += valor;
       totalVendas++;
-      if (mes) valoresPorMes[mes] = (valoresPorMes[mes] || 0) + valor;
+      valoresPorMes[mes] = (valoresPorMes[mes] || 0) + valor;
     }
   });
 
-  // textos (blindado)
+  // textos
   const elTotal = document.getElementById("totalVendas");
   if (elTotal) elTotal.textContent = totalVendas;
 
   const elValor = document.getElementById("valorTotal");
-  if (elValor) elValor.textContent =
-    somaValores.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  if (elValor) elValor.textContent = somaValores.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 
   const elTicket = document.getElementById("ticketMedio");
-  if (elTicket) elTicket.textContent =
-    totalVendas ? (somaValores/totalVendas).toLocaleString("pt-BR",{style:"currency",currency:"BRL"}) : "R$ 0,00";
+  if (elTicket) elTicket.textContent = totalVendas
+    ? (somaValores/totalVendas).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
+    : "R$ 0,00";
 
-  // STATUS (sem legenda padrão)
+  // STATUS
   charts.push(new Chart(document.getElementById("statusChart"),{
     type:"doughnut",
     data:{
@@ -517,60 +551,38 @@ if (mes !== mesAtualKey) return;
         hoverOffset:6
       }]
     },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      cutout:"68%",
-      plugins:{ legend:{ display:false } }
-    }
+    options:{ responsive:true, maintainAspectRatio:false, cutout:"68%", plugins:{ legend:{ display:false } } }
   }));
 
   // PAGAMENTO
   charts.push(new Chart(document.getElementById("pagamentoChart"),{
     type:"pie",
+    data:{ labels:Object.keys(pagamentos), datasets:[{ data:Object.values(pagamentos), borderColor:"rgba(255,255,255,0.75)", borderWidth:2 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:"top" } } }
+  }));
+
+  // QUANTIDADE (aqui é o que mais quebra se labels ficar vazio)
+  const labelsQtd = Object.keys(vendasPorMes);
+  const dadosQtd  = Object.values(vendasPorMes);
+
+  charts.push(new Chart(document.getElementById("quantidadeChart"),{
+    type:"bar",
     data:{
-      labels:Object.keys(pagamentos),
+      labels: labelsQtd.length ? labelsQtd : [mesFiltro || "—"],
       datasets:[{
-  data:Object.values(pagamentos),
-  backgroundColor: [
-    "#2196f3", "#ff9800", "#4caf50", "#9c27b0",
-    "#00bcd4", "#ffc107", "#f44336", "#795548"
-  ],
-  borderColor:"rgba(255,255,255,0.75)",
-  borderWidth:2
-}]
+        label:"Vendas",
+        data: dadosQtd.length ? dadosQtd : [0],
+        backgroundColor:"rgba(33,150,243,0.85)",
+        borderRadius:10
+      }]
     },
     options:{
       responsive:true,
       maintainAspectRatio:false,
-      plugins:{ legend:{ position:"top" } }
+      scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:"rgba(255,255,255,0.08)" }, ticks:{ precision:0 } } },
+      plugins:{ legend:{ display:false } }
     }
   }));
-
- // QUANTIDADE (mês atual: 1 barra)
-const qtdMesAtual = totalVendas; // já é sua contagem do mês atual
-
-charts.push(new Chart(document.getElementById("quantidadeChart"), {
-  type: "bar",
-  data: {
-    labels: [mesAtualKey], // ex: ["2026-03"]
-    datasets: [{
-      label: "Vendas",
-      data: [qtdMesAtual],
-      backgroundColor: "rgba(33,150,243,0.85)",
-      borderRadius: 10
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      x: { grid: { display: false } },
-      y: { beginAtZero: true, grid: { color: "rgba(255,255,255,0.08)" }, ticks: { precision: 0 } }
-    },
-    plugins: { legend: { display: false } }
-  }
-}));
 
   // VALORES
   charts.push(new Chart(document.getElementById("valoresChart"),{
@@ -587,14 +599,37 @@ charts.push(new Chart(document.getElementById("quantidadeChart"), {
     options:{
       responsive:true,
       maintainAspectRatio:false,
-      scales:{
-        x:{ grid:{ display:false } },
-        y:{ grid:{ color:"rgba(255,255,255,0.08)" } }
-      },
+      scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:"rgba(255,255,255,0.08)" } } },
       plugins:{ legend:{ display:false } }
     }
   }));
 }
+
+async function carregarDashboard() {
+  const snapshot = await getDocs(collection(db, "vendas"));
+
+  vendasCache = [];
+  snapshot.forEach(d => vendasCache.push(d.data()));
+
+  montarMesesNoSelect();
+  renderDashboard(mesSelect?.value);
+}  
+
+onAuthStateChanged(auth, user => {
+  if (!user) {
+    location.href = "login.html";
+    return;
+  }
+  carregarDashboard();
+});
+
+  if (mesSelect){ mesSelect.onchange = () => renderDashboard(mesSelect.value);}
+
+document.getElementById("btnSair").onclick = async () => {
+  await signOut(auth);
+  location.href = "login.html";
+};
+
 </script>
 
 </body>
