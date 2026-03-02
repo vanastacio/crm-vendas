@@ -547,28 +547,30 @@ if (mes !== mesAtualKey) return;
     }
   }));
 
-  // QUANTIDADE
-  charts.push(new Chart(document.getElementById("quantidadeChart"),{
-    type:"bar",
-    data:{
-      labels:Object.keys(vendasPorMes),
-      datasets:[{
-        label:"Vendas",
-        data:Object.values(vendasPorMes),
-        backgroundColor:"rgba(33,150,243,0.85)",
-        borderRadius:10
-      }]
+ // QUANTIDADE (mês atual: 1 barra)
+const qtdMesAtual = totalVendas; // já é sua contagem do mês atual
+
+charts.push(new Chart(document.getElementById("quantidadeChart"), {
+  type: "bar",
+  data: {
+    labels: [mesAtualKey], // ex: ["2026-03"]
+    datasets: [{
+      label: "Vendas",
+      data: [qtdMesAtual],
+      backgroundColor: "rgba(33,150,243,0.85)",
+      borderRadius: 10
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: { grid: { display: false } },
+      y: { beginAtZero: true, grid: { color: "rgba(255,255,255,0.08)" }, ticks: { precision: 0 } }
     },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      scales:{
-        x:{ grid:{ display:false } },
-        y:{ grid:{ color:"rgba(255,255,255,0.08)" }, ticks:{ precision:0 } }
-      },
-      plugins:{ legend:{ display:false } }
-    }
-  }));
+    plugins: { legend: { display: false } }
+  }
+}));
 
   // VALORES
   charts.push(new Chart(document.getElementById("valoresChart"),{
