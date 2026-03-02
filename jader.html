@@ -473,7 +473,7 @@ async function carregarDashboard() {
 
   snapshot.forEach(doc => {
     const v = doc.data();
-    const mes = (u.dataPedido ||
+    const mes = (v.dataPedido ||
     "").slice(0,7);
     if (mes !== mesAtualKey) return; 
     // ignora tudo que não é do mês atual
