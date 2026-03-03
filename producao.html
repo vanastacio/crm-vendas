@@ -413,7 +413,7 @@ function render(){
     const nomeCliente = v.cliente?.nome || "-";
     const contato = v.cliente?.contato || "-";
     const cidade = v.cliente?.cidade || "-";
-    const zona = v.zona?.zona || "-";
+    const zona = formatarZona(v.zona) || "-";
     const modelo = v.produto?.modelo || "-";
     const cor = v.produto?.cor || "-";
     const tamanho = v.produto?.tamanho || "-";
