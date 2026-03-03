@@ -387,6 +387,7 @@ window.expandirCard=(card)=>{
 /* ===== FILTRO INTELIGENTE ===== */
 const tipoFiltro = document.getElementById("tipoFiltro");
 const campoFiltro = document.getElementById("campoFiltro");
+const filtroZona = document.getElementById("filtroZona");
 
 tipoFiltro.onchange = () => {
 
@@ -445,6 +446,22 @@ campoFiltro.oninput = () => {
       v.dataPedido === valor
     );
   }
+
+  renderizarCards(filtrado);
+};
+
+  filtroZona.onchange = () => {
+
+  const zonaSelecionada = filtroZona.value;
+
+  if(!zonaSelecionada){
+    renderizarCards(vendasCache);
+    return;
+  }
+
+  const filtrado = vendasCache.filter(v =>
+    v.zona === zonaSelecionada
+  );
 
   renderizarCards(filtrado);
 };
