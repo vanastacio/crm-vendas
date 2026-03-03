@@ -290,26 +290,54 @@ pagamento.onchange=()=>{
   }
 };
 
-function buscarCepJsonp(cepNum) {
+async function buscarCepBrasilAPI(cepNum){
+  const resp = await fetch(`https://brasilapi.com.br/api/cep/v1/${cepNum}`);
+  if (!resp.ok) throw new Error("BrasilAPI falhou");
+  return await resp.json();
+}
+
+function buscarCepViaCepJsonp(cepNum) {
   return new Promise((resolve, reject) => {
     const callbackName = "viacep_cb_" + Date.now();
 
     window[callbackName] = (data) => {
-      delete window[callbackName];
+      try { delete window[callbackName]; } catch(e){}
       script.remove();
       resolve(data);
     };
 
     const script = document.createElement("script");
     script.src = `https://viacep.com.br/ws/${cepNum}/json/?callback=${callbackName}`;
+
     script.onerror = () => {
-      delete window[callbackName];
+      try { delete window[callbackName]; } catch(e){}
       script.remove();
-      reject(new Error("Falha ao carregar ViaCEP"));
+      reject(new Error("ViaCEP (JSONP) falhou ao carregar"));
     };
 
     document.body.appendChild(script);
   });
+}
+
+async function buscarCep(cepNum){
+  // 1) tenta BrasilAPI
+  try{
+    const r = await buscarCepBrasilAPI(cepNum);
+    return {
+      logradouro: r.street || "",
+      bairro: r.neighborhood || "",
+      localidade: r.city || ""
+    };
+  }catch(e){
+    // 2) fallback ViaCEP JSONP
+    const r = await buscarCepViaCepJsonp(cepNum);
+    if (!r || r.erro) throw new Error("CEP não encontrado");
+    return {
+      logradouro: r.logradouro || "",
+      bairro: r.bairro || "",
+      localidade: r.localidade || ""
+    };
+  }
 }
 
 cep.onblur = async () => {
@@ -317,16 +345,11 @@ cep.onblur = async () => {
   if (c.length !== 8) return;
 
   try {
-    const r = await buscarCepJsonp(c);
+    const r = await buscarCep(c);
 
-    if (!r || r.erro) {
-      alert("CEP não encontrado.");
-      return;
-    }
-
-    rua.value = r.logradouro || "";
-    bairro.value = r.bairro || "";
-    cidade.value = r.localidade || "";
+    rua.value = r.logradouro;
+    bairro.value = r.bairro;
+    cidade.value = r.localidade;
   } catch (e) {
     console.error(e);
     alert("Não foi possível buscar o CEP agora. Tente novamente.");
@@ -387,6 +410,7 @@ btnSair.onclick=async()=>{
 
 </body>
 </html>
+
 
 
 
