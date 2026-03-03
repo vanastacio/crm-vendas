@@ -193,6 +193,16 @@ hr {
 <input placeholder="Número" id="numero">
 <input placeholder="Bairro" id="bairro">
 <input placeholder="Município" id="cidade">
+  <label>Zona</label>
+<select id="zona" required>
+  <option value="">Selecione</option>
+  <option value="centro">Centro</option>
+  <option value="zona_norte">Zona Norte</option>
+  <option value="zona_sul">Zona Sul</option>
+  <option value="zona_leste">Zona Leste</option>
+  <option value="zona_oeste">Zona Oeste</option>
+  <option value="abc_paulista">ABC Paulista</option>
+</select>
 
 <textarea placeholder="Observações" id="obs"></textarea>
 
@@ -329,6 +339,7 @@ formVenda.onsubmit=async e=>{
       bairro:bairro.value,
       cidade:cidade.value
     },
+    zona: zona.value,
     observacoes:obs.value
   });
 
@@ -344,5 +355,6 @@ btnSair.onclick=async()=>{
 
 </body>
 </html>
+
 
 
