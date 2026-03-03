@@ -413,6 +413,7 @@ function render(){
     const nomeCliente = v.cliente?.nome || "-";
     const contato = v.cliente?.contato || "-";
     const cidade = v.cliente?.cidade || "-";
+    const zona = v.zona?.zona || "-";
     const modelo = v.produto?.modelo || "-";
     const cor = v.produto?.cor || "-";
     const tamanho = v.produto?.tamanho || "-";
@@ -450,6 +451,7 @@ function render(){
         <div class="linha-info">Produto: <b>${modelo}</b></div>
         <div class="linha-info">Tamanho: <b>${tamanho}</b> • Cor: <b>${cor}</b></div>
         <div class="linha-info">Contato: <b>${contato}</b> • Cidade: <b>${cidade}</b></div>
+        <div class="linha-info">Zona: <b>${zona}</b></div>
 
         <div class="valor">Total: ${moedaBRL(total)}</div>
 
