@@ -290,14 +290,46 @@ pagamento.onchange=()=>{
   }
 };
 
-cep.onblur=async()=>{
-  const c=cep.value.replace(/\D/g,"");
-  if(c.length!==8) return;
-  const r=await fetch(`https://viacep.com.br/ws/${c}/json/`).then(r=>r.json());
-  if(!r.erro){
-    rua.value=r.logradouro;
-    bairro.value=r.bairro;
-    cidade.value=r.localidade;
+function buscarCepJsonp(cepNum) {
+  return new Promise((resolve, reject) => {
+    const callbackName = "viacep_cb_" + Date.now();
+
+    window[callbackName] = (data) => {
+      delete window[callbackName];
+      script.remove();
+      resolve(data);
+    };
+
+    const script = document.createElement("script");
+    script.src = https://viacep.com.br/ws/${cepNum}/json/?callback=${callbackName};
+    script.onerror = () => {
+      delete window[callbackName];
+      script.remove();
+      reject(new Error("Falha ao carregar ViaCEP"));
+    };
+
+    document.body.appendChild(script);
+  });
+}
+
+cep.onblur = async () => {
+  const c = cep.value.replace(/\D/g, "");
+  if (c.length !== 8) return;
+
+  try {
+    const r = await buscarCepJsonp(c);
+
+    if (!r || r.erro) {
+      alert("CEP não encontrado.");
+      return;
+    }
+
+    rua.value = r.logradouro || "";
+    bairro.value = r.bairro || "";
+    cidade.value = r.localidade || "";
+  } catch (e) {
+    console.error(e);
+    alert("Não foi possível buscar o CEP agora. Tente novamente.");
   }
 };
 
@@ -355,6 +387,7 @@ btnSair.onclick=async()=>{
 
 </body>
 </html>
+
 
 
 
