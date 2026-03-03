@@ -251,6 +251,18 @@ function formatarValor(v){
   return Number(v || 0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 }
 
+  function formatarZona(z){
+  const map = {
+    centro: "Centro",
+    zona_norte: "Zona Norte",
+    zona_sul: "Zona Sul",
+    zona_leste: "Zona Leste",
+    zona_oeste: "Zona Oeste",
+    abc_paulista: "ABC Paulista"
+  };
+  return map[z] || "-";
+}
+
 function calcularTotal(v){
   const produto = v.produto?.valor ?? 0;
   const frete = v.frete ?? 0;
@@ -322,9 +334,7 @@ function renderizarCards(lista){
           <b>Modelo:</b> ${v.produto?.modelo}<br>
           <b>Cor:</b> ${v.produto?.cor}<br>
           <b>Tamanho:</b> ${v.produto?.tamanho}<br>
-          <b>Frete:</b> ${formatarValor(v.frete)}<br>
-          <b>Montagem:</b> ${formatarValor(v.montagem)}<br>
-          <b>Pagamento:</b> ${v.pagamento?.tipo}<br>
+          <b>Zona:</b> ${formatarZona(v.zona)}<br>
           <b>Status:</b> ${v.status}<br>
           <b>Observações:</b> ${v.observacoes || "-"}
           <br><br>
