@@ -301,7 +301,7 @@ function buscarCepJsonp(cepNum) {
     };
 
     const script = document.createElement("script");
-    script.src = https://viacep.com.br/ws/${cepNum}/json/?callback=${callbackName};
+    script.src = `https://viacep.com.br/ws/${cepNum}/json/?callback=${callbackName}`;
     script.onerror = () => {
       delete window[callbackName];
       script.remove();
@@ -387,6 +387,7 @@ btnSair.onclick=async()=>{
 
 </body>
 </html>
+
 
 
 
