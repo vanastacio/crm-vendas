@@ -458,7 +458,7 @@ function render(){
         <div class="acoes">
   ${
     v.status === "producao_concluida"
-    ? `<button class="btn-ok" type="button" data-id="${v.id}">
+    ? `<button class="btn-ok" type="button" onclick="enviarParaEntrega(${v.id})">
          Enviar para Entrega
        </button>`
     : ``
@@ -543,6 +543,22 @@ function render(){
       }
     };
   });
+
+  async function enviarParaEntrega(id){
+
+  const ok = confirm("Enviar este pedido para ENTREGA?");
+  if(!ok) return;
+
+  await updateDoc(doc(db, "vendas", id), {
+    status: "em_entrega",
+    enviadoParaEntregaEm: new Date().toISOString()
+  });
+
+  alert("Pedido enviado para entrega!");
+  location.reload();
+}
+
+window.enviarParaEntrega = enviarParaEntrega;
   
 </script>
 </body>
