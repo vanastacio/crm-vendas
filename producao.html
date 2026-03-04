@@ -458,8 +458,8 @@ function render(){
         <div class="acoes">
   ${
     v.status === "producao_concluida"
-    ? `<button class="btn-ok" type="button" onclick="enviarParaEntrega('${v.id}')">
-         Enviar para Entrega
+    ? `<button class="btn-ok btn-entrega" type="button" data-id="${v.id}">
+           Enviar para Entrega
        </button>`
     : ``
   }
