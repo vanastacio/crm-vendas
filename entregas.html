@@ -287,7 +287,7 @@ async function validarEntregador(user){
   if(!snap.exists()) return false;
 
   const data = snap.data();
-  return data.role === "entregador";
+  return data.role === "entregador" || role === "jader";
 }
 
 async function carregarPedidosEntrega(){
