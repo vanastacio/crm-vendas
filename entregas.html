@@ -527,7 +527,7 @@ function render(){
   const lista = aplicarFiltros();
 
   if(!lista.length){
-    listaEl.innerHTML = <div class="empty">Nenhum pedido em entrega com esses filtros.</div>;
+    listaEl.innerHTML = `<div class="empty">Nenhum pedido em entrega com esses filtros.</div>`;
     return;
   }
 
