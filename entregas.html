@@ -282,9 +282,13 @@ function normalizarTexto(s){
    DocId: email do entregador (ex: "joao@gmail.com")
 */
 async function validarEntregador(user){
-  const ref = doc(db, "entregadores", user.email);
+  // Agora checa a coleção CERTA: "usuarios"
+  // E o doc CERTO: o UID do usuário logado
+  const ref = doc(db, "usuarios", user.uid);
   const snap = await getDoc(ref);
-  return snap.exists();
+
+  // precisa existir e ter role = "entregador"
+  return snap.exists() && snap.data()?.role === "entregador";
 }
 
 async function carregarPedidosEntrega(){
