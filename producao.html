@@ -472,77 +472,41 @@ function render(){
     `;
   }).join("");
 
-  // eventos dos botões
-  elLista.querySelectorAll(".btn-ok").forEach(btn => {
-    btn.onclick = async () => {
-      const id = btn.getAttribute("data-id");
-      if (!id) return;
+// eventos do botão ENVIAR PARA ENTREGA
+elLista.querySelectorAll(".btn-entrega").forEach(btn => {
+  btn.onclick = async () => {
+    const id = btn.getAttribute("data-id");
+    if (!id) return;
 
-      btn.disabled = true;
-      btn.textContent = "Atualizando...";
+    btn.disabled = true;
+    const txtOriginal = btn.textContent;
+    btn.textContent = "Enviando...";
 
-      try{
-        await updateDoc(doc(db,"vendas", id), { status:"entregue" });
-        dados = dados.filter(x => x.id !== id);
-        render();
-      }catch(e){
-        console.error(e);
-        alert("Erro ao atualizar status. Veja o console.");
-        btn.disabled = false;
-        btn.textContent = "Marcar como Entregue";
-      }
-    };
-  });
+    try{
+      await enviarParaEntrega(id); // <-- chama a função certa
+      // remove do array local e renderiza (opcional)
+    }catch(e){
+      console.error(e);
+      alert("Erro ao enviar para entrega. Veja o console.");
+      btn.disabled = false;
+      btn.textContent = txtOriginal;
+    }
+  };
+});
 
-  elLista.querySelectorAll("[data-copiar]").forEach(btn => {
-    btn.onclick = async () => {
-      const txt = btn.getAttribute("data-copiar") || "";
-      try{
-        await navigator.clipboard.writeText(txt);
-        btn.textContent = "Copiado ✅";
-        setTimeout(()=> btn.textContent = "Copiar Contato", 900);
-      }catch{
-        alert("Não consegui copiar. Copie manualmente: " + txt);
-      }
-    };
-  });
-}
-
-  // eventos dos botões
-  elLista.querySelectorAll(".btn-ok").forEach(btn => {
-    btn.onclick = async () => {
-      const id = btn.getAttribute("data-id");
-      if (!id) return;
-
-      btn.disabled = true;
-      btn.textContent = "Atualizando...";
-
-      try{
-        await updateDoc(doc(db,"vendas", id), { status:"entregue" });
-        // remove do array local e renderiza
-        dados = dados.filter(x => x.id !== id);
-        render();
-      }catch(e){
-        console.error(e);
-        alert("Erro ao atualizar status. Veja o console.");
-        btn.disabled = false;
-        btn.textContent = "Marcar como Entregue";
-      }
-    };
-  });
-
-  elLista.querySelectorAll("[data-copiar]").forEach(btn => {
-    btn.onclick = async () => {
-      const txt = btn.getAttribute("data-copiar") || "";
-      try{
-        await navigator.clipboard.writeText(txt);
-        btn.textContent = "Copiado ✅";
-        setTimeout(()=> btn.textContent = "Copiar Contato", 900);
-      }catch{
-        alert("Não consegui copiar. Copie manualmente: " + txt);
-      }
-    };
-  });
+  // eventos do botão COPIAR CONTATO
+elLista.querySelectorAll("[data-copiar]").forEach(btn => {
+  btn.onclick = async () => {
+    const txt = btn.getAttribute("data-copiar") || "";
+    try{
+      await navigator.clipboard.writeText(txt);
+      btn.textContent = "Copiado ✅";
+      setTimeout(()=> btn.textContent = "Copiar Contato", 900);
+    }catch{
+      alert("Não consegui copiar. Copie manualmente: " + txt);
+    }
+  };
+});
 
   async function enviarParaEntrega(id){
 
