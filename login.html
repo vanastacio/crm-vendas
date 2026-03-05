@@ -231,29 +231,7 @@ btnLogin.onclick = async () => {
     loginError.textContent = "Email ou senha inválidos.";
   }
 };
-
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return;
-
-  // evita loop quando já está na página certa
-  const pagina = (location.pathname.split("/").pop() || "").toLowerCase();
-  if (["jader.html","producao-func.html","entregas.html"].includes(pagina)) return;
-
-  const role = await obterRole(user.uid);
-
-  if (!role && user.email === EMAIL_JADER) {
-    window.location.href = "jader.html";
-    return;
-  }
-
-  if (!role) {
-    // se estiver logado mas sem cadastro em /usuarios, manda pro index ou login
-    window.location.href = "index.html";
-    return;
-  }
-
-  redirecionarPorRole(role);
-});
+  
 </script>
 
 </body>
