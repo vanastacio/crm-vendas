@@ -664,7 +664,8 @@ onAuthStateChanged(auth, async (user) => {
 
   uidAtual = user.uid;
 
-  const role = await validaRole(user);
+  const role = await validarRole(user);
+  roleAtual = role;
 
   const ehEntregador = await validarEntregador(user);
   if(!ehEntregador){
