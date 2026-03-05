@@ -248,6 +248,7 @@ const db = getFirestore(app);
 
 let uidAtual = "";
 let vendasCache = [];
+let roleAtual = "";
 
 const listaEl = document.getElementById("lista");
 const zonaFiltro = document.getElementById("zonaFiltro");
@@ -654,6 +655,20 @@ window.marcarEntregue = marcarEntregue;
 zonaFiltro.onchange = render;
 dataFiltro.onchange = render;
 buscaFiltro.oninput = render;
+
+  async function validarRole(user){
+  const ref = doc(db, "usuarios", user.uid);
+  const snap = await getDoc(ref);
+  if(!snap.exists()) return "";
+
+  const data = snap.data();
+  const role = String(data.role || "").toLowerCase();
+
+  // só aceitamos entregador ou jader
+  if (role === "entregador" || role === "jader") return role;
+
+  return "";
+}
 
 /* ===== Auth ===== */
 onAuthStateChanged(auth, async (user) => {
