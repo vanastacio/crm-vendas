@@ -358,7 +358,7 @@ function aplicarUIporRole(){
    Entregador busca só em_entrega
 */
 async function carregarPedidosEntrega(){
-  listaEl.innerHTML = <div class="empty">Carregando...</div>;
+  listaEl.innerHTML = `<div class="empty">Carregando...</div>`;
 
   let q;
   if (roleAtual === "jader"){
