@@ -310,7 +310,7 @@ async function validarEntregador(user){
 }
 
 async function carregarPedidosEntrega(){
-  listaEl.innerHTML = <div class="empty">Carregando pedidos em entrega...</div>;
+  listaEl.innerHTML = `<div class="empty">Carregando pedidos em entrega...</div>`;
 
   const q = query(collection(db, "vendas"), where("status", "==", "em_entrega"));
   const snap = await getDocs(q);
