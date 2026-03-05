@@ -592,8 +592,8 @@ function render(){
           <div class="actions">
             ${
               status !== "entregue"
-                ? <button class="btn primary" onclick="marcarEntregue('${v.id}')">Marcar como entregue</button>
-                : <button class="btn" type="button" disabled style="opacity:.6;cursor:not-allowed;">Já entregue</button>
+                ? `<button class="btn primary" onclick="marcarEntregue('${v.id}')">Marcar como entregue</button>`
+                : `<button class="btn" type="button" disabled style="opacity:.6;cursor:not-allowed;">Já entregue</button>`
             }
             <button class="btn" onclick="abrirMapsById('${v.id}')">Abrir no Maps</button>
           </div>
