@@ -376,8 +376,8 @@ async function carregarPedidosEntrega(){
 
 function montarZonasNoSelect(){
   const zonas = [...new Set(vendasCache.map(v => v.zona).filter(Boolean))].sort();
-  zonaFiltro.innerHTML = <option value="">Todas as Zonas</option> +
-    zonas.map(z => <option value="${z}">${formatarZona(z)}</option>).join("");
+  zonaFiltro.innerHTML = `<option value="">Todas as Zonas</option>` +
+    zonas.map(z => `<option value="${z}">${formatarZona(z)}</option>`).join("");
 }
 
 function aplicarFiltros(){
