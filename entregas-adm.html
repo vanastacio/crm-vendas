@@ -73,7 +73,7 @@
     display:grid;
     grid-template-columns: 1fr 1fr 1.2fr;
     gap:10px;
-    margin:12px 0 12px;
+    margin:12px 0 18px;
   }
   .control{
     border:1px solid rgba(255,255,255,0.16);
@@ -87,33 +87,8 @@
   }
   .control::placeholder{ color: rgba(255,255,255,0.55); font-weight:800; }
 
-  /* ===== ABAS (ADMIN) ===== */
-  .tabs{
-    display:none; /* só aparece pro Jader via JS */
-    gap:10px;
-    margin:0 0 18px;
-  }
-  .tab{
-    flex:1;
-    padding:12px 14px;
-    border-radius:14px;
-    border:1px solid rgba(255,255,255,0.16);
-    background:rgba(0,0,0,0.18);
-    color:#fff;
-    font-weight:1000;
-    cursor:pointer;
-    transition:.2s ease;
-    text-align:center;
-    user-select:none;
-  }
-  .tab:hover{ transform: translateY(-1px); background:rgba(255,255,255,0.10); }
-  .tab.active{
-    background: rgba(33,150,243,0.22);
-    border-color: rgba(33,150,243,0.35);
-  }
-
-  /* ===== LISTA / SEÇÕES ===== */
-  .section{
+  /* ===== ZONAS (layout horizontal) ===== */
+  .zone-wrap{
     margin:14px 0;
     border:1px solid rgba(255,255,255,0.14);
     background: rgba(0,0,0,0.16);
@@ -122,40 +97,59 @@
     backdrop-filter: blur(14px);
     box-shadow:0 18px 46px rgba(0,0,0,0.35);
   }
-  .section-head{
+  .zone-head{
     display:flex;
     align-items:center;
     justify-content:space-between;
     padding:14px 16px;
-    cursor:pointer;
-    user-select:none;
     background: rgba(0,0,0,0.18);
     border-bottom: 1px solid rgba(255,255,255,0.10);
+    gap:10px;
   }
-  .section-head .zone{
+  .zone-title{
     font-weight:1000;
     letter-spacing:.3px;
     font-size:18px;
   }
-  .section-head .count{
+  .zone-count{
     opacity:.9;
     font-weight:900;
+    white-space:nowrap;
   }
-  .section-body{
-    display:none;
-    padding:14px 14px 6px;
-  }
-  .section.open .section-body{ display:block; }
 
-  /* ===== CARD ===== */
+  /* faixa horizontal */
+  .zone-row{
+    display:flex;
+    gap:12px;
+    padding:14px;
+    overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* scrollbar (desktop) */
+  .zone-row::-webkit-scrollbar{ height:10px; }
+  .zone-row::-webkit-scrollbar-thumb{
+    background: rgba(255,255,255,0.18);
+    border-radius: 999px;
+  }
+  .zone-row::-webkit-scrollbar-track{
+    background: rgba(0,0,0,0.18);
+    border-radius: 999px;
+  }
+
+  /* ===== CARD (agora vira “tile” horizontal) ===== */
   .card{
+    flex: 0 0 360px;     /* largura fixa do card na faixa */
+    max-width: 360px;
     border:1px solid rgba(255,255,255,0.14);
     background: rgba(0,0,0,0.20);
     border-radius:18px;
     padding:14px 14px 12px;
-    margin-bottom:12px;
     box-shadow:0 10px 26px rgba(0,0,0,0.35);
+    scroll-snap-align:start;
   }
+
   .card-top{
     display:flex;
     justify-content:space-between;
@@ -175,7 +169,7 @@
     background: rgba(0,0,0,0.25);
     white-space:nowrap;
   }
-  .pill.em_entrega{ border-color: rgba(33,150,243,0.35); }
+  .pill.entrega{ border-color: rgba(33,150,243,0.35); }
   .pill.entregue{ border-color: rgba(76,175,80,0.40); }
 
   .line{
@@ -226,7 +220,7 @@
     .filters{ grid-template-columns: 1fr; }
     .actions{ grid-template-columns: 1fr; }
     .btn-row{ grid-template-columns: 1fr; }
-    .tabs{ flex-direction:column; }
+    .card{ flex-basis: 84vw; max-width: 84vw; } /* melhor no celular */
   }
 </style>
 </head>
@@ -237,7 +231,7 @@
   <div class="topbar">
     <h1 class="title">Entregas</h1>
     <div class="top-actions">
-      <button id="btnVoltar" class="btn-pill" type="button" onclick="location.href='jader.html'">Voltar</button>
+      <button class="btn-pill" type="button" onclick="location.href='jader.html'">Voltar</button>
       <button id="btnSair" class="btn-pill" type="button">Sair</button>
     </div>
   </div>
@@ -250,12 +244,6 @@
     <input id="dataFiltro" type="date" class="control" />
 
     <input id="buscaFiltro" class="control" placeholder="Buscar por pedido, cliente, cidade..." />
-  </div>
-
-  <!-- ABAS (só pro Jader) -->
-  <div class="tabs" id="tabsStatus">
-    <div class="tab active" data-status="em_entrega">Em entrega</div>
-    <div class="tab" data-status="entregue">Entregues</div>
   </div>
 
   <div id="lista"></div>
@@ -281,15 +269,11 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let vendasCache = [];
-let roleAtual = "";              // "entregador" | "jader"
-let statusSelecionado = "em_entrega"; // admin alterna aqui
 
 const listaEl = document.getElementById("lista");
 const zonaFiltro = document.getElementById("zonaFiltro");
 const dataFiltro = document.getElementById("dataFiltro");
 const buscaFiltro = document.getElementById("buscaFiltro");
-const tabsStatus = document.getElementById("tabsStatus");
-const btnVoltar = document.getElementById("btnVoltar");
 
 function formatarZona(z){
   const map = {
@@ -315,43 +299,22 @@ function normalizarTexto(s){
   return String(s || "").toLowerCase().trim();
 }
 
-/* ====== BLOQUEIO: entregador OU Jader (por role em /usuarios/{uid}) ====== */
-async function validarRole(user){
+/* ====== BLOQUEIO: só entregador (ou jader) ====== */
+async function validarEntregador(user){
   const ref = doc(db, "usuarios", user.uid);
   const snap = await getDoc(ref);
-  if(!snap.exists()) return "";
+  if(!snap.exists()) return false;
 
   const data = snap.data();
-  const role = String(data.role || "").toLowerCase();
-  if (role === "entregador" || role === "jader") return role;
-
-  return "";
-}
-
-function aplicarUIporRole(){
-  // Entregador não precisa do botão voltar nem das abas
-  if (roleAtual !== "jader"){
-    if (btnVoltar) btnVoltar.style.display = "none";
-    if (tabsStatus) tabsStatus.style.display = "none";
-    statusSelecionado = "em_entrega";
-  } else {
-    if (tabsStatus) tabsStatus.style.display = "flex";
-  }
+  return data.role === "entregador" || data.role === "jader";
 }
 
 async function carregarPedidosEntrega(){
-  listaEl.innerHTML = "Carregando...";
+  listaEl.innerHTML = <div class="empty">Carregando pedidos em entrega...</div>;
 
-  // Admin (Jader) vê em_entrega e entregue (pra alternar na tela)
-  // Entregador vê só em_entrega
-  let q;
-  if (roleAtual === "jader"){
-    q = query(collection(db, "vendas"), where("status", "in", ["em_entrega", "entregue"]));
-  } else {
-    q = query(collection(db, "vendas"), where("status", "==", "em_entrega"));
-  }
-
+  const q = query(collection(db, "vendas"), where("status", "==", "em_entrega"));
   const snap = await getDocs(q);
+
   vendasCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
   montarZonasNoSelect();
@@ -360,8 +323,8 @@ async function carregarPedidosEntrega(){
 
 function montarZonasNoSelect(){
   const zonas = [...new Set(vendasCache.map(v => v.zona).filter(Boolean))].sort();
-  zonaFiltro.innerHTML = `<option value="">Todas as Zonas</option>` +
-    zonas.map(z => `<option value="${z}">${formatarZona(z)}</option>`).join("");
+  zonaFiltro.innerHTML = <option value="">Todas as Zonas</option> +
+    zonas.map(z => <option value="${z}">${formatarZona(z)}</option>).join("");
 }
 
 function aplicarFiltros(){
@@ -370,11 +333,6 @@ function aplicarFiltros(){
   const b = normalizarTexto(buscaFiltro.value);
 
   return vendasCache.filter(v => {
-    // status (só faz diferença pro admin)
-    if (roleAtual === "jader" && statusSelecionado){
-      if (v.status !== statusSelecionado) return false;
-    }
-
     if (z && v.zona !== z) return false;
     if (d && v.dataEntrega !== d) return false;
 
@@ -403,7 +361,9 @@ function agruparPorZona(lista){
 
 function enderecoCompleto(v){
   const c = v.cliente || {};
-  const partes = [ c.rua, c.numero, c.bairro, c.cidade, c.cep ].filter(Boolean);
+  const partes = [
+    c.rua, c.numero, c.bairro, c.cidade, c.cep
+  ].filter(Boolean);
   return partes.join(" - ");
 }
 
@@ -420,7 +380,6 @@ function abrirMaps(v){
 }
 
 function imprimirPedido(v){
-  // Modelo Premium B (impressão)
   const logoSrc = "logo-jd.png";
   const empresa = "JD FÁBRICA DE ESTOFADOS";
 
@@ -458,20 +417,51 @@ function imprimirPedido(v){
       .head .t .s{ font-size:13px; opacity:.8; font-weight:700; }
 
       .box{ padding:18px 22px; }
-      .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-      .card{ border:1px solid #e7e7e7; border-radius:12px; padding:12px 14px; background:#fafafa; }
+      .grid{
+        display:grid;
+        grid-template-columns: 1fr 1fr;
+        gap:12px;
+      }
+      .card{
+        border:1px solid #e7e7e7;
+        border-radius:12px;
+        padding:12px 14px;
+        background:#fafafa;
+      }
       .label{ font-size:12px; opacity:.7; font-weight:800; margin-bottom:4px; }
       .value{ font-size:14px; font-weight:900; }
 
-      .big{ margin-top:12px; border:1px solid #e7e7e7; border-radius:12px; padding:14px; }
+      .big{
+        margin-top:12px;
+        border:1px solid #e7e7e7;
+        border-radius:12px;
+        padding:14px;
+      }
       .row{ display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px dashed #ddd; }
       .row:last-child{ border-bottom:none; }
       .row b{ min-width:120px; }
 
-      .sign{ margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:18px; }
-      .line{ border-top:2px solid #000; padding-top:6px; font-weight:800; text-align:center; }
+      .sign{
+        margin-top:16px;
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:18px;
+      }
+      .line{
+        border-top:2px solid #000;
+        padding-top:6px;
+        font-weight:800;
+        text-align:center;
+      }
 
-      .footer{ padding:14px 22px; background:#0f0f0f; color:#fff; font-weight:800; display:flex; justify-content:space-between; }
+      .footer{
+        padding:14px 22px;
+        background:#0f0f0f;
+        color:#fff;
+        font-weight:800;
+        display:flex;
+        justify-content:space-between;
+      }
 
       @media print{
         body{ background:#fff; }
@@ -491,10 +481,22 @@ function imprimirPedido(v){
 
       <div class="box">
         <div class="grid">
-          <div class="card"><div class="label">Pedido</div><div class="value">#${pedido}</div></div>
-          <div class="card"><div class="label">Total</div><div class="value">${total}</div></div>
-          <div class="card"><div class="label">Data do Pedido</div><div class="value">${dataPedido}</div></div>
-          <div class="card"><div class="label">Data da Entrega</div><div class="value">${dataEntrega}</div></div>
+          <div class="card">
+            <div class="label">Pedido</div>
+            <div class="value">#${pedido}</div>
+          </div>
+          <div class="card">
+            <div class="label">Total</div>
+            <div class="value">${total}</div>
+          </div>
+          <div class="card">
+            <div class="label">Data do Pedido</div>
+            <div class="value">${dataPedido}</div>
+          </div>
+          <div class="card">
+            <div class="label">Data da Entrega</div>
+            <div class="value">${dataEntrega}</div>
+          </div>
         </div>
 
         <div class="big">
@@ -545,12 +547,16 @@ function render(){
   const lista = aplicarFiltros();
 
   if(!lista.length){
-    listaEl.innerHTML = `<div class="empty">Nenhum pedido com esses filtros.</div>`;
+    listaEl.innerHTML = <div class="empty">Nenhum pedido em entrega com esses filtros.</div>;
     return;
   }
 
   const grupos = agruparPorZona(lista);
-  const zonasOrdenadas = Object.keys(grupos).sort((a,b) => formatarZona(a).localeCompare(formatarZona(b)));
+
+  // Ordena zonas por nome
+  const zonasOrdenadas = Object.keys(grupos).sort((a,b) =>
+    formatarZona(a).localeCompare(formatarZona(b))
+  );
 
   listaEl.innerHTML = zonasOrdenadas.map(z => {
     const itens = grupos[z];
@@ -565,10 +571,6 @@ function render(){
       const modelo = v.produto?.modelo || "-";
       const total = moedaBRL(v.total ?? v.valor ?? 0);
 
-      const status = v.status || "em_entrega";
-      const pillTxt = (status === "entregue") ? "ENTREGUE" : "EM ENTREGA";
-      const pillClass = (status === "entregue") ? "pill entregue" : "pill em_entrega";
-
       return `
         <div class="card">
           <div class="card-top">
@@ -577,7 +579,7 @@ function render(){
               <div class="line">Cliente: <b>${cliente}</b></div>
               <div class="line muted">Entrega: <b>${dataEntrega}</b> • Zona: <b>${zonaTxt}</b></div>
             </div>
-            <div class="${pillClass}">${pillTxt}</div>
+            <div class="pill entrega">EM ENTREGA</div>
           </div>
 
           <div class="line">Produto: <b>${modelo}</b></div>
@@ -586,11 +588,7 @@ function render(){
           <div class="line"><b>Total:</b> ${total}</div>
 
           <div class="actions">
-            ${
-              status !== "entregue"
-                ? `<button class="btn primary" onclick="marcarEntregue('${v.id}')">Marcar como entregue</button>`
-                : `<button class="btn" type="button" disabled style="opacity:.6;cursor:not-allowed;">Já entregue</button>`
-            }
+            <button class="btn primary" onclick="marcarEntregue('${v.id}')">Marcar como entregue</button>
             <button class="btn" onclick="abrirMapsById('${v.id}')">Abrir no Maps</button>
           </div>
 
@@ -607,23 +605,20 @@ function render(){
     }).join("");
 
     return `
-      <div class="section open">
-        <div class="section-head" onclick="toggleSection(this)">
-          <div class="zone">${formatarZona(z)}</div>
-          <div class="count">${itens.length} pedido(s)</div>
+      <div class="zone-wrap">
+        <div class="zone-head">
+          <div class="zone-title">${formatarZona(z)}</div>
+          <div class="zone-count">${itens.length} pedido(s)</div>
         </div>
-        <div class="section-body">${cards}</div>
+        <div class="zone-row">
+          ${cards}
+        </div>
       </div>
     `;
   }).join("");
 }
 
 /* ===== Helpers globais pros botões do HTML ===== */
-window.toggleSection = (head) => {
-  const section = head.closest(".section");
-  section.classList.toggle("open");
-};
-
 function acharVenda(id){ return vendasCache.find(v => v.id === id); }
 
 window.abrirMapsById = (id) => {
@@ -659,19 +654,6 @@ zonaFiltro.onchange = render;
 dataFiltro.onchange = render;
 buscaFiltro.oninput = render;
 
-/* ===== Tabs (admin) ===== */
-if (tabsStatus){
-  tabsStatus.querySelectorAll(".tab").forEach(t => {
-    t.onclick = () => {
-      if (roleAtual !== "jader") return;
-      tabsStatus.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
-      t.classList.add("active");
-      statusSelecionado = t.getAttribute("data-status") || "em_entrega";
-      render();
-    };
-  });
-}
-
 /* ===== Auth ===== */
 onAuthStateChanged(auth, async (user) => {
   if(!user){
@@ -679,15 +661,13 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  const role = await validarRole(user);
-  if(!role){
+  const ehEntregador = await validarEntregador(user);
+  if(!ehEntregador){
     alert("Acesso restrito: apenas entregadores.");
     location.href = "login.html";
     return;
   }
 
-  roleAtual = role;
-  aplicarUIporRole();
   carregarPedidosEntrega();
 });
 
