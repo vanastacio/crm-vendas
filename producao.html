@@ -327,6 +327,7 @@ const elFim = document.getElementById("dataFim");
 
 let dados = [];
 let userInfo = { nome:"", email:"" };
+let entregadores = [];
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
@@ -335,6 +336,7 @@ onAuthStateChanged(auth, async (user) => {
   }
   userInfo.nome = user.displayName || "";
   userInfo.email = user.email || "";
+  await carregarEntregadores();
   await carregar();
 });
 
@@ -358,6 +360,29 @@ function moedaBRL(n){
 
 function normaliza(s){
   return String(s||"").toLowerCase().trim();
+}
+
+async function carregarEntregadores(){
+  // pega todos os usuários que são entregadores
+  const q = query(collection(db, "usuarios"), where("role", "==", "entregador"));
+  const snap = await getDocs(q);
+
+  entregadores = snap.docs.map(d => {
+    const data = d.data();
+    return {
+      id: d.id, // <-- ESTE É O DOC ID (normalmente o UID do Auth)
+      name: data.name || data.nome || data.email || "Entregador",
+      email: data.email || ""
+    };
+  }).sort((a,b) => String(a.name).localeCompare(String(b.name)));
+}
+
+function htmlOptionsEntregadores(){
+  if (!entregadores.length){
+    return `<option value="">Nenhum entregador cadastrado</option>`;
+  }
+  return `<option value="">Selecione o entregador...</option>` +
+    entregadores.map(e => `<option value="${e.id}">${e.name}</option>`).join("");
 }
 
 async function carregar(){
@@ -458,10 +483,16 @@ function render(){
         <div class="acoes">
   ${
     v.status === "producao_concluida"
-    ? `<button class="btn-ok btn-entrega" type="button" data-id="${v.id}">
-           Enviar para Entrega
-       </button>`
-    : ``
+? `
+  <select class="control entregador-select" data-id="${v.id}" style="margin-bottom:10px;">
+    ${htmlOptionsEntregadores()}
+  </select>
+
+  <button class="btn-ok btn-entrega" type="button" data-id="${v.id}">
+    Enviar para Entrega
+  </button>
+`
+: ``
   }
 
   <button class="btn-sec" type="button" data-copiar="${contato}">
@@ -482,8 +513,22 @@ elLista.querySelectorAll(".btn-entrega").forEach(btn => {
     const txtOriginal = btn.textContent;
     btn.textContent = "Enviando...";
 
+    const box = btn.closest(".acoes");
+const sel = box ? box.querySelector(".entregador-select") : null;
+const entregadorId = sel ? sel.value : "";
+
+if (!entregadorId){
+  alert("Selecione o entregador antes de enviar para entrega.");
+  btn.disabled = false;
+  btn.textContent = txtOriginal;
+  return;
+}
+
+const entregador = entregadores.find(e => e.id === entregadorId);
+const entregadorNome = entregador?.name || "Entregador";
+
     try{
-      await enviarParaEntrega(id); // <-- chama a função certa
+      await enviarParaEntrega(id, entregadorId, entregadorNome); // <-- chama a função certa
       // remove do array local e renderiza (opcional)
     }catch(e){
       console.error(e);
@@ -508,21 +553,23 @@ elLista.querySelectorAll("[data-copiar]").forEach(btn => {
   };
 });
 
-  async function enviarParaEntrega(id){
-
-  const ok = confirm("Enviar este pedido para ENTREGA?");
+  async function enviarParaEntrega(id, entregadorId, entregadorNome){
+  const ok = confirm(`Enviar este pedido para ENTREGA?\nEntregador: ${entregadorNome}`);
   if(!ok) return;
 
   await updateDoc(doc(db, "vendas", id), {
     status: "em_entrega",
-    enviadoParaEntregaEm: new Date().toISOString()
+    enviadoParaEntregaEm: new Date().toISOString(),
+    entregadorId: entregadorId,
+    entregadorNome: entregadorNome
   });
 
   alert("Pedido enviado para entrega!");
   location.reload();
 }
 
-    window.enviarParaEntrega = enviarParaEntrega;
+window.enviarParaEntrega = enviarParaEntrega;
+
 }
   
 </script>
