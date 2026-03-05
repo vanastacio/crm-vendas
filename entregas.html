@@ -246,6 +246,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+let uidAtual = "";
 let vendasCache = [];
 
 const listaEl = document.getElementById("lista");
@@ -293,11 +294,30 @@ async function validarEntregador(user){
 async function carregarPedidosEntrega(){
   listaEl.innerHTML = "Carregando...";
 
- const q = query(collection(db, "vendas"), where("status", "==", "em_entrega"));
-const snap = await getDocs(q);
+  let q;
 
-vendasCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  
+  if (roleAtual === "jader"){
+    // Jader vê tudo
+    q = query(
+      collection(db, "vendas"),
+      where("status", "in", ["em_entrega", "entregue"])
+    );
+  } else {
+    // Entregador vê somente pedidos dele
+    q = query(
+      collection(db, "vendas"),
+      where("status", "==", "em_entrega"),
+      where("entregadorId", "==", uidAtual)
+    );
+  }
+
+  const snap = await getDocs(q);
+
+  vendasCache = snap.docs.map(d => ({
+    id: d.id,
+    ...d.data()
+  }));
+
   montarZonasNoSelect();
   render();
 }
@@ -641,6 +661,10 @@ onAuthStateChanged(auth, async (user) => {
     location.href = "login.html";
     return;
   }
+
+  uidAtual = user.uid;
+
+  const role = await validaRole(user);
 
   const ehEntregador = await validarEntregador(user);
   if(!ehEntregador){
