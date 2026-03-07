@@ -222,6 +222,8 @@ btnLogin.onclick = async () => {
   try {
     const cred = await signInWithEmailAndPassword(auth, email.value, senha.value);
     const user = cred.user;
+    console.log("UID LOGADO:", user.uid,
+                "EMAIL:", user.email);
 
     // Atalho: Jader pelo email (se quiser manter)
     if (user.email === EMAIL_JADER){
