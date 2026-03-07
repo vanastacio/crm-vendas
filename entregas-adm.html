@@ -454,6 +454,7 @@ function imprimirPedido(v){
   const total = moedaBRL(v.total ?? v.valor ?? 0);
 
   const w = window.open("", "_blank");
+
   w.document.write(`
   <!DOCTYPE html>
   <html lang="pt-BR">
@@ -461,65 +462,328 @@ function imprimirPedido(v){
     <meta charset="UTF-8" />
     <title>Pedido ${pedido}</title>
     <style>
-      body{ font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f4f4; }
-      .page{ max-width: 820px; margin: 18px auto; background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.15); }
-      .head{ padding:18px 22px; display:flex; align-items:center; gap:14px; border-bottom: 2px solid #d4af37; }
-      .head img{ width:70px; height:70px; object-fit:contain; }
-      .head .t{ line-height:1.1; }
-      .head .t .n{ font-size:18px; font-weight:900; }
-      .head .t .s{ font-size:13px; opacity:.8; font-weight:700; }
-      .box{ padding:18px 22px; }
-      .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-      .card{ border:1px solid #e7e7e7; border-radius:12px; padding:12px 14px; background:#fafafa; }
-      .label{ font-size:12px; opacity:.7; font-weight:800; margin-bottom:4px; }
-      .value{ font-size:14px; font-weight:900; }
-      .big{ margin-top:12px; border:1px solid #e7e7e7; border-radius:12px; padding:14px; }
-      .row{ display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px dashed #ddd; }
-      .row:last-child{ border-bottom:none; }
-      .row b{ min-width:120px; }
-      .sign{ margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:18px; }
-      .line{ border-top:2px solid #000; padding-top:6px; font-weight:800; text-align:center; }
-      .footer{ padding:14px 22px; background:#0f0f0f; color:#fff; font-weight:800; display:flex; justify-content:space-between; }
-      @media print{ body{ background:#fff; } .page{ box-shadow:none; margin:0; border-radius:0; } }
+      *{
+        box-sizing:border-box;
+      }
+
+      body{
+        font-family: Arial, Helvetica, sans-serif;
+        margin:0;
+        padding:24px;
+        color:#111;
+        background:#fff;
+      }
+
+      .page{
+        max-width:900px;
+        margin:0 auto;
+      }
+
+      .header{
+        display:flex;
+        align-items:center;
+        gap:18px;
+        margin-bottom:14px;
+      }
+
+      .logo{
+        width:84px;
+        height:84px;
+        object-fit:contain;
+      }
+
+      .header-text{
+        flex:1;
+      }
+
+      .empresa{
+        font-size:18px;
+        font-weight:800;
+        letter-spacing:.3px;
+      }
+
+      .subtitulo{
+        font-size:13px;
+        color:#444;
+        margin-top:2px;
+      }
+
+      .linha-topo{
+        border:none;
+        border-top:2px solid #8b6a2b;
+        margin:10px 0 18px;
+      }
+
+      .grid-top{
+        display:grid;
+        grid-template-columns: 1fr 1fr;
+        gap:12px;
+        margin-bottom:12px;
+      }
+
+      .box{
+        border:1px solid #d8d8d8;
+        border-radius:18px;
+        padding:14px 16px;
+        min-height:74px;
+      }
+
+      .box-label{
+        font-size:14px;
+        color:#444;
+        margin-bottom:6px;
+      }
+
+      .box-value{
+        font-size:16px;
+        font-weight:700;
+      }
+
+      .dados{
+        margin-top:6px;
+        margin-bottom:18px;
+      }
+
+      .linha{
+        display:grid;
+        grid-template-columns: 180px 1fr;
+        gap:14px;
+        padding:7px 0;
+        align-items:start;
+      }
+
+      .linha .label{
+        font-size:16px;
+        color:#333;
+      }
+
+      .linha .valor{
+        font-size:16px;
+        font-weight:500;
+      }
+
+      .linha-total{
+        margin-top:12px;
+        display:grid;
+        grid-template-columns: 180px 1fr;
+        gap:14px;
+        align-items:center;
+      }
+
+      .linha-total .label{
+        font-size:16px;
+      }
+
+      .linha-total .valor{
+        font-size:20px;
+        font-weight:800;
+      }
+
+      .garantia{
+        margin-top:28px;
+        border:1px solid #d8d8d8;
+        border-radius:14px;
+        padding:18px 20px;
+      }
+
+      .garantia h3{
+        margin:0 0 12px;
+        font-size:17px;
+        letter-spacing:.3px;
+      }
+
+      .garantia p{
+        margin:0 0 10px;
+        font-size:13px;
+        line-height:1.55;
+        text-align:justify;
+      }
+
+      .garantia ul{
+        margin:8px 0 10px 18px;
+        padding:0;
+      }
+
+      .garantia li{
+        margin-bottom:6px;
+        font-size:13px;
+        line-height:1.45;
+      }
+
+      .assinaturas{
+        margin-top:34px;
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:24px;
+      }
+
+      .assinatura-box{
+        text-align:center;
+      }
+
+      .assinatura-linha{
+        border-top:2px solid #333;
+        margin-top:38px;
+        padding-top:8px;
+        font-size:14px;
+      }
+
+      .rodape{
+        margin-top:26px;
+        font-size:12px;
+        color:#555;
+        text-align:center;
+      }
+
+      @media print{
+        body{
+          padding:12px;
+        }
+
+        .page{
+          max-width:100%;
+        }
+      }
     </style>
   </head>
   <body>
     <div class="page">
-      <div class="head">
-        <img src="${logoSrc}" alt="Logo JD">
-        <div class="t">
-          <div class="n">${empresa}</div>
-          <div class="s">Comprovante de Pedido / Entrega</div>
+
+      <div class="header">
+        <img src="${logoSrc}" alt="Logo JD" class="logo">
+        <div class="header-text">
+          <div class="empresa">${empresa}</div>
+          <div class="subtitulo">Comprovante de Pedido | Entrega</div>
         </div>
       </div>
 
-      <div class="box">
-        <div class="grid">
-          <div class="card"><div class="label">Pedido</div><div class="value">#${pedido}</div></div>
-          <div class="card"><div class="label">Total</div><div class="value">${total}</div></div>
-          <div class="card"><div class="label">Data do Pedido</div><div class="value">${dataPedido}</div></div>
-          <div class="card"><div class="label">Data da Entrega</div><div class="value">${dataEntrega}</div></div>
+      <hr class="linha-topo">
+
+      <div class="grid-top">
+        <div class="box">
+          <div class="box-label">Data do Pedido</div>
+          <div class="box-value">${dataPedido}</div>
         </div>
 
-        <div class="big">
-          <div class="row"><b>Cliente:</b> <span>${cliente}</span></div>
-          <div class="row"><b>Contato:</b> <span>${contato}</span></div>
-          <div class="row"><b>Cidade:</b> <span>${cidade}</span></div>
-          <div class="row"><b>Zona:</b> <span>${zona}</span></div>
-          <div class="row"><b>Endereço:</b> <span>${end || "-"}</span></div>
-          <div class="row"><b>Produto:</b> <span>${modelo}</span></div>
-          <div class="row"><b>Cor / Tamanho:</b> <span>${cor} / ${tamanho}</span></div>
+        <div class="box">
+          <div class="box-label">Data da Entrega</div>
+          <div class="box-value">${dataEntrega}</div>
         </div>
 
-        <div class="sign">
-          <div class="line">Assinatura do Cliente</div>
-          <div class="line">Assinatura do Entregador</div>
+        <div class="box">
+          <div class="box-label">Nº do Pedido</div>
+          <div class="box-value">#${pedido}</div>
+        </div>
+
+        <div class="box">
+          <div class="box-label">Produto</div>
+          <div class="box-value">${modelo}</div>
         </div>
       </div>
 
-      <div class="footer">
-        <div>Pedido #${pedido}</div>
-        <div>${empresa}</div>
+      <div class="dados">
+        <div class="linha">
+          <div class="label">Cliente:</div>
+          <div class="valor">${cliente}</div>
+        </div>
+
+        <div class="linha">
+          <div class="label">Cor / Tamanho:</div>
+          <div class="valor">${cor} / ${tamanho}</div>
+        </div>
+
+        <div class="linha">
+          <div class="label">Contato:</div>
+          <div class="valor">${contato}</div>
+        </div>
+
+        <div class="linha">
+          <div class="label">Cidade:</div>
+          <div class="valor">${cidade}</div>
+        </div>
+
+        <div class="linha">
+          <div class="label">Zona:</div>
+          <div class="valor">${zona}</div>
+        </div>
+
+        <div class="linha">
+          <div class="label">Endereço:</div>
+          <div class="valor">${end || "-"}</div>
+        </div>
+
+        <div class="linha-total">
+          <div class="label">Valor:</div>
+          <div class="valor">${total}</div>
+        </div>
+      </div>
+
+      <div class="garantia">
+        <h3>TERMO DE GARANTIA</h3>
+
+        <p>
+          A <strong>JD Fábrica de Estofados</strong> assegura ao cliente a
+          <strong>garantia legal de 90 (noventa) dias</strong>, conforme estabelecido pelo
+          <strong>Código de Defesa do Consumidor – Lei nº 8.078/1990</strong>,
+          válida para vícios aparentes ou de fácil constatação.
+        </p>
+
+        <p>
+          Além da garantia legal, a empresa concede <strong>garantia contratual adicional</strong>,
+          totalizando <strong>180 (cento e oitenta) dias de garantia para defeitos estruturais de fabricação</strong>,
+          contados a partir da <strong>data de entrega do produto ao cliente</strong>,
+          mediante apresentação deste comprovante de pedido/entrega.
+        </p>
+
+        <p>
+          A garantia estrutural aplica-se exclusivamente a defeitos relacionados à
+          <strong>estrutura interna do estofado</strong>, tais como:
+        </p>
+
+        <ul>
+          <li>defeitos na estrutura de madeira ou base de sustentação;</li>
+          <li>falhas na montagem estrutural do produto;</li>
+          <li>problemas que comprometam a estabilidade ou integridade da estrutura.</li>
+        </ul>
+
+        <p>
+          Durante o período de garantia, constatado defeito de fabricação, a
+          <strong>JD Fábrica de Estofados</strong> realizará a análise técnica do produto e,
+          se confirmado o defeito coberto pela garantia, poderá providenciar o reparo,
+          substituição da peça defeituosa ou outra solução adequada, conforme o caso
+          e nos termos da legislação vigente.
+        </p>
+
+        <p><strong>Exclusões de garantia:</strong></p>
+
+        <ul>
+          <li>uso inadequado ou fora das recomendações do fabricante;</li>
+          <li>desgaste natural decorrente do uso normal do produto;</li>
+          <li>exposição a umidade excessiva, líquidos ou agentes externos;</li>
+          <li>danos causados por transporte após a entrega;</li>
+          <li>rasgos, manchas, queimaduras ou danos ao tecido/revestimento;</li>
+          <li>alterações, desmontagens ou reparos realizados por terceiros não autorizados;</li>
+          <li>mau uso, sobrecarga ou utilização indevida do estofado.</li>
+        </ul>
+
+        <p>
+          Para solicitar atendimento em garantia, o cliente deverá apresentar este comprovante
+          e informar o defeito identificado para avaliação técnica da empresa.
+        </p>
+      </div>
+
+      <div class="assinaturas">
+        <div class="assinatura-box">
+          <div class="assinatura-linha">Assinatura do Cliente</div>
+        </div>
+
+        <div class="assinatura-box">
+          <div class="assinatura-linha">Assinatura do Entregador</div>
+        </div>
+      </div>
+
+      <div class="rodape">
+        ${empresa}
       </div>
     </div>
 
@@ -529,9 +793,10 @@ function imprimirPedido(v){
   </body>
   </html>
   `);
+
   w.document.close();
 }
-
+  
 async function marcarEntregue(id){
   const ok = confirm("Confirmar: este pedido foi ENTREGUE?");
   if(!ok) return;
