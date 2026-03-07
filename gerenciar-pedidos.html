@@ -184,7 +184,6 @@ body {
   <select id="tipoFiltro" class="filtro-select">
     <option value="">Filtrar por...</option>
     <option value="pedido">Número do Pedido</option>
-    <option value="cliente">Cliente</option>
     <option value="vendedor">Vendedor</option>
     <option value="data">Data do Pedido</option>
   </select>
@@ -343,7 +342,6 @@ function renderizarCards(lista){
     pendentesDiv.innerHTML+=`
       <div class="card-pedido ${classeStatus}" onclick="expandirCard(this)">
         <b>Pedido:</b> ${v.pedido}<br>
-        <b>Cliente:</b> ${v.cliente?.nome}<br>
         <b>Vendedor:</b> ${v.vendedorNome}<br>
         <b>Entrega:</b> ${v.dataEntrega}<br>
         <b>Valor:</b> ${formatarValor(total)}
