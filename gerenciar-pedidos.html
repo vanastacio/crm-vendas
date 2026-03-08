@@ -251,6 +251,9 @@ let ultimoDoc = null;
 const limitePagina = 12;
 let vendasCache = [];
 let contadorNotificacao = 0;
+let listaFiltradaCache = [];
+let paginaFiltroAtual = 1;
+let modoFiltroAtivo = false;
 
 /* ===== LOGIN ===== */
 onAuthStateChanged(auth, (user)=>{
@@ -388,6 +391,14 @@ function renderizarCards(lista){
     `;
   });
 }
+
+  function renderizarPaginaFiltrada(){
+  const inicio = (paginaFiltroAtual - 1) * limitePagina;
+  const fim = inicio + limitePagina;
+  const pagina = listaFiltradaCache.slice(inicio, fim);
+
+  renderizarCards(pagina);
+}
   
 /* ===== EXPANSÃO ===== */
 window.expandirCard=(card)=>{
@@ -418,21 +429,24 @@ async function aplicarFiltros(){
 
   const usandoFiltro = !!zonaSelecionada || (!!tipo && !!valor);
 
-  // se não estiver usando filtro nenhum, volta pra paginação normal
+  // sem filtro = volta pro modo normal
   if (!usandoFiltro){
+    modoFiltroAtivo = false;
+    listaFiltradaCache = [];
+    paginaFiltroAtual = 1;
     carregarPedidos();
     return;
   }
 
-  let listaCompleta = await carregarTodosPedidos();
+  modoFiltroAtivo = true;
+
+  const listaCompleta = await carregarTodosPedidos();
   let filtrado = [...listaCompleta];
 
-  // filtro por zona
   if (zonaSelecionada){
     filtrado = filtrado.filter(v => v.zona === zonaSelecionada);
   }
 
-  // filtro principal
   if (tipo && valor){
     if (tipo === "pedido"){
       filtrado = filtrado.filter(v =>
@@ -453,7 +467,9 @@ async function aplicarFiltros(){
     }
   }
 
-  renderizarCards(filtrado);
+  listaFiltradaCache = filtrado;
+  paginaFiltroAtual = 1;
+  renderizarPaginaFiltrada();
 }
 
 tipoFiltro.onchange = async () => {
@@ -487,12 +503,32 @@ filtroZona.onchange = async () => {
 };
   
 /* ===== PAGINAÇÃO ===== */
-window.proximaPagina=()=>carregarPedidos("proxima");
-window.paginaAnterior=()=>{
-  ultimoDoc=null;
-  carregarPedidos();
+window.proximaPagina = () => {
+  if (modoFiltroAtivo){
+    const totalPaginas = Math.ceil(listaFiltradaCache.length / limitePagina);
+    if (paginaFiltroAtual < totalPaginas){
+      paginaFiltroAtual++;
+      renderizarPaginaFiltrada();
+    }
+    return;
+  }
+
+  carregarPedidos("proxima");
 };
 
+window.paginaAnterior = () => {
+  if (modoFiltroAtivo){
+    if (paginaFiltroAtual > 1){
+      paginaFiltroAtual--;
+      renderizarPaginaFiltrada();
+    }
+    return;
+  }
+
+  ultimoDoc = null;
+  carregarPedidos();
+};
+  
 /* ===== NOTIFICAÇÃO REALTIME ===== */
 function ativarNotificacaoTempoReal(){
   onSnapshot(collection(db,"vendas"),()=>{
