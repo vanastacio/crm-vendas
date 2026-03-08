@@ -324,6 +324,20 @@ async function carregarPedidos(direcao="primeira"){
   renderizarCards(vendasCache);
 }
 
+     async function carregarTodosPedidos(){
+  const q = query(
+    collection(db,"vendas"),
+    orderBy("dataPedido","desc")
+  );
+
+  const snapshot = await getDocs(q);
+
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+}
+
 /* ===== RENDER ===== */
 function renderizarCards(lista){
 
@@ -397,12 +411,21 @@ const tipoFiltro = document.getElementById("tipoFiltro");
 const campoFiltro = document.getElementById("campoFiltro");
 const filtroZona = document.getElementById("filtroZona");
 
-function aplicarFiltros(){
+async function aplicarFiltros(){
   const tipo = tipoFiltro.value;
   const valor = String(campoFiltro.value || "").toLowerCase().trim();
   const zonaSelecionada = filtroZona.value;
 
-  let filtrado = [...vendasCache];
+  const usandoFiltro = !!zonaSelecionada || (!!tipo && !!valor);
+
+  // se não estiver usando filtro nenhum, volta pra paginação normal
+  if (!usandoFiltro){
+    carregarPedidos();
+    return;
+  }
+
+  let listaCompleta = await carregarTodosPedidos();
+  let filtrado = [...listaCompleta];
 
   // filtro por zona
   if (zonaSelecionada){
@@ -433,12 +456,12 @@ function aplicarFiltros(){
   renderizarCards(filtrado);
 }
 
-tipoFiltro.onchange = () => {
+tipoFiltro.onchange = async () => {
   campoFiltro.value = "";
 
   if (!tipoFiltro.value){
     campoFiltro.style.display = "none";
-    aplicarFiltros();
+    await aplicarFiltros();
     return;
   }
 
@@ -452,15 +475,15 @@ tipoFiltro.onchange = () => {
     campoFiltro.type = "text";
   }
 
-  aplicarFiltros();
+  await aplicarFiltros();
 };
 
-campoFiltro.oninput = () => {
-  aplicarFiltros();
+campoFiltro.oninput = async () => {
+  await aplicarFiltros();
 };
 
-filtroZona.onchange = () => {
-  aplicarFiltros();
+filtroZona.onchange = async () => {
+  await aplicarFiltros();
 };
   
 /* ===== PAGINAÇÃO ===== */
