@@ -342,7 +342,7 @@ function renderizarCards(lista){
     pendentesDiv.innerHTML+=`
       <div class="card-pedido ${classeStatus}" onclick="expandirCard(this)">
          <b>Pedido:</b> ${v.pedido}<br>
-       📍 <b>${v.cidade || "-"}</b><br>
+       📍 <b>${v.cliente?.cidade || "-"}</b><br>
          <b>Entrega:</b> ${v.dataEntrega}<br>
          <b>Vendedor:</b> ${v.vendedorNome}<br>
         <div class="detalhes" style="display:none;margin-top:10px;">
