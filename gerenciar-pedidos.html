@@ -397,83 +397,72 @@ const tipoFiltro = document.getElementById("tipoFiltro");
 const campoFiltro = document.getElementById("campoFiltro");
 const filtroZona = document.getElementById("filtroZona");
 
-tipoFiltro.onchange = () => {
+function aplicarFiltros(){
+  const tipo = tipoFiltro.value;
+  const valor = String(campoFiltro.value || "").toLowerCase().trim();
+  const zonaSelecionada = filtroZona.value;
 
+  let filtrado = [...vendasCache];
+
+  // filtro por zona
+  if (zonaSelecionada){
+    filtrado = filtrado.filter(v => v.zona === zonaSelecionada);
+  }
+
+  // filtro principal
+  if (tipo && valor){
+    if (tipo === "pedido"){
+      filtrado = filtrado.filter(v =>
+        String(v.pedido || "").includes(valor)
+      );
+    }
+
+    else if (tipo === "vendedor"){
+      filtrado = filtrado.filter(v =>
+        String(v.vendedorNome || "").toLowerCase().includes(valor)
+      );
+    }
+
+    else if (tipo === "data"){
+      filtrado = filtrado.filter(v =>
+        String(v.dataPedido || "") === valor
+      );
+    }
+  }
+
+  renderizarCards(filtrado);
+}
+
+tipoFiltro.onchange = () => {
   campoFiltro.value = "";
 
-  if(!tipoFiltro.value){
+  if (!tipoFiltro.value){
     campoFiltro.style.display = "none";
-    renderizarCards(vendasCache);
+    aplicarFiltros();
     return;
   }
 
   campoFiltro.style.display = "inline-block";
 
-  if(tipoFiltro.value === "data"){
+  if (tipoFiltro.value === "data"){
     campoFiltro.type = "date";
-  } 
-  else if(tipoFiltro.value === "pedido"){
+  } else if (tipoFiltro.value === "pedido"){
     campoFiltro.type = "number";
-  }
-  else {
+  } else {
     campoFiltro.type = "text";
   }
+
+  aplicarFiltros();
 };
 
 campoFiltro.oninput = () => {
-
-  const valor = campoFiltro.value.toLowerCase();
-
-  if(!valor){
-    renderizarCards(vendasCache);
-    return;
-  }
-
-  let filtrado = [];
-
-  if(tipoFiltro.value === "pedido"){
-    filtrado = vendasCache.filter(v =>
-      v.pedido === valor
-    );
-  }
-
-  if(tipoFiltro.value === "cliente"){
-    filtrado = vendasCache.filter(v =>
-      v.cliente?.nome?.toLowerCase().includes(valor)
-    );
-  }
-
-  if(tipoFiltro.value === "vendedor"){
-    filtrado = vendasCache.filter(v =>
-      v.vendedorNome?.toLowerCase().includes(valor)
-    );
-  }
-
-  if(tipoFiltro.value === "data"){
-    filtrado = vendasCache.filter(v =>
-      v.dataPedido === valor
-    );
-  }
-
-  renderizarCards(filtrado);
+  aplicarFiltros();
 };
 
-  filtroZona.onchange = () => {
-
-  const zonaSelecionada = filtroZona.value;
-
-  if(!zonaSelecionada){
-    renderizarCards(vendasCache);
-    return;
-  }
-
-  const filtrado = vendasCache.filter(v =>
-    v.zona === zonaSelecionada
-  );
-
-  renderizarCards(filtrado);
+filtroZona.onchange = () => {
+  aplicarFiltros();
 };
-
+  
 /* ===== PAGINAÇÃO ===== */
 window.proximaPagina=()=>carregarPedidos("proxima");
 window.paginaAnterior=()=>{
