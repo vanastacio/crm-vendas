@@ -546,10 +546,14 @@ window.enviarParaProducao = async (id) => {
     status: "producao"
   });
 
-  alert("Pedido enviado para produção!");
-  carregarPedidos();
-};
+alert("Pedido enviado para produção!");
 
+if (modoFiltroAtivo) {
+  await aplicarFiltros();
+} else {
+  carregarPedidos();
+}
+  
 window.excluirPedido = async (id) => {
   const confirmar = confirm("Deseja realmente excluir este pedido?");
   if (!confirmar) return;
@@ -557,7 +561,12 @@ window.excluirPedido = async (id) => {
   await deleteDoc(doc(db, "vendas", id));
 
   alert("Pedido excluído com sucesso!");
-  carregarPedidos();
+
+  if (modoFiltroAtivo) {
+    await aplicarFiltros();
+  } else {
+    carregarPedidos();
+  }
 };
   
 </script>
