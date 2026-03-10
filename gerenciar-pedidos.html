@@ -132,6 +132,7 @@ body {
   border-radius:50%;
   padding:4px 8px;
 }
+
 /* ===== STATUS VISUAL DOS CARDS ===== */
 
 .card-ativo{
@@ -164,6 +165,22 @@ body {
   font-size:12px;
   font-weight:800;
   background: rgba(255,255,255,0.25);
+}
+
+/* ===== BOTÃO EXCLUIR ===== */
+.btn-excluir{
+  background:#e53935;
+  color:#fff;
+  border:none;
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  margin-top:8px;
+  font-weight:bold;
+}
+
+.btn-excluir:hover{
+  background:#c62828;
 }
   
 </style>
@@ -228,10 +245,12 @@ import {
   limit,
   startAfter,
   getDocs,
-  onSnapshot
+  onSnapshot,
+  updateDoc,
+  doc,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
@@ -384,6 +403,13 @@ function renderizarCards(lista){
         : `<span class="tag-status tag-entregue">Entregue</span>`
       )
 }
+
+          <br><br>
+
+          <button class="btn-excluir"
+            onclick="event.stopPropagation(); excluirPedido('${v.id}')">
+            Excluir Pedido
+          </button>
            
         </div>
       </div>
@@ -504,13 +530,14 @@ function ativarNotificacaoTempoReal(){
     badge.innerText=contadorNotificacao;
   });
 }
+
 window.limparNotificacao = () => {
   contadorNotificacao = 0;
   const badge = document.getElementById("badge");
   badge.style.display = "none";
 };
 
-/* ✅ AQUI SIM — PASSO 4 */
+/* ===== AÇÕES ===== */
 window.enviarParaProducao = async (id) => {
   const confirmar = confirm("Deseja enviar este pedido para PRODUÇÃO?");
   if (!confirmar) return;
@@ -520,6 +547,16 @@ window.enviarParaProducao = async (id) => {
   });
 
   alert("Pedido enviado para produção!");
+  carregarPedidos();
+};
+
+window.excluirPedido = async (id) => {
+  const confirmar = confirm("Deseja realmente excluir este pedido?");
+  if (!confirmar) return;
+
+  await deleteDoc(doc(db, "vendas", id));
+
+  alert("Pedido excluído com sucesso!");
   carregarPedidos();
 };
   
