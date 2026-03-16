@@ -182,6 +182,21 @@ body {
 .btn-excluir:hover{
   background:#c62828;
 }
+
+/* ===== BOTÃO ENTREGA ===== */
+.btn-entrega{
+  background:#1565c0;
+  color:#fff;
+  border:none;
+  padding:10px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.btn-entrega:hover{
+  background:#0d47a1;
+}
   
 </style>
 </head>
@@ -308,6 +323,16 @@ function calcularTotal(v){
   return produto + frete + montagem;
 }
 
+/* ===== ENTREGADORES ===== */
+const entregadores = {
+  "1": { id: "entregador1", nome: "Entregador 1" },
+  "2": { id: "entregador2", nome: "Entregador 2" },
+  "3": { id: "entregador3", nome: "Entregador 3" },
+  "4": { id: "entregador4", nome: "Entregador 4" },
+  "5": { id: "entregador5", nome: "Entregador 5" },
+  "6": { id: "entregador6", nome: "Entregador 6" }
+};
+
 /* ===== CARREGAR ===== */
 async function carregarPedidos(direcao="primeira"){
 
@@ -370,7 +395,6 @@ function renderizarCards(lista){
     const total = calcularTotal(v);
 
     const classeStatus =
-      v.status === "producao" ? "card-producao" :
       v.status === "entregue" ? "card-entregue" :
       "card-ativo";
 
@@ -387,21 +411,19 @@ function renderizarCards(lista){
           <b>Cor:</b> ${v.produto?.cor}<br>
           <b>Tamanho:</b> ${v.produto?.tamanho}<br>
           <b>Zona:</b> ${formatarZona(v.zona)}<br>
-          <b>Status:</b> ${v.status}<br>
+          <b>Status:</b> ${v.status || "-"}<br>
           <b>Valor:</b> ${formatarValor(total)}<br>
-          <b>Observações:</b> ${v.observacoes || "-"}
+          <b>Observações:</b> ${v.observacoes || "-"}<br>
+          <b>Entregador:</b> ${v.entregadorNome || "-"}
           <br><br>
            
          ${
-  v.status !== "producao" && v.status !== "entregue"
-    ? `<button class="btn-producao"
-        onclick="event.stopPropagation(); enviarParaProducao('${v.id}')">
-        Enviar para Produção
+  v.status !== "entregue"
+    ? `<button class="btn-entrega"
+        onclick="event.stopPropagation(); enviarParaEntrega('${v.id}')">
+        Enviar para Entrega
       </button>`
-    : (v.status === "producao"
-        ? `<span class="tag-status tag-producao">Em produção</span>`
-        : `<span class="tag-status tag-entregue">Entregue</span>`
-      )
+    : <span class="tag-status tag-entregue">Entregue</span>
 }
 
           <br><br>
@@ -538,21 +560,44 @@ window.limparNotificacao = () => {
 };
 
 /* ===== AÇÕES ===== */
-window.enviarParaProducao = async (id) => {
-  const confirmar = confirm("Deseja enviar este pedido para PRODUÇÃO?");
+window.enviarParaEntrega = async (id) => {
+  const escolha = prompt(
+`Digite o número do entregador:
+
+1 - Entregador 1
+2 - Entregador 2
+3 - Entregador 3
+4 - Entregador 4
+5 - Entregador 5
+6 - Entregador 6`
+  );
+
+  if (!escolha) return;
+
+  const entregador = entregadores[escolha];
+
+  if (!entregador){
+    alert("Entregador inválido.");
+    return;
+  }
+
+  const confirmar = confirm(Deseja enviar este pedido para ${entregador.nome}?);
   if (!confirmar) return;
 
   await updateDoc(doc(db, "vendas", id), {
-    status: "producao"
+    status: "em_entrega",
+    entregadorId: entregador.id,
+    entregadorNome: entregador.nome,
+    enviadoParaEntregaEm: new Date().toISOString()
   });
 
-alert("Pedido enviado para produção!");
+  alert("Pedido enviado para entrega com sucesso!");
 
-if (modoFiltroAtivo) {
-  await aplicarFiltros();
-} else {
-  carregarPedidos();
-}
+  if (modoFiltroAtivo) {
+    await aplicarFiltros();
+  } else {
+    carregarPedidos();
+  }
 };
   
 window.excluirPedido = async (id) => {
