@@ -90,7 +90,7 @@ body::before{
   font-size:20px;
 }
 
-/* ===== MENU (AGORA 4 BOTÕES) ===== */
+/* ===== MENU ===== */
 .menu{
   display:grid;
   grid-template-columns:repeat(4,1fr);
@@ -222,7 +222,7 @@ canvas{
   min-height:320px;
 }
 
-/* ===== VALORES (IGUAL AO MOCK: 2 CAIXAS + GRÁFICO) ===== */
+/* ===== VALORES ===== */
 .card-valores .valores-head{
   display:flex;
   align-items:flex-start;
@@ -267,7 +267,6 @@ canvas{
   color:#79ff9a;
 }
 
-/* gráfico do valores um pouco maior como no mock */
 .card-valores #valoresChart{
   height:260px !important;
   max-height:260px !important;
@@ -287,7 +286,7 @@ canvas{
   .card-valores .valores-stats{ grid-template-columns:1fr; }
 }
 
-  .filtros{
+.filtros{
   display:flex;
   align-items:center;
   gap:10px;
@@ -343,23 +342,14 @@ canvas{
       Gerenciar Pedidos
     </button>
 
-    <button onclick="location.href='producao.html'">
+    <button onclick="location.href='entregas-adm.html'">
       <span class="icon" aria-hidden="true">
         <svg viewBox="0 0 24 24">
-          <path d="M4 4h16v4H4V4Zm0 6h16v10H4V10Zm2 2v6h12v-6H6Z"/>
+          <path d="M3 7h13v6h5l-2 4h-2a3 3 0 0 1-6 0H9a3 3 0 0 1-6 0H1v-2h2V9a2 2 0 0 1 2-2Zm2 2v6h1a3 3 0 0 1 6 0h3V9H5Zm14 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm-12 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"/>
         </svg>
       </span>
-      Produção
+      Entregas
     </button>
-
-    <button onclick="location.href='entregas-adm.html'">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24">
-      <path d="M3 7h13v6h5l-2 4h-2a3 3 0 0 1-6 0H9a3 3 0 0 1-6 0H1v-2h2V9a2 2 0 0 1 2-2Zm2 2v6h1a3 3 0 0 1 6 0h3V9H5Zm14 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm-12 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"/>
-    </svg>
-  </span>
-  Entregas
-</button>
 
     <button type="button">
       <span class="icon" aria-hidden="true">
@@ -377,10 +367,10 @@ canvas{
   </div>
 
   <!-- FILTRO DE MÊS -->
-<div class="filtros">
-  <label for="mesSelect" class="filtro-label">Mês:</label>
-  <select id="mesSelect" class="filtro-select"></select>
-</div>
+  <div class="filtros">
+    <label for="mesSelect" class="filtro-label">Mês:</label>
+    <select id="mesSelect" class="filtro-select"></select>
+  </div>
 
   <!-- DASHBOARD -->
   <div class="dashboard">
@@ -396,7 +386,7 @@ canvas{
 
         <div class="legend">
           <div class="legend-item"><span class="dot blue"></span> Ativa</div>
-          <div class="legend-item"><span class="dot orange"></span> Produção</div>
+          <div class="legend-item"><span class="dot orange"></span> Em Entrega</div>
           <div class="legend-item"><span class="dot green"></span> Entregue</div>
         </div>
       </div>
@@ -418,9 +408,8 @@ canvas{
       </div>
     </div>
 
-    <!-- VALORES (CORRIGIDO: IGUAL AO MOCK / SEM INVENTAR IDs) -->
-    <div class="card card--wide
-      card-valores">
+    <!-- VALORES -->
+    <div class="card card--wide card-valores">
       <div class="valores-head">
         <h2 class="valores-title">Valores de Vendas</h2>
       </div>
@@ -440,9 +429,9 @@ canvas{
       <canvas id="valoresChart"></canvas>
     </div>
 
-  </div><!-- /dashboard -->
+  </div>
 
-</div><!-- /container -->
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -462,9 +451,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let vendasCache = []; // guarda todas as vendas em memória
+let vendasCache = [];
 const mesSelect = document.getElementById("mesSelect");
-  
 let charts = [];
 
 function destroyCharts(){
@@ -479,29 +467,27 @@ function applyChartDefaults(){
   Chart.defaults.plugins.legend.labels.boxWidth = 10;
 }
 
-  function montarMesesNoSelect() {
+function montarMesesNoSelect() {
   if (!mesSelect) return;
 
   const meses = [...new Set(
     vendasCache
       .map(v => String(v.dataPedido || "").slice(0,7))
       .filter(m => m && m.length === 7)
-  )].sort(); // crescente
+  )].sort();
 
-  // opcional: mais recente primeiro
   meses.reverse();
 
-  mesSelect.innerHTML = meses.map(m => `<option value="${m}">${m}</option>`).join("");
+  mesSelect.innerHTML = meses.map(m => <option value="${m}">${m}</option>).join("");
 
-  // se não tiver nada, evita quebrar
   if (!mesSelect.value && meses.length) mesSelect.value = meses[0];
 }
 
-  function renderDashboard(mesFiltro) {
+function renderDashboard(mesFiltro) {
   applyChartDefaults();
   destroyCharts();
 
-  const status = { ativa:0, producao:0, entregue:0 };
+  const status = { ativa:0, em_entrega:0, entregue:0 };
   const pagamentos = {};
   const vendasPorMes = {};
   const valoresPorMes = {};
@@ -514,19 +500,15 @@ function applyChartDefaults(){
     if (!mes) return;
     if (mesFiltro && mes !== mesFiltro) return;
 
-    // status
     if (v.status && Object.prototype.hasOwnProperty.call(status, v.status)) {
       status[v.status]++;
     }
 
-    // pagamento
     const pg = v.pagamento?.tipo || v.pagamento;
     if (pg) pagamentos[pg] = (pagamentos[pg] || 0) + 1;
 
-    // quantidade por mês (se você quiser só o mês filtrado, pode usar só um ponto)
     vendasPorMes[mes] = (vendasPorMes[mes] || 0) + 1;
 
-    // valor (blindado)
     const valor = Number(v.total ?? v.valor ?? v.produto?.total ?? 0);
     if (Number.isFinite(valor) && valor > 0) {
       somaValores += valor;
@@ -535,7 +517,6 @@ function applyChartDefaults(){
     }
   });
 
-  // textos
   const elTotal = document.getElementById("totalVendas");
   if (elTotal) elTotal.textContent = totalVendas;
 
@@ -547,13 +528,12 @@ function applyChartDefaults(){
     ? (somaValores/totalVendas).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
     : "R$ 0,00";
 
-  // STATUS
   charts.push(new Chart(document.getElementById("statusChart"),{
     type:"doughnut",
     data:{
-      labels:["Ativa","Produção","Entregue"],
+      labels:["Ativa","Em Entrega","Entregue"],
       datasets:[{
-        data:[ status.ativa, status.producao, status.entregue ],
+        data:[ status.ativa, status.em_entrega, status.entregue ],
         backgroundColor:[ "#2196f3", "#ff9800", "#4caf50" ],
         borderColor:"rgba(255,255,255,0.75)",
         borderWidth:2,
@@ -563,23 +543,21 @@ function applyChartDefaults(){
     options:{ responsive:true, maintainAspectRatio:false, cutout:"68%", plugins:{ legend:{ display:false } } }
   }));
 
-  // PAGAMENTO
   charts.push(new Chart(document.getElementById("pagamentoChart"),{
     type:"pie",
     data:{ labels:Object.keys(pagamentos), datasets:[{
-  data: Object.values(pagamentos),
-  backgroundColor: [
-    "#2196f3", "#ff9800", "#4caf50", "#9c27b0",
-    "#00bcd4", "#ffc107", "#f44336", "#795548",
-    "#607d8b", "#e91e63", "#3f51b5", "#8bc34a"
-  ],
-  borderColor: "rgba(255,255,255,0.75)",
-  borderWidth: 2
-}] },
+      data: Object.values(pagamentos),
+      backgroundColor: [
+        "#2196f3", "#ff9800", "#4caf50", "#9c27b0",
+        "#00bcd4", "#ffc107", "#f44336", "#795548",
+        "#607d8b", "#e91e63", "#3f51b5", "#8bc34a"
+      ],
+      borderColor: "rgba(255,255,255,0.75)",
+      borderWidth: 2
+    }] },
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:"top" } } }
   }));
 
-  // QUANTIDADE (aqui é o que mais quebra se labels ficar vazio)
   const labelsQtd = Object.keys(vendasPorMes);
   const dadosQtd  = Object.values(vendasPorMes);
 
@@ -602,7 +580,6 @@ function applyChartDefaults(){
     }
   }));
 
-  // VALORES
   charts.push(new Chart(document.getElementById("valoresChart"),{
     type:"bar",
     data:{
@@ -641,7 +618,9 @@ onAuthStateChanged(auth, user => {
   carregarDashboard();
 });
 
-  if (mesSelect){ mesSelect.onchange = () => renderDashboard(mesSelect.value);}
+if (mesSelect){
+  mesSelect.onchange = () => renderDashboard(mesSelect.value);
+}
 
 document.getElementById("btnSair").onclick = async () => {
   await signOut(auth);
