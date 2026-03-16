@@ -478,7 +478,7 @@ function montarMesesNoSelect() {
 
   meses.reverse();
 
-  mesSelect.innerHTML = meses.map(m => <option value="${m}">${m}</option>).join("");
+  mesSelect.innerHTML = meses.map(m => `<option value="${m}">${m}</option>`).join("");
 
   if (!mesSelect.value && meses.length) mesSelect.value = meses[0];
 }
