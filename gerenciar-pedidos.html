@@ -395,6 +395,7 @@ function renderizarCards(lista){
     const total = calcularTotal(v);
 
     const classeStatus =
+      v.status === "em_entrega" ? "card-producao" :
       v.status === "entregue" ? "card-entregue" :
       "card-ativo";
 
@@ -418,12 +419,14 @@ function renderizarCards(lista){
           <br><br>
            
          ${
-  v.status !== "entregue"
-    ? `<button class="btn-entrega"
-        onclick="event.stopPropagation(); enviarParaEntrega('${v.id}')">
-        Enviar para Entrega
-      </button>`
-    : `<span class="tag-status tag-entregue">Entregue</span>`
+   v.status === "entregue"
+    ? `<span class="tag-status tag-entregue">Entregue</span>`
+    : v.status === "em_entrega"
+      ? `<span class="tag-status tag-producao">Em entrega</span>`
+      : `<button class="btn-entrega"
+          onclick="event.stopPropagation(); enviarParaEntrega('${v.id}')">
+          Enviar para Entrega
+        </button>`
 }
 
           <br><br>
