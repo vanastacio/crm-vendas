@@ -562,14 +562,13 @@ window.limparNotificacao = () => {
 /* ===== AÇÕES ===== */
 window.enviarParaEntrega = async (id) => {
   const escolha = prompt(
-`Digite o número do entregador:
-
-1 - Entregador 1
-2 - Entregador 2
-3 - Entregador 3
-4 - Entregador 4
-5 - Entregador 5
-6 - Entregador 6`
+    "Digite o número do entregador:\n\n" +
+    "1 - Entregador 1\n" +
+    "2 - Entregador 2\n" +
+    "3 - Entregador 3\n" +
+    "4 - Entregador 4\n" +
+    "5 - Entregador 5\n" +
+    "6 - Entregador 6"
   );
 
   if (!escolha) return;
@@ -581,7 +580,7 @@ window.enviarParaEntrega = async (id) => {
     return;
   }
 
-  const confirmar = confirm(Deseja enviar este pedido para ${entregador.nome}?);
+  const confirmar = confirm("Deseja enviar este pedido para " + entregador.nome + "?");
   if (!confirmar) return;
 
   await updateDoc(doc(db, "vendas", id), {
