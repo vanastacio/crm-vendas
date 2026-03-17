@@ -718,6 +718,23 @@ function imprimirPedido(v){
         </div>
       </div>
 
+      <div class="linha">
+  <div class="label">Pagamento:</div>
+  <div class="valor">${
+    v.observacoes || (
+      v.pagamento?.tipo === "prazo"
+        ? `${v.pagamento?.parcelas || 0}x`
+        : v.pagamento?.tipo === "pix"
+          ? "PIX à vista"
+          : v.pagamento?.tipo === "dinheiro"
+            ? "Dinheiro à vista"
+            : v.pagamento?.tipo === "cartao"
+              ? `${v.pagamento?.parcelas || 0}x no cartão`
+              : (v.pagamento?.tipo || "-")
+    )
+  }</div>
+</div>
+
       <div class="garantia">
         <h3>TERMO DE GARANTIA</h3>
 
