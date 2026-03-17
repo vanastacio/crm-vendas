@@ -126,6 +126,17 @@ body::before{
   color:#79ff9a;
 }
 
+.kpi-sub{
+  margin-top:8px;
+  font-size:13px;
+  font-weight:800;
+  opacity:.88;
+}
+
+.sub-pos{ color:#79ff9a; }
+.sub-neg{ color:#ff8a80; }
+.sub-neu{ color:#fff; }
+
 .grid{
   display:grid;
   grid-template-columns: 1fr 1fr;
@@ -157,7 +168,7 @@ canvas{
 table{
   width:100%;
   border-collapse:collapse;
-  min-width:1000px;
+  min-width:1200px;
 }
 
 thead th{
@@ -202,6 +213,85 @@ tbody tr:hover{
   font-weight:800;
 }
 
+.paginacao-tabela{
+  margin-top:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.paginacao-tabela button{
+  padding:10px 16px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:800;
+  background:rgba(255,255,255,0.14);
+  color:#fff;
+}
+
+.paginacao-tabela button:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.paginacao-info{
+  font-weight:800;
+  opacity:.9;
+}
+
+.ranking-list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.ranking-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:14px 16px;
+  border-radius:14px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.08);
+}
+
+.ranking-left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.ranking-pos{
+  width:34px;
+  height:34px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  font-weight:900;
+  background:rgba(255,255,255,0.12);
+}
+
+.ranking-name{
+  font-weight:900;
+  font-size:15px;
+}
+
+.ranking-meta{
+  font-size:12px;
+  opacity:.85;
+  margin-top:2px;
+}
+
+.ranking-value{
+  font-weight:900;
+  color:#79ff9a;
+  white-space:nowrap;
+}
+
 @media (max-width: 1100px){
   .filtros{ grid-template-columns: repeat(3, 1fr); }
   .kpis{ grid-template-columns: repeat(2, 1fr); }
@@ -227,10 +317,10 @@ tbody tr:hover{
 
   <div class="filtros">
     <select id="filtroPeriodo" class="control">
+      <option value="personalizado">Período personalizado</option>
       <option value="mes">Este mês</option>
       <option value="semana">Esta semana</option>
       <option value="dia">Hoje</option>
-      <option value="personalizado">Período personalizado</option>
     </select>
 
     <input id="dataInicio" class="control" type="date">
@@ -265,21 +355,25 @@ tbody tr:hover{
     <div class="card">
       <div class="kpi-label">Total vendido</div>
       <div class="kpi-value" id="kpiTotalVendido">R$ 0,00</div>
+      <div class="kpi-sub" id="subTotalVendido">—</div>
     </div>
 
     <div class="card">
       <div class="kpi-label">Quantidade de pedidos</div>
       <div class="kpi-value" id="kpiQtdPedidos">0</div>
+      <div class="kpi-sub" id="subQtdPedidos">—</div>
     </div>
 
     <div class="card">
       <div class="kpi-label">Ticket médio</div>
       <div class="kpi-value" id="kpiTicketMedio">R$ 0,00</div>
+      <div class="kpi-sub" id="subTicketMedio">—</div>
     </div>
 
     <div class="card">
       <div class="kpi-label">Média por vendedor</div>
       <div class="kpi-value" id="kpiMediaVendedor">R$ 0,00</div>
+      <div class="kpi-sub" id="subMediaVendedor">—</div>
     </div>
   </div>
 
@@ -292,6 +386,18 @@ tbody tr:hover{
     <div class="card">
       <h2>Formas de Pagamento</h2>
       <canvas id="chartPagamentos"></canvas>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Evolução Diária</h2>
+      <canvas id="chartEvolucao"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>Ranking de Vendedores</h2>
+      <div id="rankingVendedores" class="ranking-list"></div>
     </div>
   </div>
 
@@ -308,14 +414,22 @@ tbody tr:hover{
             <th>Cidade</th>
             <th>Vendedor</th>
             <th>Zona</th>
-            <th>Pagamento</th>
+            <th>Forma de pagamento</th>
+            <th>Observações</th>
             <th>Valor</th>
           </tr>
         </thead>
         <tbody id="tbodyFinanceiro"></tbody>
       </table>
     </div>
+
     <div id="vazioFinanceiro" class="vazio" style="display:none;">Nenhum lançamento encontrado.</div>
+
+    <div class="paginacao-tabela">
+      <button id="btnTabelaAnterior" type="button">Anterior</button>
+      <span id="paginacaoTabelaInfo" class="paginacao-info">Página 1 de 1</span>
+      <button id="btnTabelaProxima" type="button">Próxima</button>
+    </div>
   </div>
 
 </div>
@@ -345,9 +459,21 @@ const filtroVendedor = document.getElementById("filtroVendedor");
 const filtroZona = document.getElementById("filtroZona");
 const filtroPagamento = document.getElementById("filtroPagamento");
 
+const tbodyFinanceiro = document.getElementById("tbodyFinanceiro");
+const vazioFinanceiro = document.getElementById("vazioFinanceiro");
+const btnTabelaAnterior = document.getElementById("btnTabelaAnterior");
+const btnTabelaProxima = document.getElementById("btnTabelaProxima");
+const paginacaoTabelaInfo = document.getElementById("paginacaoTabelaInfo");
+const rankingVendedores = document.getElementById("rankingVendedores");
+
 let vendasCache = [];
 let chartVend = null;
 let chartPg = null;
+let chartEvolucao = null;
+
+let listaFiltradaTabela = [];
+let paginaTabelaAtual = 1;
+const limiteTabela = 10;
 
 function moedaBRL(v){
   return Number(v || 0).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
@@ -364,15 +490,13 @@ function calcularTotal(v){
 }
 
 function formatarPagamento(v){
-  if (v.observacoes && String(v.observacoes).trim()) return String(v.observacoes).trim();
-
   const tipo = String(v.pagamento?.tipo || "").toLowerCase();
   const parcelas = Number(v.pagamento?.parcelas || 0);
 
   if (tipo === "pix") return "PIX à vista";
-  if (tipo === "dinheiro") return "Dinheiro à vista";
-  if (tipo === "cartao") return parcelas ? `${parcelas}x no cartão` : "Cartão";
-  if (tipo === "prazo") return parcelas ? `${parcelas}x` : "Prazo";
+  if (tipo === "dinheiro") return "Dinheiro";
+  if (tipo === "cartao") return parcelas ? ${parcelas}x cartão : "Cartão";
+  if (tipo === "prazo") return parcelas ? ${parcelas}x prazo : "Prazo";
   return "-";
 }
 
@@ -390,13 +514,13 @@ function getHojeLocal(){
   const ano = hoje.getFullYear();
   const mes = String(hoje.getMonth() + 1).padStart(2, "0");
   const dia = String(hoje.getDate()).padStart(2, "0");
-  return `${ano}-${mes}-${dia}`;
+  return ${ano}-${mes}-${dia};
 }
 
 function getInicioSemana(data = new Date()){
   const d = new Date(data);
-  const diaSemana = d.getDay(); // 0 domingo
-  const diff = diaSemana === 0 ? -6 : 1 - diaSemana; // segunda
+  const diaSemana = d.getDay();
+  const diff = diaSemana === 0 ? -6 : 1 - diaSemana;
   d.setDate(d.getDate() + diff);
   return d;
 }
@@ -405,7 +529,12 @@ function toYMD(dateObj){
   const ano = dateObj.getFullYear();
   const mes = String(dateObj.getMonth() + 1).padStart(2, "0");
   const dia = String(dateObj.getDate()).padStart(2, "0");
-  return `${ano}-${mes}-${dia}`;
+  return ${ano}-${mes}-${dia};
+}
+
+function parseYMD(str){
+  const [y,m,d] = String(str).split("-").map(Number);
+  return new Date(y, (m || 1) - 1, d || 1);
 }
 
 function aplicarPeriodoAutomatico(){
@@ -424,17 +553,20 @@ function aplicarPeriodoAutomatico(){
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     dataInicio.value = toYMD(inicioMes);
     dataFim.value = getHojeLocal();
+  } else {
+    dataInicio.value = "";
+    dataFim.value = "";
   }
 }
 
-function filtrarVendas(){
+function filtrarVendas(listaBase){
   const vendedor = String(filtroVendedor.value || "").toLowerCase().trim();
   const zona = filtroZona.value;
   const pagamento = filtroPagamento.value;
   const inicio = dataInicio.value;
   const fim = dataFim.value;
 
-  return vendasCache.filter(v => {
+  return listaBase.filter(v => {
     const vendedorNome = String(v.vendedorNome || "").toLowerCase();
     const dataPedido = String(v.dataPedido || "");
     const zonaVenda = String(v.zona || "");
@@ -450,18 +582,119 @@ function filtrarVendas(){
   });
 }
 
-function renderKpis(lista){
-  const total = lista.reduce((acc, v) => acc + calcularTotal(v), 0);
-  const quantidade = lista.length;
-  const ticket = quantidade ? total / quantidade : 0;
+function getPeriodoAnterior(){
+  const inicio = dataInicio.value;
+  const fim = dataFim.value;
 
-  const vendedoresUnicos = [...new Set(lista.map(v => String(v.vendedorNome || "").trim()).filter(Boolean))];
-  const mediaVendedor = vendedoresUnicos.length ? total / vendedoresUnicos.length : 0;
+  if (!inicio || !fim) return null;
 
-  document.getElementById("kpiTotalVendido").textContent = moedaBRL(total);
-  document.getElementById("kpiQtdPedidos").textContent = quantidade;
-  document.getElementById("kpiTicketMedio").textContent = moedaBRL(ticket);
-  document.getElementById("kpiMediaVendedor").textContent = moedaBRL(mediaVendedor);
+  const dtInicio = parseYMD(inicio);
+  const dtFim = parseYMD(fim);
+
+  const diffMs = dtFim - dtInicio;
+  const anteriorFim = new Date(dtInicio);
+  anteriorFim.setDate(anteriorFim.getDate() - 1);
+
+  const anteriorInicio = new Date(anteriorFim.getTime() - diffMs);
+
+  return {
+    inicio: toYMD(anteriorInicio),
+    fim: toYMD(anteriorFim)
+  };
+}
+
+function filtrarPeriodoEspecifico(listaBase, inicio, fim){
+  return listaBase.filter(v => {
+    const dataPedido = String(v.dataPedido || "");
+    if (inicio && dataPedido < inicio) return false;
+    if (fim && dataPedido > fim) return false;
+    return true;
+  });
+}
+
+function somaTotal(lista){
+  return lista.reduce((acc, v) => acc + calcularTotal(v), 0);
+}
+
+function setSubTexto(el, texto, tipo="neu"){
+  el.textContent = texto;
+  el.className = kpi-sub sub-${tipo};
+}
+
+function renderKpis(listaAtual){
+  const totalAtual = somaTotal(listaAtual);
+  const quantidadeAtual = listaAtual.length;
+  const ticketAtual = quantidadeAtual ? totalAtual / quantidadeAtual : 0;
+
+  const vendedoresUnicos = [...new Set(listaAtual.map(v => String(v.vendedorNome || "").trim()).filter(Boolean))];
+  const mediaVendedorAtual = vendedoresUnicos.length ? totalAtual / vendedoresUnicos.length : 0;
+
+  document.getElementById("kpiTotalVendido").textContent = moedaBRL(totalAtual);
+  document.getElementById("kpiQtdPedidos").textContent = quantidadeAtual;
+  document.getElementById("kpiTicketMedio").textContent = moedaBRL(ticketAtual);
+  document.getElementById("kpiMediaVendedor").textContent = moedaBRL(mediaVendedorAtual);
+
+  const periodoAnterior = getPeriodoAnterior();
+
+  if (!periodoAnterior){
+    setSubTexto(document.getElementById("subTotalVendido"), "Sem comparativo", "neu");
+    setSubTexto(document.getElementById("subQtdPedidos"), "Sem comparativo", "neu");
+    setSubTexto(document.getElementById("subTicketMedio"), "Sem comparativo", "neu");
+    setSubTexto(document.getElementById("subMediaVendedor"), "Sem comparativo", "neu");
+    return;
+  }
+
+  let listaAnterior = filtrarPeriodoEspecifico(vendasCache, periodoAnterior.inicio, periodoAnterior.fim);
+
+  const vendedor = String(filtroVendedor.value || "").toLowerCase().trim();
+  const zona = filtroZona.value;
+  const pagamento = filtroPagamento.value;
+
+  if (vendedor){
+    listaAnterior = listaAnterior.filter(v => String(v.vendedorNome || "").toLowerCase().includes(vendedor));
+  }
+  if (zona){
+    listaAnterior = listaAnterior.filter(v => String(v.zona || "") === zona);
+  }
+  if (pagamento){
+    listaAnterior = listaAnterior.filter(v => String(v.pagamento?.tipo || "").toLowerCase() === pagamento);
+  }
+
+  const totalAnterior = somaTotal(listaAnterior);
+  const qtdAnterior = listaAnterior.length;
+  const ticketAnterior = qtdAnterior ? totalAnterior / qtdAnterior : 0;
+  const vendedoresAnt = [...new Set(listaAnterior.map(v => String(v.vendedorNome || "").trim()).filter(Boolean))];
+  const mediaVendedorAnterior = vendedoresAnt.length ? totalAnterior / vendedoresAnt.length : 0;
+
+  function compPercentual(atual, anterior){
+    if (!anterior && !atual) return { texto:"0%", tipo:"neu" };
+    if (!anterior && atual) return { texto:"+100%", tipo:"pos" };
+    const pct = ((atual - anterior) / anterior) * 100;
+    const sinal = pct > 0 ? "+" : "";
+    return {
+      texto: ${sinal}${pct.toFixed(1)}% vs período anterior,
+      tipo: pct > 0 ? "pos" : pct < 0 ? "neg" : "neu"
+    };
+  }
+
+  function compAbsoluto(atual, anterior, sufixo=""){
+    const diff = atual - anterior;
+    const sinal = diff > 0 ? "+" : "";
+    return {
+      texto: ${sinal}${diff}${sufixo} vs período anterior,
+      tipo: diff > 0 ? "pos" : diff < 0 ? "neg" : "neu"
+    };
+  }
+
+  const totalComp = compPercentual(totalAtual, totalAnterior);
+  const qtdComp = compAbsoluto(quantidadeAtual, qtdAnterior, " pedidos");
+  const ticketComp = compPercentual(ticketAtual, ticketAnterior);
+  const mediaVendComp = compPercentual(mediaVendedorAtual, mediaVendedorAnterior);
+
+  setSubTexto(document.getElementById("subTotalVendido"), totalComp.texto, totalComp.tipo);
+  setSubTexto(document.getElementById("subQtdPedidos"), qtdComp.texto, qtdComp.tipo);
+  setSubTexto(document.getElementById("subTicketMedio"), ticketComp.texto, ticketComp.tipo);
+  setSubTexto(document.getElementById("subMediaVendedor"), mediaVendComp.texto, mediaVendComp.tipo);
 }
 
 function renderChartVendedores(lista){
@@ -539,39 +772,133 @@ function renderChartPagamentos(lista){
   });
 }
 
-function renderTabela(lista){
-  const tbody = document.getElementById("tbodyFinanceiro");
-  const vazio = document.getElementById("vazioFinanceiro");
+function renderChartEvolucao(lista){
+  const mapa = {};
 
-  if (!lista.length){
-    tbody.innerHTML = "";
-    vazio.style.display = "block";
+  lista.forEach(v => {
+    const data = String(v.dataPedido || "");
+    if (!data) return;
+    mapa[data] = (mapa[data] || 0) + calcularTotal(v);
+  });
+
+  const labels = Object.keys(mapa).sort();
+  const data = labels.map(l => mapa[l]);
+
+  if (chartEvolucao) chartEvolucao.destroy();
+
+  chartEvolucao = new Chart(document.getElementById("chartEvolucao"), {
+    type: 'line',
+    data: {
+      labels: labels.length ? labels : ["Sem dados"],
+      datasets: [{
+        label: 'Faturamento diário',
+        data: data.length ? data : [0],
+        borderColor: 'rgba(76,175,80,0.95)',
+        backgroundColor: 'rgba(76,175,80,0.18)',
+        fill: true,
+        tension: 0.25,
+        pointRadius: 4,
+        pointBackgroundColor: 'rgba(76,175,80,1)'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: 'rgba(255,255,255,0.08)' } }
+      }
+    }
+  });
+}
+
+function renderRanking(lista){
+  const mapa = {};
+
+  lista.forEach(v => {
+    const nome = String(v.vendedorNome || "Sem vendedor");
+    if (!mapa[nome]) mapa[nome] = { total:0, qtd:0 };
+    mapa[nome].total += calcularTotal(v);
+    mapa[nome].qtd += 1;
+  });
+
+  const ranking = Object.entries(mapa)
+    .map(([nome, info]) => ({
+      nome,
+      total: info.total,
+      qtd: info.qtd
+    }))
+    .sort((a,b) => b.total - a.total)
+    .slice(0, 3);
+
+  if (!ranking.length){
+    rankingVendedores.innerHTML = <div class="vazio">Sem dados no período.</div>;
     return;
   }
 
-  vazio.style.display = "none";
-
-  tbody.innerHTML = lista.map(v => `
-    <tr>
-      <td>${v.pedido || "-"}</td>
-      <td>${v.dataPedido || "-"}</td>
-      <td>${v.dataEntrega || "-"}</td>
-      <td>${v.cliente?.nome || "-"}</td>
-      <td>${v.cliente?.cidade || "-"}</td>
-      <td>${v.vendedorNome || "-"}</td>
-      <td>${v.zona || "-"}</td>
-      <td><span class="badge ${classePagamento(v)}">${formatarPagamento(v)}</span></td>
-      <td>${moedaBRL(calcularTotal(v))}</td>
-    </tr>
+  rankingVendedores.innerHTML = ranking.map((item, i) => `
+    <div class="ranking-item">
+      <div class="ranking-left">
+        <div class="ranking-pos">${i + 1}</div>
+        <div>
+          <div class="ranking-name">${item.nome}</div>
+          <div class="ranking-meta">${item.qtd} venda(s)</div>
+        </div>
+      </div>
+      <div class="ranking-value">${moedaBRL(item.total)}</div>
+    </div>
   `).join("");
 }
 
+function renderTabelaPaginada(){
+  const totalItens = listaFiltradaTabela.length;
+  const totalPaginas = Math.max(1, Math.ceil(totalItens / limiteTabela));
+
+  if (paginaTabelaAtual > totalPaginas) paginaTabelaAtual = totalPaginas;
+
+  const inicio = (paginaTabelaAtual - 1) * limiteTabela;
+  const fim = inicio + limiteTabela;
+  const pagina = listaFiltradaTabela.slice(inicio, fim);
+
+  if (!totalItens){
+    tbodyFinanceiro.innerHTML = "";
+    vazioFinanceiro.style.display = "block";
+  } else {
+    vazioFinanceiro.style.display = "none";
+    tbodyFinanceiro.innerHTML = pagina.map(v => `
+      <tr>
+        <td>${v.pedido || "-"}</td>
+        <td>${v.dataPedido || "-"}</td>
+        <td>${v.dataEntrega || "-"}</td>
+        <td>${v.cliente?.nome || "-"}</td>
+        <td>${v.cliente?.cidade || "-"}</td>
+        <td>${v.vendedorNome || "-"}</td>
+        <td>${v.zona || "-"}</td>
+        <td><span class="badge ${classePagamento(v)}">${formatarPagamento(v)}</span></td>
+        <td>${v.observacoes || "-"}</td>
+        <td>${moedaBRL(calcularTotal(v))}</td>
+      </tr>
+    `).join("");
+  }
+
+  paginacaoTabelaInfo.textContent = Página ${totalItens ? paginaTabelaAtual : 1} de ${totalPaginas};
+  btnTabelaAnterior.disabled = paginaTabelaAtual <= 1 || totalItens === 0;
+  btnTabelaProxima.disabled = paginaTabelaAtual >= totalPaginas || totalItens === 0;
+}
+
 function renderTudo(){
-  const lista = filtrarVendas();
+  const lista = filtrarVendas(vendasCache);
+
   renderKpis(lista);
   renderChartVendedores(lista);
   renderChartPagamentos(lista);
-  renderTabela(lista);
+  renderChartEvolucao(lista);
+  renderRanking(lista);
+
+  listaFiltradaTabela = lista;
+  paginaTabelaAtual = 1;
+  renderTabelaPaginada();
 }
 
 async function carregarFinanceiro(){
@@ -590,6 +917,9 @@ function registrarEventos(){
   filtroPeriodo.onchange = () => {
     if (filtroPeriodo.value !== "personalizado"){
       aplicarPeriodoAutomatico();
+    } else {
+      dataInicio.value = "";
+      dataFim.value = "";
     }
     renderTudo();
   };
@@ -599,6 +929,21 @@ function registrarEventos(){
   filtroVendedor.oninput = renderTudo;
   filtroZona.onchange = renderTudo;
   filtroPagamento.onchange = renderTudo;
+
+  btnTabelaAnterior.onclick = () => {
+    if (paginaTabelaAtual > 1){
+      paginaTabelaAtual--;
+      renderTabelaPaginada();
+    }
+  };
+
+  btnTabelaProxima.onclick = () => {
+    const totalPaginas = Math.max(1, Math.ceil(listaFiltradaTabela.length / limiteTabela));
+    if (paginaTabelaAtual < totalPaginas){
+      paginaTabelaAtual++;
+      renderTabelaPaginada();
+    }
+  };
 }
 
 Chart.defaults.color = "rgba(255,255,255,0.85)";
