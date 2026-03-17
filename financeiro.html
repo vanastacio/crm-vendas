@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Financeiro - JD</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:'Segoe UI', Arial, sans-serif;
+  background:url("fundo.jpg") no-repeat center center fixed;
+  background-size:cover;
+  color:#fff;
+}
+
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at 30% 12%, rgba(33,150,243,0.18), transparent 45%),
+    radial-gradient(circle at 80% 35%, rgba(76,175,80,0.10), transparent 45%),
+    rgba(0,0,0,0.22);
+  z-index:-1;
+}
+
+.container{
+  max-width:1280px;
+  margin:auto;
+  padding:34px 26px;
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:18px;
+}
+
+.title{
+  font-size:44px;
+  font-weight:900;
+  letter-spacing:.3px;
+  margin:0;
+}
+
+.top-actions{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.btn-pill{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 18px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.18);
+  background:rgba(0,0,0,0.25);
+  backdrop-filter:blur(12px);
+  cursor:pointer;
+  color:#fff;
+  font-weight:800;
+  transition:.25s ease;
+}
+
+.btn-pill:hover{
+  transform:translateY(-1px);
+  background:rgba(255,255,255,0.12);
+}
+
+.filtros{
+  display:grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap:12px;
+  margin:16px 0 20px;
+}
+
+.control{
+  width:100%;
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.16);
+  background:rgba(0,0,0,0.22);
+  color:#fff;
+  outline:none;
+  font-weight:800;
+  backdrop-filter:blur(10px);
+}
+
+.control option{
+  color:#000;
+}
+
+.kpis{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:18px;
+  margin-bottom:18px;
+}
+
+.card{
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius:18px;
+  padding:18px;
+  backdrop-filter:blur(14px);
+  box-shadow:0 18px 46px rgba(0,0,0,0.45);
+}
+
+.kpi-label{
+  font-size:14px;
+  font-weight:800;
+  opacity:.9;
+  margin-bottom:8px;
+}
+
+.kpi-value{
+  font-size:30px;
+  font-weight:900;
+  color:#79ff9a;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:18px;
+  margin-bottom:18px;
+}
+
+.card h2{
+  margin:0 0 14px;
+  font-size:22px;
+  font-weight:900;
+}
+
+canvas{
+  width:100% !important;
+  height:300px !important;
+  max-height:300px;
+}
+
+.table-card{
+  overflow:hidden;
+}
+
+.table-wrap{
+  overflow:auto;
+  border-radius:14px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:1000px;
+}
+
+thead th{
+  text-align:left;
+  font-size:13px;
+  padding:14px 12px;
+  background:rgba(255,255,255,0.10);
+  border-bottom:1px solid rgba(255,255,255,0.10);
+  white-space:nowrap;
+}
+
+tbody td{
+  padding:14px 12px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  font-size:14px;
+  white-space:nowrap;
+}
+
+tbody tr:hover{
+  background:rgba(255,255,255,0.06);
+}
+
+.badge{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  background:rgba(255,255,255,0.14);
+}
+
+.badge.pix{ background:rgba(33,150,243,0.25); }
+.badge.dinheiro{ background:rgba(76,175,80,0.25); }
+.badge.prazo{ background:rgba(255,152,0,0.25); }
+.badge.cartao{ background:rgba(156,39,176,0.25); }
+.badge.outro{ background:rgba(255,255,255,0.18); }
+
+.vazio{
+  text-align:center;
+  opacity:.8;
+  padding:20px;
+  font-weight:800;
+}
+
+@media (max-width: 1100px){
+  .filtros{ grid-template-columns: repeat(3, 1fr); }
+  .kpis{ grid-template-columns: repeat(2, 1fr); }
+  .grid{ grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px){
+  .title{ font-size:32px; }
+  .filtros{ grid-template-columns: 1fr; }
+  .kpis{ grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topbar">
+    <h1 class="title">Financeiro</h1>
+    <div class="top-actions">
+      <button class="btn-pill" onclick="location.href='jader.html'">Voltar</button>
+    </div>
+  </div>
+
+  <div class="filtros">
+    <select id="filtroPeriodo" class="control">
+      <option value="mes">Este mês</option>
+      <option value="semana">Esta semana</option>
+      <option value="dia">Hoje</option>
+      <option value="personalizado">Período personalizado</option>
+    </select>
+
+    <input id="dataInicio" class="control" type="date">
+    <input id="dataFim" class="control" type="date">
+
+    <input id="filtroVendedor" class="control" type="text" placeholder="Filtrar por vendedor">
+
+    <select id="filtroZona" class="control">
+      <option value="">Todas as zonas</option>
+      <option value="centro">Centro</option>
+      <option value="zona_norte">Zona Norte</option>
+      <option value="zona_sul">Zona Sul</option>
+      <option value="zona_leste">Zona Leste</option>
+      <option value="zona_oeste">Zona Oeste</option>
+      <option value="abc_paulista">ABC Paulista</option>
+      <option value="litoral_sul">Litoral Sul</option>
+      <option value="litoral_norte">Litoral Norte</option>
+      <option value="sudoeste">Sudoeste</option>
+      <option value="interior">Interior</option>
+    </select>
+
+    <select id="filtroPagamento" class="control">
+      <option value="">Todos os pagamentos</option>
+      <option value="pix">PIX</option>
+      <option value="dinheiro">Dinheiro</option>
+      <option value="prazo">Prazo</option>
+      <option value="cartao">Cartão</option>
+    </select>
+  </div>
+
+  <div class="kpis">
+    <div class="card">
+      <div class="kpi-label">Total vendido</div>
+      <div class="kpi-value" id="kpiTotalVendido">R$ 0,00</div>
+    </div>
+
+    <div class="card">
+      <div class="kpi-label">Quantidade de pedidos</div>
+      <div class="kpi-value" id="kpiQtdPedidos">0</div>
+    </div>
+
+    <div class="card">
+      <div class="kpi-label">Ticket médio</div>
+      <div class="kpi-value" id="kpiTicketMedio">R$ 0,00</div>
+    </div>
+
+    <div class="card">
+      <div class="kpi-label">Média por vendedor</div>
+      <div class="kpi-value" id="kpiMediaVendedor">R$ 0,00</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Faturamento por Vendedor</h2>
+      <canvas id="chartVendedores"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>Formas de Pagamento</h2>
+      <canvas id="chartPagamentos"></canvas>
+    </div>
+  </div>
+
+  <div class="card table-card">
+    <h2>Lançamentos do Período</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Pedido</th>
+            <th>Data Pedido</th>
+            <th>Entrega</th>
+            <th>Cliente</th>
+            <th>Cidade</th>
+            <th>Vendedor</th>
+            <th>Zona</th>
+            <th>Pagamento</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyFinanceiro"></tbody>
+      </table>
+    </div>
+    <div id="vazioFinanceiro" class="vazio" style="display:none;">Nenhum lançamento encontrado.</div>
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
+  authDomain: "crm-vendas-43b6b.firebaseapp.com",
+  projectId: "crm-vendas-43b6b",
+  storageBucket: "crm-vendas-43b6b.appspot.com",
+  messagingSenderId: "645002761099",
+  appId: "1:645002761099:web:f194f70c351d1074ac158e"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const filtroPeriodo = document.getElementById("filtroPeriodo");
+const dataInicio = document.getElementById("dataInicio");
+const dataFim = document.getElementById("dataFim");
+const filtroVendedor = document.getElementById("filtroVendedor");
+const filtroZona = document.getElementById("filtroZona");
+const filtroPagamento = document.getElementById("filtroPagamento");
+
+let vendasCache = [];
+let chartVend = null;
+let chartPg = null;
+
+function moedaBRL(v){
+  return Number(v || 0).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+}
+
+function calcularTotal(v){
+  const produto = Number(v.produto?.valor ?? 0);
+  const frete = Number(v.frete ?? 0);
+  const montagem = Number(v.montagem ?? 0);
+  const totalDoc = Number(v.total ?? v.valor ?? 0);
+
+  if (totalDoc > 0) return totalDoc;
+  return produto + frete + montagem;
+}
+
+function formatarPagamento(v){
+  if (v.observacoes && String(v.observacoes).trim()) return String(v.observacoes).trim();
+
+  const tipo = String(v.pagamento?.tipo || "").toLowerCase();
+  const parcelas = Number(v.pagamento?.parcelas || 0);
+
+  if (tipo === "pix") return "PIX à vista";
+  if (tipo === "dinheiro") return "Dinheiro à vista";
+  if (tipo === "cartao") return parcelas ? `${parcelas}x no cartão` : "Cartão";
+  if (tipo === "prazo") return parcelas ? `${parcelas}x` : "Prazo";
+  return "-";
+}
+
+function classePagamento(v){
+  const tipo = String(v.pagamento?.tipo || "").toLowerCase();
+  if (tipo === "pix") return "pix";
+  if (tipo === "dinheiro") return "dinheiro";
+  if (tipo === "prazo") return "prazo";
+  if (tipo === "cartao") return "cartao";
+  return "outro";
+}
+
+function getHojeLocal(){
+  const hoje = new Date();
+  const ano = hoje.getFullYear();
+  const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+  const dia = String(hoje.getDate()).padStart(2, "0");
+  return ${ano}-${mes}-${dia};
+}
+
+function getInicioSemana(data = new Date()){
+  const d = new Date(data);
+  const diaSemana = d.getDay(); // 0 domingo
+  const diff = diaSemana === 0 ? -6 : 1 - diaSemana; // segunda
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function toYMD(dateObj){
+  const ano = dateObj.getFullYear();
+  const mes = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const dia = String(dateObj.getDate()).padStart(2, "0");
+  return ${ano}-${mes}-${dia};
+}
+
+function aplicarPeriodoAutomatico(){
+  const hoje = new Date();
+  const tipo = filtroPeriodo.value;
+
+  if (tipo === "dia"){
+    const hojeYMD = getHojeLocal();
+    dataInicio.value = hojeYMD;
+    dataFim.value = hojeYMD;
+  } else if (tipo === "semana"){
+    const inicio = getInicioSemana(hoje);
+    dataInicio.value = toYMD(inicio);
+    dataFim.value = getHojeLocal();
+  } else if (tipo === "mes"){
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    dataInicio.value = toYMD(inicioMes);
+    dataFim.value = getHojeLocal();
+  }
+}
+
+function filtrarVendas(){
+  const vendedor = String(filtroVendedor.value || "").toLowerCase().trim();
+  const zona = filtroZona.value;
+  const pagamento = filtroPagamento.value;
+  const inicio = dataInicio.value;
+  const fim = dataFim.value;
+
+  return vendasCache.filter(v => {
+    const vendedorNome = String(v.vendedorNome || "").toLowerCase();
+    const dataPedido = String(v.dataPedido || "");
+    const zonaVenda = String(v.zona || "");
+    const pagamentoTipo = String(v.pagamento?.tipo || "").toLowerCase();
+
+    if (vendedor && !vendedorNome.includes(vendedor)) return false;
+    if (zona && zonaVenda !== zona) return false;
+    if (pagamento && pagamentoTipo !== pagamento) return false;
+    if (inicio && dataPedido < inicio) return false;
+    if (fim && dataPedido > fim) return false;
+
+    return true;
+  });
+}
+
+function renderKpis(lista){
+  const total = lista.reduce((acc, v) => acc + calcularTotal(v), 0);
+  const quantidade = lista.length;
+  const ticket = quantidade ? total / quantidade : 0;
+
+  const vendedoresUnicos = [...new Set(lista.map(v => String(v.vendedorNome || "").trim()).filter(Boolean))];
+  const mediaVendedor = vendedoresUnicos.length ? total / vendedoresUnicos.length : 0;
+
+  document.getElementById("kpiTotalVendido").textContent = moedaBRL(total);
+  document.getElementById("kpiQtdPedidos").textContent = quantidade;
+  document.getElementById("kpiTicketMedio").textContent = moedaBRL(ticket);
+  document.getElementById("kpiMediaVendedor").textContent = moedaBRL(mediaVendedor);
+}
+
+function renderChartVendedores(lista){
+  const mapa = {};
+
+  lista.forEach(v => {
+    const nome = String(v.vendedorNome || "Sem vendedor");
+    mapa[nome] = (mapa[nome] || 0) + calcularTotal(v);
+  });
+
+  const labels = Object.keys(mapa);
+  const data = Object.values(mapa);
+
+  if (chartVend) chartVend.destroy();
+
+  chartVend = new Chart(document.getElementById("chartVendedores"), {
+    type: 'bar',
+    data: {
+      labels: labels.length ? labels : ["Sem dados"],
+      datasets: [{
+        label: 'Total vendido',
+        data: data.length ? data : [0],
+        backgroundColor: 'rgba(33,150,243,0.85)',
+        borderRadius: 10
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: 'rgba(255,255,255,0.08)' } }
+      }
+    }
+  });
+}
+
+function renderChartPagamentos(lista){
+  const mapa = {};
+
+  lista.forEach(v => {
+    const tipo = String(v.pagamento?.tipo || "outro").toLowerCase();
+    mapa[tipo] = (mapa[tipo] || 0) + 1;
+  });
+
+  const labels = Object.keys(mapa).map(t => {
+    if (t === "pix") return "PIX";
+    if (t === "dinheiro") return "Dinheiro";
+    if (t === "prazo") return "Prazo";
+    if (t === "cartao") return "Cartão";
+    return "Outro";
+  });
+
+  const data = Object.values(mapa);
+
+  if (chartPg) chartPg.destroy();
+
+  chartPg = new Chart(document.getElementById("chartPagamentos"), {
+    type: 'doughnut',
+    data: {
+      labels: labels.length ? labels : ["Sem dados"],
+      datasets: [{
+        data: data.length ? data : [1],
+        backgroundColor: ['#2196f3', '#4caf50', '#ff9800', '#9c27b0', '#90a4ae'],
+        borderColor: 'rgba(255,255,255,0.75)',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%'
+    }
+  });
+}
+
+function renderTabela(lista){
+  const tbody = document.getElementById("tbodyFinanceiro");
+  const vazio = document.getElementById("vazioFinanceiro");
+
+  if (!lista.length){
+    tbody.innerHTML = "";
+    vazio.style.display = "block";
+    return;
+  }
+
+  vazio.style.display = "none";
+
+  tbody.innerHTML = lista.map(v => `
+    <tr>
+      <td>${v.pedido || "-"}</td>
+      <td>${v.dataPedido || "-"}</td>
+      <td>${v.dataEntrega || "-"}</td>
+      <td>${v.cliente?.nome || "-"}</td>
+      <td>${v.cliente?.cidade || "-"}</td>
+      <td>${v.vendedorNome || "-"}</td>
+      <td>${v.zona || "-"}</td>
+      <td><span class="badge ${classePagamento(v)}">${formatarPagamento(v)}</span></td>
+      <td>${moedaBRL(calcularTotal(v))}</td>
+    </tr>
+  `).join("");
+}
+
+function renderTudo(){
+  const lista = filtrarVendas();
+  renderKpis(lista);
+  renderChartVendedores(lista);
+  renderChartPagamentos(lista);
+  renderTabela(lista);
+}
+
+async function carregarFinanceiro(){
+  const snapshot = await getDocs(collection(db, "vendas"));
+  vendasCache = [];
+
+  snapshot.forEach(doc => {
+    vendasCache.push({ id: doc.id, ...doc.data() });
+  });
+
+  aplicarPeriodoAutomatico();
+  renderTudo();
+}
+
+function registrarEventos(){
+  filtroPeriodo.onchange = () => {
+    if (filtroPeriodo.value !== "personalizado"){
+      aplicarPeriodoAutomatico();
+    }
+    renderTudo();
+  };
+
+  dataInicio.onchange = renderTudo;
+  dataFim.onchange = renderTudo;
+  filtroVendedor.oninput = renderTudo;
+  filtroZona.onchange = renderTudo;
+  filtroPagamento.onchange = renderTudo;
+}
+
+Chart.defaults.color = "rgba(255,255,255,0.85)";
+Chart.defaults.font.family = "'Segoe UI', Arial, sans-serif";
+
+onAuthStateChanged(auth, user => {
+  if (!user) {
+    location.href = "login.html";
+    return;
+  }
+
+  registrarEventos();
+  carregarFinanceiro();
+});
+</script>
+
+</body>
+</html>
