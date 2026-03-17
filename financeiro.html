@@ -495,8 +495,8 @@ function formatarPagamento(v){
 
   if (tipo === "pix") return "PIX à vista";
   if (tipo === "dinheiro") return "Dinheiro";
-  if (tipo === "cartao") return parcelas ? ${parcelas}x cartão : "Cartão";
-  if (tipo === "prazo") return parcelas ? ${parcelas}x prazo : "Prazo";
+  if (tipo === "cartao") return parcelas ? `${parcelas}x cartão` : "Cartão";
+  if (tipo === "prazo") return parcelas ? `${parcelas}x prazo` : "Prazo";
   return "-";
 }
 
@@ -514,7 +514,7 @@ function getHojeLocal(){
   const ano = hoje.getFullYear();
   const mes = String(hoje.getMonth() + 1).padStart(2, "0");
   const dia = String(hoje.getDate()).padStart(2, "0");
-  return ${ano}-${mes}-${dia};
+  return `${ano}-${mes}-${dia}`;
 }
 
 function getInicioSemana(data = new Date()){
@@ -529,7 +529,7 @@ function toYMD(dateObj){
   const ano = dateObj.getFullYear();
   const mes = String(dateObj.getMonth() + 1).padStart(2, "0");
   const dia = String(dateObj.getDate()).padStart(2, "0");
-  return ${ano}-${mes}-${dia};
+  return `${ano}-${mes}-${dia}`;
 }
 
 function parseYMD(str){
@@ -618,7 +618,7 @@ function somaTotal(lista){
 
 function setSubTexto(el, texto, tipo="neu"){
   el.textContent = texto;
-  el.className = kpi-sub sub-${tipo};
+  el.className = `kpi-sub sub-${tipo}`;
 }
 
 function renderKpis(listaAtual){
@@ -672,7 +672,7 @@ function renderKpis(listaAtual){
     const pct = ((atual - anterior) / anterior) * 100;
     const sinal = pct > 0 ? "+" : "";
     return {
-      texto: ${sinal}${pct.toFixed(1)}% vs período anterior,
+      texto: `${sinal}${pct.toFixed(1)}% vs período anterior`,
       tipo: pct > 0 ? "pos" : pct < 0 ? "neg" : "neu"
     };
   }
@@ -681,7 +681,7 @@ function renderKpis(listaAtual){
     const diff = atual - anterior;
     const sinal = diff > 0 ? "+" : "";
     return {
-      texto: ${sinal}${diff}${sufixo} vs período anterior,
+      texto: `${sinal}${diff}${sufixo} vs período anterior`,
       tipo: diff > 0 ? "pos" : diff < 0 ? "neg" : "neu"
     };
   }
@@ -833,7 +833,7 @@ function renderRanking(lista){
     .slice(0, 3);
 
   if (!ranking.length){
-    rankingVendedores.innerHTML = <div class="vazio">Sem dados no período.</div>;
+    rankingVendedores.innerHTML = `<div class="vazio">Sem dados no período.</div>`;
     return;
   }
 
@@ -882,7 +882,7 @@ function renderTabelaPaginada(){
     `).join("");
   }
 
-  paginacaoTabelaInfo.textContent = Página ${totalItens ? paginaTabelaAtual : 1} de ${totalPaginas};
+  paginacaoTabelaInfo.textContent = `Página ${totalItens ? paginaTabelaAtual : 1} de ${totalPaginas}`;
   btnTabelaAnterior.disabled = paginaTabelaAtual <= 1 || totalItens === 0;
   btnTabelaProxima.disabled = paginaTabelaAtual >= totalPaginas || totalItens === 0;
 }
