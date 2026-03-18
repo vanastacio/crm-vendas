@@ -323,8 +323,8 @@ tbody tr:hover{
       <option value="dia">Hoje</option>
     </select>
 
-    <input id="dataInicio" class="control" type="date">
-    <input id="dataFim" class="control" type="date">
+    <input id="dataUnica" class="control" type="date">
+    
 
     <input id="filtroVendedor" class="control" type="text" placeholder="Filtrar por vendedor">
 
@@ -453,8 +453,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 const filtroPeriodo = document.getElementById("filtroPeriodo");
-const dataInicio = document.getElementById("dataInicio");
-const dataFim = document.getElementById("dataFim");
+const dataUnica = document.getElementById("dataUnica");
 const filtroVendedor = document.getElementById("filtroVendedor");
 const filtroZona = document.getElementById("filtroZona");
 const filtroPagamento = document.getElementById("filtroPagamento");
@@ -542,20 +541,16 @@ function aplicarPeriodoAutomatico(){
   const tipo = filtroPeriodo.value;
 
   if (tipo === "dia"){
-    const hojeYMD = getHojeLocal();
-    dataInicio.value = hojeYMD;
-    dataFim.value = hojeYMD;
-  } else if (tipo === "semana"){
-    const inicio = getInicioSemana(hoje);
-    dataInicio.value = toYMD(inicio);
-    dataFim.value = getHojeLocal();
-  } else if (tipo === "mes"){
-    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-    dataInicio.value = toYMD(inicioMes);
-    dataFim.value = getHojeLocal();
-  } else {
-    dataInicio.value = "";
-    dataFim.value = "";
+    dataUnica.value = getHojeLocal();
+  } 
+  else if (tipo === "semana"){
+    dataUnica.value = "";
+  } 
+  else if (tipo === "mes"){
+    dataUnica.value = "";
+  } 
+  else {
+    dataUnica.value = "";
   }
 }
 
@@ -563,8 +558,7 @@ function filtrarVendas(listaBase){
   const vendedor = String(filtroVendedor.value || "").toLowerCase().trim();
   const zona = filtroZona.value;
   const pagamento = filtroPagamento.value;
-  const inicio = dataInicio.value;
-  const fim = dataFim.value;
+  const data = dataUnica.value;
 
   return listaBase.filter(v => {
     const vendedorNome = String(v.vendedorNome || "").toLowerCase();
@@ -575,8 +569,7 @@ function filtrarVendas(listaBase){
     if (vendedor && !vendedorNome.includes(vendedor)) return false;
     if (zona && zonaVenda !== zona) return false;
     if (pagamento && pagamentoTipo !== pagamento) return false;
-    if (inicio && dataPedido < inicio) return false;
-    if (fim && dataPedido > fim) return false;
+    if (data && v.dataPedido !== data) return false;
 
     return true;
   });
@@ -924,8 +917,7 @@ function registrarEventos(){
     renderTudo();
   };
 
-  dataInicio.onchange = renderTudo;
-  dataFim.onchange = renderTudo;
+  dataUnica.onchange = renderTudo;
   filtroVendedor.oninput = renderTudo;
   filtroZona.onchange = renderTudo;
   filtroPagamento.onchange = renderTudo;
