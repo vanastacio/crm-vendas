@@ -573,7 +573,7 @@ function renderVendedores(){
   document.querySelectorAll(".btn-salvar-comissao").forEach(btn => {
     btn.onclick = async () => {
       const nome = btn.getAttribute("data-nome");
-      const input = document.querySelector(.input-comissao-vendedor[data-nome="${CSS.escape(nome)}"]);
+      const input = document.querySelector(`.input-comissao-vendedor[data-nome="${CSS.escape(nome)}"]`);
       const valor = Number(input?.value || 0);
 
       await salvarComissaoVendedor(nome, valor);
@@ -611,7 +611,7 @@ async function salvarComissaoVendedor(nome, valor){
 async function excluirComissaoVendedor(nome){
   if (!nome) return;
 
-  const confirmar = confirm(Deseja excluir a comissão configurada para ${nome}?);
+  const confirmar = confirm(`Deseja excluir a comissão configurada para ${nome}?`);
   if (!confirmar) return;
 
   const id = slugify(nome);
