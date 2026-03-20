@@ -157,7 +157,7 @@ body::before{
 table{
   width:100%;
   border-collapse:collapse;
-  min-width:760px;
+  min-width:900px;
 }
 
 thead th{
@@ -189,15 +189,6 @@ tbody tr:hover{
   color:#fff;
   outline:none;
   font-weight:800;
-}
-
-.badge{
-  display:inline-block;
-  padding:6px 10px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:900;
-  background:rgba(33,150,243,0.24);
 }
 
 .form-grid{
@@ -232,6 +223,23 @@ tbody tr:hover{
   padding:8px 12px;
 }
 
+.btn-save{
+  border:none;
+  border-radius:10px;
+  background:#2e7d32;
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  padding:8px 12px;
+  margin-right:8px;
+}
+
+.btn-save:hover,
+.btn-remove:hover,
+.btn-add:hover{
+  filter:brightness(1.05);
+}
+
 .total-box{
   margin-top:14px;
   padding:14px 16px;
@@ -248,6 +256,13 @@ tbody tr:hover{
 .total-valor{
   color:#79ff9a;
   font-size:24px;
+}
+
+.vazio{
+  padding:18px;
+  text-align:center;
+  opacity:.8;
+  font-weight:800;
 }
 
 @media (max-width: 1100px){
@@ -320,30 +335,13 @@ tbody tr:hover{
               <th>Pedidos vendidos</th>
               <th>Valor por venda</th>
               <th>Comissão total</th>
+              <th>Ação</th>
             </tr>
           </thead>
-          <tbody id="tbodyVendedores">
-            <tr>
-              <td>Mariane</td>
-              <td>14</td>
-              <td><input class="input-mini" type="number" value="250"></td>
-              <td>R$ 3.500,00</td>
-            </tr>
-            <tr>
-              <td>Vinicius</td>
-              <td>9</td>
-              <td><input class="input-mini" type="number" value="150"></td>
-              <td>R$ 1.350,00</td>
-            </tr>
-            <tr>
-              <td>Paula</td>
-              <td>6</td>
-              <td><input class="input-mini" type="number" value="200"></td>
-              <td>R$ 1.200,00</td>
-            </tr>
-          </tbody>
+          <tbody id="tbodyVendedores"></tbody>
         </table>
       </div>
+      <div id="vazioVendedores" class="vazio" style="display:none;">Nenhum vendedor encontrado no período.</div>
     </div>
 
     <!-- PRODUÇÃO -->
@@ -366,31 +364,18 @@ tbody tr:hover{
               <th>Qtd. produzida</th>
               <th>Valor por sofá</th>
               <th>Total</th>
+              <th>Data</th>
               <th>Ação</th>
             </tr>
           </thead>
-          <tbody id="tbodyProducao">
-            <tr>
-              <td>Carlos</td>
-              <td>12</td>
-              <td>R$ 80,00</td>
-              <td>R$ 960,00</td>
-              <td><button class="btn-remove" type="button">Remover</button></td>
-            </tr>
-            <tr>
-              <td>João</td>
-              <td>8</td>
-              <td>R$ 75,00</td>
-              <td>R$ 600,00</td>
-              <td><button class="btn-remove" type="button">Remover</button></td>
-            </tr>
-          </tbody>
+          <tbody id="tbodyProducao"></tbody>
         </table>
       </div>
+      <div id="vazioProducao" class="vazio" style="display:none;">Nenhum lançamento de produção no período.</div>
 
       <div class="total-box">
         <span>Total comissão produção</span>
-        <span class="total-valor" id="totalProducao">R$ 1.560,00</span>
+        <span class="total-valor" id="totalProducao">R$ 0,00</span>
       </div>
     </div>
 
@@ -398,18 +383,286 @@ tbody tr:hover{
 
 </div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  doc,
+  setDoc,
+  deleteDoc,
+  addDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
+  authDomain: "crm-vendas-43b6b.firebaseapp.com",
+  projectId: "crm-vendas-43b6b",
+  storageBucket: "crm-vendas-43b6b.appspot.com",
+  messagingSenderId: "645002761099",
+  appId: "1:645002761099:web:f194f70c351d1074ac158e"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const filtroPeriodo = document.getElementById("filtroPeriodo");
+const dataInicio = document.getElementById("dataInicio");
+const dataFim = document.getElementById("dataFim");
+const filtroVendedor = document.getElementById("filtroVendedor");
+
+const tbodyVendedores = document.getElementById("tbodyVendedores");
+const vazioVendedores = document.getElementById("vazioVendedores");
+
+const tbodyProducao = document.getElementById("tbodyProducao");
+const vazioProducao = document.getElementById("vazioProducao");
+
+const nomeProdutor = document.getElementById("nomeProdutor");
+const qtdProduzida = document.getElementById("qtdProduzida");
+const valorPorSofa = document.getElementById("valorPorSofa");
+const btnAdicionarProducao = document.getElementById("btnAdicionarProducao");
+
+let vendasCache = [];
+let regrasComissaoCache = {};
+let producaoCache = [];
+
 function moedaBRL(v){
   return Number(v || 0).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
 }
 
-// etapa 1: somente estrutura visual
-// próxima etapa: ligar ao Firebase e calcular de verdade
+function getHojeLocal(){
+  const hoje = new Date();
+  return hoje.toISOString().slice(0,10);
+}
 
-document.getElementById("btnAdicionarProducao").onclick = () => {
-  const nome = document.getElementById("nomeProdutor").value.trim();
-  const qtd = Number(document.getElementById("qtdProduzida").value || 0);
-  const valor = Number(document.getElementById("valorPorSofa").value || 0);
+function toYMD(dateObj){
+  const ano = dateObj.getFullYear();
+  const mes = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const dia = String(dateObj.getDate()).padStart(2, "0");
+  return ${ano}-${mes}-${dia};
+}
+
+function getInicioSemana(data = new Date()){
+  const d = new Date(data);
+  const diaSemana = d.getDay();
+  const diff = diaSemana === 0 ? -6 : 1 - diaSemana;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function slugify(text){
+  return String(text || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "sem-nome";
+}
+
+function aplicarPeriodoAutomatico(){
+  const hoje = new Date();
+  const tipo = filtroPeriodo.value;
+
+  if (tipo === "dia"){
+    const hojeYMD = getHojeLocal();
+    dataInicio.value = hojeYMD;
+    dataFim.value = hojeYMD;
+  } else if (tipo === "semana"){
+    const inicio = getInicioSemana(hoje);
+    dataInicio.value = toYMD(inicio);
+    dataFim.value = getHojeLocal();
+  } else if (tipo === "mes"){
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    dataInicio.value = toYMD(inicioMes);
+    dataFim.value = getHojeLocal();
+  }
+}
+
+function filtrarVendas(){
+  const vendedorFiltro = String(filtroVendedor.value || "").toLowerCase().trim();
+  const inicio = dataInicio.value;
+  const fim = dataFim.value;
+
+  return vendasCache.filter(v => {
+    const nomeVendedor = String(v.vendedorNome || "").toLowerCase();
+    const dataPedido = String(v.dataPedido || "");
+
+    if (vendedorFiltro && !nomeVendedor.includes(vendedorFiltro)) return false;
+    if (inicio && dataPedido < inicio) return false;
+    if (fim && dataPedido > fim) return false;
+
+    return true;
+  });
+}
+
+function filtrarProducao(){
+  const inicio = dataInicio.value;
+  const fim = dataFim.value;
+
+  return producaoCache.filter(item => {
+    const data = String(item.dataLancamento || "");
+    if (inicio && data < inicio) return false;
+    if (fim && data > fim) return false;
+    return true;
+  });
+}
+
+function renderVendedores(){
+  const lista = filtrarVendas();
+  const mapaQtd = {};
+
+  lista.forEach(v => {
+    const nome = String(v.vendedorNome || "").trim();
+    if (!nome) return;
+    mapaQtd[nome] = (mapaQtd[nome] || 0) + 1;
+  });
+
+  const nomesRegras = Object.values(regrasComissaoCache).map(r => r.nome).filter(Boolean);
+  const nomes = [...new Set([...Object.keys(mapaQtd), ...nomesRegras])].sort((a,b) => a.localeCompare(b, "pt-BR"));
+
+  const vendedorFiltro = String(filtroVendedor.value || "").toLowerCase().trim();
+  const nomesFiltrados = nomes.filter(nome => {
+    if (!vendedorFiltro) return true;
+    return nome.toLowerCase().includes(vendedorFiltro);
+  });
+
+  const vendasPeriodo = lista.length;
+  let totalComissao = 0;
+  let vendedoresAtivos = 0;
+
+  if (!nomesFiltrados.length){
+    tbodyVendedores.innerHTML = "";
+    vazioVendedores.style.display = "block";
+  } else {
+    vazioVendedores.style.display = "none";
+
+    tbodyVendedores.innerHTML = nomesFiltrados.map(nome => {
+      const qtd = mapaQtd[nome] || 0;
+      const regra = regrasComissaoCache[slugify(nome)];
+      const valorPorVenda = Number(regra?.valorPorVenda || 0);
+      const total = qtd * valorPorVenda;
+
+      if (qtd > 0) vendedoresAtivos++;
+      totalComissao += total;
+
+      return `
+        <tr>
+          <td>${nome}</td>
+          <td>${qtd}</td>
+          <td>
+            <input class="input-mini input-comissao-vendedor" type="number" value="${valorPorVenda}" data-nome="${nome}">
+          </td>
+          <td>${moedaBRL(total)}</td>
+          <td>
+            <button class="btn-save btn-salvar-comissao" type="button" data-nome="${nome}">Salvar</button>
+            <button class="btn-remove btn-excluir-comissao" type="button" data-nome="${nome}">Excluir comissão</button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  document.getElementById("kpiVendasPeriodo").textContent = vendasPeriodo;
+  document.getElementById("kpiComissaoVendedores").textContent = moedaBRL(totalComissao);
+  document.getElementById("kpiVendedoresAtivos").textContent = vendedoresAtivos;
+
+  document.querySelectorAll(".btn-salvar-comissao").forEach(btn => {
+    btn.onclick = async () => {
+      const nome = btn.getAttribute("data-nome");
+      const input = document.querySelector(.input-comissao-vendedor[data-nome="${CSS.escape(nome)}"]);
+      const valor = Number(input?.value || 0);
+
+      await salvarComissaoVendedor(nome, valor);
+    };
+  });
+
+  document.querySelectorAll(".btn-excluir-comissao").forEach(btn => {
+    btn.onclick = async () => {
+      const nome = btn.getAttribute("data-nome");
+      await excluirComissaoVendedor(nome);
+    };
+  });
+}
+
+async function salvarComissaoVendedor(nome, valor){
+  if (!nome) return;
+
+  const id = slugify(nome);
+
+  await setDoc(doc(db, "comissoes_vendedores", id), {
+    nome,
+    valorPorVenda: Number(valor || 0),
+    updatedAt: new Date().toISOString()
+  });
+
+  regrasComissaoCache[id] = {
+    nome,
+    valorPorVenda: Number(valor || 0)
+  };
+
+  renderVendedores();
+  alert("Comissão do vendedor salva com sucesso!");
+}
+
+async function excluirComissaoVendedor(nome){
+  if (!nome) return;
+
+  const confirmar = confirm(Deseja excluir a comissão configurada para ${nome}?);
+  if (!confirmar) return;
+
+  const id = slugify(nome);
+  await deleteDoc(doc(db, "comissoes_vendedores", id));
+  delete regrasComissaoCache[id];
+
+  renderVendedores();
+  alert("Comissão excluída com sucesso!");
+}
+
+function renderProducao(){
+  const lista = filtrarProducao();
+
+  let total = 0;
+
+  if (!lista.length){
+    tbodyProducao.innerHTML = "";
+    vazioProducao.style.display = "block";
+  } else {
+    vazioProducao.style.display = "none";
+
+    tbodyProducao.innerHTML = lista.map(item => {
+      total += Number(item.total || 0);
+
+      return `
+        <tr>
+          <td>${item.nome || "-"}</td>
+          <td>${item.quantidade || 0}</td>
+          <td>${moedaBRL(item.valorPorSofa || 0)}</td>
+          <td>${moedaBRL(item.total || 0)}</td>
+          <td>${item.dataLancamento || "-"}</td>
+          <td><button class="btn-remove btn-remover-producao" type="button" data-id="${item.id}">Remover</button></td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  document.getElementById("totalProducao").textContent = moedaBRL(total);
+
+  document.querySelectorAll(".btn-remover-producao").forEach(btn => {
+    btn.onclick = async () => {
+      const id = btn.getAttribute("data-id");
+      await removerProducao(id);
+    };
+  });
+}
+
+async function adicionarProducao(){
+  const nome = nomeProdutor.value.trim();
+  const qtd = Number(qtdProduzida.value || 0);
+  const valor = Number(valorPorSofa.value || 0);
 
   if (!nome || !qtd || !valor){
     alert("Preencha nome, quantidade e valor por sofá.");
@@ -418,52 +671,101 @@ document.getElementById("btnAdicionarProducao").onclick = () => {
 
   const total = qtd * valor;
 
-  const tbody = document.getElementById("tbodyProducao");
-  const tr = document.createElement("tr");
-
-  tr.innerHTML = `
-    <td>${nome}</td>
-    <td>${qtd}</td>
-    <td>${moedaBRL(valor)}</td>
-    <td>${moedaBRL(total)}</td>
-    <td><button class="btn-remove" type="button">Remover</button></td>
-  `;
-
-  tbody.appendChild(tr);
-
-  tr.querySelector(".btn-remove").onclick = () => {
-    tr.remove();
-    recalcularTotalProducao();
-  };
-
-  document.getElementById("nomeProdutor").value = "";
-  document.getElementById("qtdProduzida").value = "";
-  document.getElementById("valorPorSofa").value = "";
-
-  recalcularTotalProducao();
-};
-
-document.querySelectorAll(".btn-remove").forEach(btn => {
-  btn.onclick = () => {
-    btn.closest("tr").remove();
-    recalcularTotalProducao();
-  };
-});
-
-function recalcularTotalProducao(){
-  const linhas = document.querySelectorAll("#tbodyProducao tr");
-  let total = 0;
-
-  linhas.forEach(linha => {
-    const texto = linha.children[3]?.textContent || "0";
-    const numero = Number(
-      texto.replace(/[R$\s.]/g, "").replace(",", ".")
-    ) || 0;
-    total += numero;
+  await addDoc(collection(db, "comissoes_producao"), {
+    nome,
+    quantidade: qtd,
+    valorPorSofa: valor,
+    total,
+    dataLancamento: getHojeLocal(),
+    createdAt: new Date().toISOString()
   });
 
-  document.getElementById("totalProducao").textContent = moedaBRL(total);
+  nomeProdutor.value = "";
+  qtdProduzida.value = "";
+  valorPorSofa.value = "";
+
+  await carregarProducao();
+  renderProducao();
 }
+
+async function removerProducao(id){
+  const confirmar = confirm("Deseja remover este lançamento de produção?");
+  if (!confirmar) return;
+
+  await deleteDoc(doc(db, "comissoes_producao", id));
+  producaoCache = producaoCache.filter(item => item.id !== id);
+  renderProducao();
+}
+
+async function carregarRegrasVendedores(){
+  const snap = await getDocs(collection(db, "comissoes_vendedores"));
+  regrasComissaoCache = {};
+
+  snap.forEach(d => {
+    regrasComissaoCache[d.id] = { id: d.id, ...d.data() };
+  });
+}
+
+async function carregarVendas(){
+  const snap = await getDocs(collection(db, "vendas"));
+  vendasCache = [];
+
+  snap.forEach(d => {
+    vendasCache.push({ id: d.id, ...d.data() });
+  });
+}
+
+async function carregarProducao(){
+  const snap = await getDocs(collection(db, "comissoes_producao"));
+  producaoCache = [];
+
+  snap.forEach(d => {
+    producaoCache.push({ id: d.id, ...d.data() });
+  });
+
+  producaoCache.sort((a,b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+}
+
+function renderTudo(){
+  renderVendedores();
+  renderProducao();
+}
+
+function registrarEventos(){
+  filtroPeriodo.onchange = () => {
+    if (filtroPeriodo.value === "personalizado"){
+      dataInicio.value = "";
+      dataFim.value = "";
+    } else {
+      aplicarPeriodoAutomatico();
+    }
+    renderTudo();
+  };
+
+  dataInicio.onchange = renderTudo;
+  dataFim.onchange = renderTudo;
+  filtroVendedor.oninput = renderTudo;
+
+  btnAdicionarProducao.onclick = adicionarProducao;
+}
+
+onAuthStateChanged(auth, async user => {
+  if (!user){
+    location.href = "login.html";
+    return;
+  }
+
+  registrarEventos();
+  aplicarPeriodoAutomatico();
+
+  await Promise.all([
+    carregarVendas(),
+    carregarRegrasVendedores(),
+    carregarProducao()
+  ]);
+
+  renderTudo();
+});
 </script>
 
 </body>
