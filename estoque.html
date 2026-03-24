@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Estoque - JD</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<style>
+body{
+  margin:0;
+  font-family:'Segoe UI', Arial, sans-serif;
+  background:url("fundo.jpg") no-repeat center center fixed;
+  background-size:cover;
+  color:#fff;
+}
+
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at 30% 12%, rgba(33,150,243,0.18), transparent 45%),
+    radial-gradient(circle at 80% 35%, rgba(76,175,80,0.10), transparent 45%),
+    rgba(0,0,0,0.22);
+  z-index:-1;
+}
+
+.container{
+  max-width:1280px;
+  margin:auto;
+  padding:34px 26px;
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:18px;
+}
+
+.title{
+  font-size:44px;
+  font-weight:900;
+  letter-spacing:.3px;
+  margin:0;
+}
+
+.top-actions{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.btn-pill{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 18px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.18);
+  background:rgba(0,0,0,0.25);
+  backdrop-filter:blur(12px);
+  cursor:pointer;
+  color:#fff;
+  font-weight:800;
+  transition:.25s ease;
+}
+
+.btn-pill:hover{
+  transform:translateY(-1px);
+  background:rgba(255,255,255,0.12);
+}
+
+.grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:18px;
+  margin-bottom:18px;
+}
+
+.card{
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius:18px;
+  padding:18px;
+  backdrop-filter:blur(14px);
+  box-shadow:0 18px 46px rgba(0,0,0,0.45);
+}
+
+.card h2{
+  margin:0 0 14px;
+  font-size:24px;
+  font-weight:900;
+}
+
+.card p.sub{
+  margin:0 0 16px;
+  opacity:.86;
+  font-weight:700;
+}
+
+.kpis{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:14px;
+  margin-bottom:18px;
+}
+
+.kpi{
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:16px;
+  padding:14px;
+}
+
+.kpi-label{
+  font-size:13px;
+  font-weight:900;
+  opacity:.9;
+  margin-bottom:8px;
+}
+
+.kpi-value{
+  font-size:26px;
+  font-weight:900;
+  color:#79ff9a;
+}
+
+.control{
+  width:100%;
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.16);
+  background:rgba(0,0,0,0.22);
+  color:#fff;
+  outline:none;
+  font-weight:800;
+  backdrop-filter:blur(10px);
+  box-sizing:border-box;
+}
+
+.control option{
+  color:#000;
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap:12px;
+  margin-bottom:14px;
+}
+
+.form-grid-4{
+  display:grid;
+  grid-template-columns: 1.2fr 1fr 1fr auto;
+  gap:12px;
+  margin-bottom:14px;
+}
+
+.btn-primary{
+  border:none;
+  border-radius:14px;
+  background:linear-gradient(135deg,#0d63c9,#0b4da6);
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  padding:12px 16px;
+  box-shadow:0 10px 24px rgba(0,0,0,0.35);
+}
+
+.btn-primary:hover{
+  transform:translateY(-1px);
+}
+
+.btn-danger{
+  border:none;
+  border-radius:10px;
+  background:#e53935;
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  padding:8px 12px;
+}
+
+.btn-danger:hover{
+  filter:brightness(1.05);
+}
+
+.table-wrap{
+  overflow:auto;
+  border-radius:14px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:1000px;
+}
+
+thead th{
+  text-align:left;
+  font-size:13px;
+  padding:14px 12px;
+  background:rgba(255,255,255,0.10);
+  border-bottom:1px solid rgba(255,255,255,0.10);
+  white-space:nowrap;
+}
+
+tbody td{
+  padding:14px 12px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  font-size:14px;
+  white-space:nowrap;
+}
+
+tbody tr:hover{
+  background:rgba(255,255,255,0.06);
+}
+
+.badge{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  background:rgba(255,255,255,0.14);
+}
+
+.badge.ok{ background:rgba(76,175,80,0.24); }
+.badge.baixo{ background:rgba(255,152,0,0.24); }
+.badge.critico{ background:rgba(229,57,53,0.24); }
+
+.vazio{
+  padding:18px;
+  text-align:center;
+  opacity:.8;
+  font-weight:800;
+}
+
+.full-card{
+  margin-bottom:18px;
+}
+
+@media (max-width: 1100px){
+  .grid{ grid-template-columns:1fr; }
+  .kpis{ grid-template-columns: repeat(2, 1fr); }
+  .form-grid-4{ grid-template-columns:1fr; }
+}
+
+@media (max-width: 700px){
+  .title{ font-size:32px; }
+  .kpis{ grid-template-columns:1fr; }
+  .form-grid{ grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topbar">
+    <h1 class="title">Estoque</h1>
+    <div class="top-actions">
+      <button class="btn-pill" onclick="location.href='jader.html'">Voltar</button>
+    </div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-label">Itens cadastrados</div>
+      <div class="kpi-value" id="kpiItens">0</div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-label">Itens com estoque baixo</div>
+      <div class="kpi-value" id="kpiBaixo">0</div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-label">Itens críticos</div>
+      <div class="kpi-value" id="kpiCritico">0</div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-label">Movimentações</div>
+      <div class="kpi-value" id="kpiMovimentacoes">0</div>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <div class="card">
+      <h2>Cadastrar Item</h2>
+      <p class="sub">Cadastre qualquer item do estoque do Jader.</p>
+
+      <div class="form-grid">
+        <input id="itemNome" class="control" type="text" placeholder="Nome do item">
+        <input id="itemCategoria" class="control" type="text" placeholder="Categoria">
+        <input id="itemUnidade" class="control" type="text" placeholder="Unidade (m, un, kg...)">
+        <input id="itemQuantidade" class="control" type="number" placeholder="Quantidade inicial">
+        <input id="itemMinimo" class="control" type="number" placeholder="Estoque mínimo">
+      </div>
+
+      <button id="btnCadastrarItem" class="btn-primary" type="button">Cadastrar item</button>
+    </div>
+
+    <div class="card">
+      <h2>Movimentar Estoque</h2>
+      <p class="sub">Faça entrada ou saída manual do estoque.</p>
+
+      <div class="form-grid">
+        <select id="movItem" class="control"></select>
+        <select id="movTipo" class="control">
+          <option value="entrada">Entrada</option>
+          <option value="saida">Saída</option>
+        </select>
+        <input id="movQuantidade" class="control" type="number" placeholder="Quantidade">
+        <input id="movObservacao" class="control" type="text" placeholder="Observação">
+      </div>
+
+      <button id="btnMovimentar" class="btn-primary" type="button">Registrar movimentação</button>
+    </div>
+
+  </div>
+
+  <div class="card full-card">
+    <h2>Estoque Atual</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Categoria</th>
+            <th>Unidade</th>
+            <th>Quantidade atual</th>
+            <th>Estoque mínimo</th>
+            <th>Status</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyItens"></tbody>
+      </table>
+    </div>
+    <div id="vazioItens" class="vazio" style="display:none;">Nenhum item cadastrado.</div>
+  </div>
+
+  <div class="card">
+    <h2>Histórico de Movimentações</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Tipo</th>
+            <th>Quantidade</th>
+            <th>Observação</th>
+            <th>Origem</th>
+            <th>Data</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyMovimentacoes"></tbody>
+      </table>
+    </div>
+    <div id="vazioMov" class="vazio" style="display:none;">Nenhuma movimentação encontrada.</div>
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  doc,
+  updateDoc,
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
+  authDomain: "crm-vendas-43b6b.firebaseapp.com",
+  projectId: "crm-vendas-43b6b",
+  storageBucket: "crm-vendas-43b6b.appspot.com",
+  messagingSenderId: "645002761099",
+  appId: "1:645002761099:web:f194f70c351d1074ac158e"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const itemNome = document.getElementById("itemNome");
+const itemCategoria = document.getElementById("itemCategoria");
+const itemUnidade = document.getElementById("itemUnidade");
+const itemQuantidade = document.getElementById("itemQuantidade");
+const itemMinimo = document.getElementById("itemMinimo");
+const btnCadastrarItem = document.getElementById("btnCadastrarItem");
+
+const movItem = document.getElementById("movItem");
+const movTipo = document.getElementById("movTipo");
+const movQuantidade = document.getElementById("movQuantidade");
+const movObservacao = document.getElementById("movObservacao");
+const btnMovimentar = document.getElementById("btnMovimentar");
+
+const tbodyItens = document.getElementById("tbodyItens");
+const vazioItens = document.getElementById("vazioItens");
+const tbodyMovimentacoes = document.getElementById("tbodyMovimentacoes");
+const vazioMov = document.getElementById("vazioMov");
+
+let itensCache = [];
+let movimentacoesCache = [];
+
+function moedaNumero(v){
+  return Number(v || 0);
+}
+
+function getHojeLocal(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function getStatusItem(item){
+  const atual = moedaNumero(item.quantidadeAtual);
+  const minimo = moedaNumero(item.estoqueMinimo);
+
+  if (atual <= 0) return { texto: "Crítico", classe: "critico" };
+  if (atual <= minimo) return { texto: "Baixo", classe: "baixo" };
+  return { texto: "OK", classe: "ok" };
+}
+
+function preencherSelectItens(){
+  movItem.innerHTML = `<option value="">Selecione um item</option>` +
+    itensCache
+      .sort((a,b) => String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR"))
+      .map(item => `<option value="${item.id}">${item.nome}</option>`)
+      .join("");
+}
+
+function renderKpis(){
+  const totalItens = itensCache.length;
+  const baixo = itensCache.filter(item => {
+    const atual = moedaNumero(item.quantidadeAtual);
+    const minimo = moedaNumero(item.estoqueMinimo);
+    return atual > 0 && atual <= minimo;
+  }).length;
+
+  const critico = itensCache.filter(item => moedaNumero(item.quantidadeAtual) <= 0).length;
+
+  document.getElementById("kpiItens").textContent = totalItens;
+  document.getElementById("kpiBaixo").textContent = baixo;
+  document.getElementById("kpiCritico").textContent = critico;
+  document.getElementById("kpiMovimentacoes").textContent = movimentacoesCache.length;
+}
+
+function renderItens(){
+  if (!itensCache.length){
+    tbodyItens.innerHTML = "";
+    vazioItens.style.display = "block";
+    return;
+  }
+
+  vazioItens.style.display = "none";
+
+  const ordenados = [...itensCache].sort((a,b) =>
+    String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR")
+  );
+
+  tbodyItens.innerHTML = ordenados.map(item => {
+    const status = getStatusItem(item);
+    return `
+      <tr>
+        <td>${item.nome || "-"}</td>
+        <td>${item.categoria || "-"}</td>
+        <td>${item.unidade || "-"}</td>
+        <td>${moedaNumero(item.quantidadeAtual)}</td>
+        <td>${moedaNumero(item.estoqueMinimo)}</td>
+        <td><span class="badge ${status.classe}">${status.texto}</span></td>
+        <td><button class="btn-danger btn-excluir-item" type="button" data-id="${item.id}">Excluir</button></td>
+      </tr>
+    `;
+  }).join("");
+
+  document.querySelectorAll(".btn-excluir-item").forEach(btn => {
+    btn.onclick = async () => {
+      const id = btn.getAttribute("data-id");
+      await excluirItem(id);
+    };
+  });
+}
+
+function renderMovimentacoes(){
+  if (!movimentacoesCache.length){
+    tbodyMovimentacoes.innerHTML = "";
+    vazioMov.style.display = "block";
+    return;
+  }
+
+  vazioMov.style.display = "none";
+
+  const ordenadas = [...movimentacoesCache].sort((a,b) =>
+    String(b.createdAt || "").localeCompare(String(a.createdAt || ""))
+  );
+
+  tbodyMovimentacoes.innerHTML = ordenadas.map(mov => `
+    <tr>
+      <td>${mov.itemNome || "-"}</td>
+      <td>${mov.tipo || "-"}</td>
+      <td>${moedaNumero(mov.quantidade)}</td>
+      <td>${mov.observacao || "-"}</td>
+      <td>${mov.origem || "manual"}</td>
+      <td>${mov.dataMovimentacao || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+function renderTudo(){
+  preencherSelectItens();
+  renderKpis();
+  renderItens();
+  renderMovimentacoes();
+}
+
+async function carregarItens(){
+  const snap = await getDocs(collection(db, "estoque_itens"));
+  itensCache = [];
+  snap.forEach(d => {
+    itensCache.push({ id: d.id, ...d.data() });
+  });
+}
+
+async function carregarMovimentacoes(){
+  const snap = await getDocs(collection(db, "estoque_movimentacoes"));
+  movimentacoesCache = [];
+  snap.forEach(d => {
+    movimentacoesCache.push({ id: d.id, ...d.data() });
+  });
+}
+
+async function cadastrarItem(){
+  const nome = itemNome.value.trim();
+  const categoria = itemCategoria.value.trim();
+  const unidade = itemUnidade.value.trim();
+  const quantidadeInicial = moedaNumero(itemQuantidade.value);
+  const estoqueMinimo = moedaNumero(itemMinimo.value);
+
+  if (!nome || !categoria || !unidade){
+    alert("Preencha nome, categoria e unidade.");
+    return;
+  }
+
+  await addDoc(collection(db, "estoque_itens"), {
+    nome,
+    categoria,
+    unidade,
+    quantidadeAtual: quantidadeInicial,
+    estoqueMinimo,
+    createdAt: new Date().toISOString()
+  });
+
+  itemNome.value = "";
+  itemCategoria.value = "";
+  itemUnidade.value = "";
+  itemQuantidade.value = "";
+  itemMinimo.value = "";
+
+  await carregarItens();
+  renderTudo();
+  alert("Item cadastrado com sucesso!");
+}
+
+async function registrarMovimentacao(){
+  const itemId = movItem.value;
+  const tipo = movTipo.value;
+  const quantidade = moedaNumero(movQuantidade.value);
+  const observacao = movObservacao.value.trim();
+
+  if (!itemId || !tipo || !quantidade){
+    alert("Selecione item, tipo e quantidade.");
+    return;
+  }
+
+  const item = itensCache.find(i => i.id === itemId);
+  if (!item){
+    alert("Item não encontrado.");
+    return;
+  }
+
+  let novaQuantidade = moedaNumero(item.quantidadeAtual);
+
+  if (tipo === "entrada"){
+    novaQuantidade += quantidade;
+  } else {
+    novaQuantidade -= quantidade;
+    if (novaQuantidade < 0){
+      alert("Estoque insuficiente para essa saída.");
+      return;
+    }
+  }
+
+  await updateDoc(doc(db, "estoque_itens", itemId), {
+    quantidadeAtual: novaQuantidade
+  });
+
+  await addDoc(collection(db, "estoque_movimentacoes"), {
+    itemId,
+    itemNome: item.nome,
+    tipo,
+    quantidade,
+    observacao,
+    origem: "manual",
+    dataMovimentacao: getHojeLocal(),
+    createdAt: new Date().toISOString()
+  });
+
+  movItem.value = "";
+  movTipo.value = "entrada";
+  movQuantidade.value = "";
+  movObservacao.value = "";
+
+  await Promise.all([carregarItens(), carregarMovimentacoes()]);
+  renderTudo();
+  alert("Movimentação registrada com sucesso!");
+}
+
+async function excluirItem(id){
+  const confirmar = confirm("Deseja realmente excluir este item do estoque?");
+  if (!confirmar) return;
+
+  await deleteDoc(doc(db, "estoque_itens", id));
+  itensCache = itensCache.filter(item => item.id !== id);
+  renderTudo();
+  alert("Item excluído com sucesso!");
+}
+
+function registrarEventos(){
+  btnCadastrarItem.onclick = cadastrarItem;
+  btnMovimentar.onclick = registrarMovimentacao;
+}
+
+onAuthStateChanged(auth, async user => {
+  if (!user){
+    location.href = "login.html";
+    return;
+  }
+
+  registrarEventos();
+
+  await Promise.all([
+    carregarItens(),
+    carregarMovimentacoes()
+  ]);
+
+  renderTudo();
+});
+</script>
+
+</body>
+</html>
