@@ -452,14 +452,14 @@ function toYMD(dateObj){
   const ano = dateObj.getFullYear();
   const mes = String(dateObj.getMonth() + 1).padStart(2, "0");
   const dia = String(dateObj.getDate()).padStart(2, "0");
-  return ${ano}-${mes}-${dia};
+  return `${ano}-${mes}-${dia}`;
 }
 
 function formatarDataBR(data){
   if (!data) return "-";
   const [ano, mes, dia] = String(data).split("-");
   if (!ano || !mes || !dia) return data;
-  return ${dia}/${mes}/${ano};
+  return `${dia}/${mes}/${ano}`;
 }
 
 function getInicioSemana(data = new Date()){
@@ -582,7 +582,7 @@ function renderVendedores(){
           <td>${moedaBRL(total)}</td>
           <td>
             <button class="btn-save btn-salvar-comissao" type="button" data-nome="${nome}">Salvar</button>
-            ${valorPorVenda > 0 ? <button class="btn-pdf btn-gerar-pdf" type="button" data-nome="${nome}">Gerar PDF</button> : ""}
+            ${valorPorVenda > 0 ? `<button class="btn-pdf btn-gerar-pdf" type="button" data-nome="${nome}">Gerar PDF</button>` : ""}
             <button class="btn-remove btn-excluir-comissao" type="button" data-nome="${nome}">Excluir comissão</button>
           </td>
         </tr>
@@ -597,7 +597,7 @@ function renderVendedores(){
   document.querySelectorAll(".btn-salvar-comissao").forEach(btn => {
     btn.onclick = async () => {
       const nome = btn.getAttribute("data-nome");
-      const input = document.querySelector(.input-comissao-vendedor[data-nome="${CSS.escape(nome)}"]);
+      const input = document.querySelector(`.input-comissao-vendedor[data-nome="${CSS.escape(nome)}"]`);
       const valor = Number(input?.value || 0);
 
       await salvarComissaoVendedor(nome, valor);
@@ -642,7 +642,7 @@ async function salvarComissaoVendedor(nome, valor){
 async function excluirComissaoVendedor(nome){
   if (!nome) return;
 
-  const confirmar = confirm(Deseja excluir a comissão configurada para ${nome}?);
+  const confirmar = confirm(`Deseja excluir a comissão configurada para ${nome}?`);
   if (!confirmar) return;
 
   const id = slugify(nome);
@@ -671,16 +671,16 @@ function gerarPDFComissao(nome){
   y += 12;
   docPdf.setFontSize(11);
   docPdf.setFont("helvetica", "normal");
-  docPdf.text(Vendedor: ${nome}, 14, y);
+  docPdf.text(`Vendedor: ${nome}`, 14, y);
   y += 7;
-  docPdf.text(Período: ${formatarDataBR(dataInicio.value)} até ${formatarDataBR(dataFim.value)}, 14, y);
+  docPdf.text(`Período: ${formatarDataBR(dataInicio.value)} até ${formatarDataBR(dataFim.value)}`, 14, y);
   y += 7;
-  docPdf.text(Quantidade de vendas: ${vendas.length}, 14, y);
+  docPdf.text(`Quantidade de vendas: ${vendas.length}`, 14, y);
   y += 7;
-  docPdf.text(Valor por venda: ${moedaBRL(valorPorVenda)}, 14, y);
+  docPdf.text(`Valor por venda: ${moedaBRL(valorPorVenda)}` , 14, y);
   y += 7;
   docPdf.setFont("helvetica", "bold");
-  docPdf.text(Total da comissão: ${moedaBRL(total)}, 14, y);
+  docPdf.text(`Total da comissão: ${moedaBRL(total)}`, 14, y);
 
   y += 12;
   docPdf.setFont("helvetica", "bold");
@@ -699,7 +699,7 @@ function gerarPDFComissao(nome){
       const cor = v?.produto?.cor || "-";
       const cidade = v?.cliente?.cidade || "-";
 
-      const linha = ${data} - ${tamanho} - ${cor} - ${cidade};
+      const linha = `${data} - ${tamanho} - ${cor} - ${cidade}`;
 
       const linhasQuebradas = docPdf.splitTextToSize(linha, 180);
 
@@ -721,7 +721,7 @@ function gerarPDFComissao(nome){
 
   docPdf.setFont("helvetica", "bold");
   docPdf.setFontSize(14);
-  docPdf.text(PAGO: ${moedaBRL(total)}, 14, y);
+  docPdf.text(`PAGO: ${moedaBRL(total)}`, 14, y);
 
   y += 20;
   docPdf.setFontSize(11);
@@ -731,9 +731,9 @@ function gerarPDFComissao(nome){
   docPdf.text("Assinatura do recebedor", 14, y);
 
   y += 16;
-  docPdf.text(Emitido em: ${new Date().toLocaleDateString("pt-BR")}, 14, y);
+  docPdf.text(`Emitido em: ${new Date().toLocaleDateString("pt-BR")}`, 14, y);
 
-  const nomeArquivo = recibo-comissao-${slugify(nome)}-${dataInicio.value}-a-${dataFim.value}.pdf;
+  const nomeArquivo = `recibo-comissao-${slugify(nome)}-${dataInicio.value}-a-${dataFim.value}.pdf`;
   docPdf.save(nomeArquivo);
 }
 
