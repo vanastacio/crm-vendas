@@ -5,6 +5,8 @@
 <title>Comissões - JD</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
 body{
   margin:0;
@@ -157,7 +159,7 @@ body::before{
 table{
   width:100%;
   border-collapse:collapse;
-  min-width:900px;
+  min-width:1100px;
 }
 
 thead th{
@@ -209,10 +211,6 @@ tbody tr:hover{
   box-shadow:0 10px 24px rgba(0,0,0,0.35);
 }
 
-.btn-add:hover{
-  transform:translateY(-1px);
-}
-
 .btn-remove{
   border:none;
   border-radius:10px;
@@ -234,9 +232,21 @@ tbody tr:hover{
   margin-right:8px;
 }
 
+.btn-pdf{
+  border:none;
+  border-radius:10px;
+  background:#1565c0;
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  padding:8px 12px;
+  margin-right:8px;
+}
+
 .btn-save:hover,
 .btn-remove:hover,
-.btn-add:hover{
+.btn-add:hover,
+.btn-pdf:hover{
   filter:brightness(1.05);
 }
 
@@ -308,6 +318,7 @@ tbody tr:hover{
     <!-- VENDEDORES -->
     <div class="card">
       <h2>Comissão de Vendedores</h2>
+      <p class="sub">O Jader define quanto cada vendedor recebe por pedido vendido.</p>
 
       <div class="kpis">
         <div class="kpi">
@@ -346,6 +357,7 @@ tbody tr:hover{
     <!-- PRODUÇÃO -->
     <div class="card">
       <h2>Comissão da Produção</h2>
+      <p class="sub">Cadastro manual dos produtores e cálculo por quantidade de sofás produzidos.</p>
 
       <div class="form-grid">
         <input id="nomeProdutor" class="control" type="text" placeholder="Nome do produtor">
@@ -440,7 +452,14 @@ function toYMD(dateObj){
   const ano = dateObj.getFullYear();
   const mes = String(dateObj.getMonth() + 1).padStart(2, "0");
   const dia = String(dateObj.getDate()).padStart(2, "0");
-  return `${ano}-${mes}-${dia}`;
+  return ${ano}-${mes}-${dia};
+}
+
+function formatarDataBR(data){
+  if (!data) return "-";
+  const [ano, mes, dia] = String(data).split("-");
+  if (!ano || !mes || !dia) return data;
+  return ${dia}/${mes}/${ano};
 }
 
 function getInicioSemana(data = new Date()){
@@ -509,6 +528,12 @@ function filtrarProducao(){
   });
 }
 
+function getVendasDoVendedor(nome){
+  return filtrarVendas().filter(v =>
+    String(v.vendedorNome || "").trim().toLowerCase() === String(nome || "").trim().toLowerCase()
+  );
+}
+
 function renderVendedores(){
   const lista = filtrarVendas();
   const mapaQtd = {};
@@ -557,6 +582,7 @@ function renderVendedores(){
           <td>${moedaBRL(total)}</td>
           <td>
             <button class="btn-save btn-salvar-comissao" type="button" data-nome="${nome}">Salvar</button>
+            ${valorPorVenda > 0 ? <button class="btn-pdf btn-gerar-pdf" type="button" data-nome="${nome}">Gerar PDF</button> : ""}
             <button class="btn-remove btn-excluir-comissao" type="button" data-nome="${nome}">Excluir comissão</button>
           </td>
         </tr>
@@ -571,7 +597,7 @@ function renderVendedores(){
   document.querySelectorAll(".btn-salvar-comissao").forEach(btn => {
     btn.onclick = async () => {
       const nome = btn.getAttribute("data-nome");
-      const input = document.querySelector(`.input-comissao-vendedor[data-nome="${CSS.escape(nome)}"]`);
+      const input = document.querySelector(.input-comissao-vendedor[data-nome="${CSS.escape(nome)}"]);
       const valor = Number(input?.value || 0);
 
       await salvarComissaoVendedor(nome, valor);
@@ -582,6 +608,13 @@ function renderVendedores(){
     btn.onclick = async () => {
       const nome = btn.getAttribute("data-nome");
       await excluirComissaoVendedor(nome);
+    };
+  });
+
+  document.querySelectorAll(".btn-gerar-pdf").forEach(btn => {
+    btn.onclick = async () => {
+      const nome = btn.getAttribute("data-nome");
+      gerarPDFComissao(nome);
     };
   });
 }
@@ -609,7 +642,7 @@ async function salvarComissaoVendedor(nome, valor){
 async function excluirComissaoVendedor(nome){
   if (!nome) return;
 
-  const confirmar = confirm(`Deseja excluir a comissão configurada para ${nome}?`);
+  const confirmar = confirm(Deseja excluir a comissão configurada para ${nome}?);
   if (!confirmar) return;
 
   const id = slugify(nome);
@@ -618,6 +651,90 @@ async function excluirComissaoVendedor(nome){
 
   renderVendedores();
   alert("Comissão excluída com sucesso!");
+}
+
+function gerarPDFComissao(nome){
+  const { jsPDF } = window.jspdf;
+  const docPdf = new jsPDF();
+
+  const vendas = getVendasDoVendedor(nome);
+  const regra = regrasComissaoCache[slugify(nome)];
+  const valorPorVenda = Number(regra?.valorPorVenda || 0);
+  const total = vendas.length * valorPorVenda;
+
+  let y = 20;
+
+  docPdf.setFont("helvetica", "bold");
+  docPdf.setFontSize(18);
+  docPdf.text("RECIBO DE COMISSÃO", 105, y, { align: "center" });
+
+  y += 12;
+  docPdf.setFontSize(11);
+  docPdf.setFont("helvetica", "normal");
+  docPdf.text(Vendedor: ${nome}, 14, y);
+  y += 7;
+  docPdf.text(Período: ${formatarDataBR(dataInicio.value)} até ${formatarDataBR(dataFim.value)}, 14, y);
+  y += 7;
+  docPdf.text(Quantidade de vendas: ${vendas.length}, 14, y);
+  y += 7;
+  docPdf.text(Valor por venda: ${moedaBRL(valorPorVenda)}, 14, y);
+  y += 7;
+  docPdf.setFont("helvetica", "bold");
+  docPdf.text(Total da comissão: ${moedaBRL(total)}, 14, y);
+
+  y += 12;
+  docPdf.setFont("helvetica", "bold");
+  docPdf.text("Detalhamento das vendas:", 14, y);
+
+  y += 8;
+  docPdf.setFont("helvetica", "normal");
+
+  if (!vendas.length){
+    docPdf.text("Nenhuma venda encontrada neste período.", 14, y);
+    y += 8;
+  } else {
+    vendas.forEach((v, i) => {
+      const data = formatarDataBR(v.dataPedido || "");
+      const tamanho = v?.produto?.tamanho || v?.produto?.medida || v?.produto?.modelo || "-";
+      const cor = v?.produto?.cor || "-";
+      const cidade = v?.cliente?.cidade || "-";
+
+      const linha = ${data} - ${tamanho} - ${cor} - ${cidade};
+
+      const linhasQuebradas = docPdf.splitTextToSize(linha, 180);
+
+      if (y > 260){
+        docPdf.addPage();
+        y = 20;
+      }
+
+      docPdf.text(linhasQuebradas, 14, y);
+      y += (linhasQuebradas.length * 6);
+    });
+  }
+
+  y += 10;
+  if (y > 250){
+    docPdf.addPage();
+    y = 20;
+  }
+
+  docPdf.setFont("helvetica", "bold");
+  docPdf.setFontSize(14);
+  docPdf.text(PAGO: ${moedaBRL(total)}, 14, y);
+
+  y += 20;
+  docPdf.setFontSize(11);
+  docPdf.setFont("helvetica", "normal");
+  docPdf.text("______________", 14, y);
+  y += 6;
+  docPdf.text("Assinatura do recebedor", 14, y);
+
+  y += 16;
+  docPdf.text(Emitido em: ${new Date().toLocaleDateString("pt-BR")}, 14, y);
+
+  const nomeArquivo = recibo-comissao-${slugify(nome)}-${dataInicio.value}-a-${dataFim.value}.pdf;
+  docPdf.save(nomeArquivo);
 }
 
 function renderProducao(){
