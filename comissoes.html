@@ -403,7 +403,8 @@ import {
   doc,
   setDoc,
   deleteDoc,
-  addDoc
+  addDoc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -534,6 +535,51 @@ function getVendasDoVendedor(nome){
   );
 }
 
+  function getPeriodoAtualTexto(){
+  return `${dataInicio.value || ""}_${dataFim.value || ""}`;
+}
+
+function getComissaoVendedorFinanceiroId(nome){
+  return `comissao_vendedor_${slugify(nome)}_${getPeriodoAtualTexto()}`;
+}
+
+async function salvarLancamentoFinanceiroComissaoVendedor(nome, totalComissao){
+  const financeiroId = getComissaoVendedorFinanceiroId(nome);
+
+  await setDoc(doc(db, "financeiro_lancamentos", financeiroId), {
+    descricao: `Comissão vendedor - ${nome}`,
+    categoria: "Comissões",
+    tipo: "saida",
+    valor: Number(totalComissao || 0),
+    observacao: `Período: ${dataInicio.value || "-"} até ${dataFim.value || "-"}`,
+    dataLancamento: dataFim.value || getHojeLocal(),
+    origem: "comissao_vendedor",
+    referenciaNome: nome,
+    referenciaPeriodoInicio: dataInicio.value || "",
+    referenciaPeriodoFim: dataFim.value || "",
+    createdAt: new Date().toISOString()
+  });
+}
+
+async function excluirLancamentoFinanceiroComissaoVendedor(nome){
+  const financeiroId = getComissaoVendedorFinanceiroId(nome);
+  await deleteDoc(doc(db, "financeiro_lancamentos", financeiroId));
+}
+
+async function criarLancamentoFinanceiroProducao(nome, qtd, valorUnitario, total, dataLancamento, referenciaId){
+  await setDoc(doc(db, "financeiro_lancamentos", referenciaId), {
+    descricao: `Comissão produção - ${nome}`,
+    categoria: "Comissões",
+    tipo: "saida",
+    valor: Number(total || 0),
+    observacao: `${qtd} sofá(s) x ${moedaBRL(valorUnitario)}`,
+    dataLancamento: dataLancamento || getHojeLocal(),
+    origem: "comissao_producao",
+    referenciaNome: nome,
+    createdAt: new Date().toISOString()
+  });
+}
+
 function renderVendedores(){
   const lista = filtrarVendas();
   const mapaQtd = {};
@@ -623,6 +669,8 @@ async function salvarComissaoVendedor(nome, valor){
   if (!nome) return;
 
   const id = slugify(nome);
+  const vendasDoVendedor = getVendasDoVendedor(nome);
+  const totalComissao = vendasDoVendedor.length * Number(valor || 0);
 
   await setDoc(doc(db, "comissoes_vendedores", id), {
     nome,
@@ -630,13 +678,15 @@ async function salvarComissaoVendedor(nome, valor){
     updatedAt: new Date().toISOString()
   });
 
+  await salvarLancamentoFinanceiroComissaoVendedor(nome, totalComissao);
+
   regrasComissaoCache[id] = {
     nome,
     valorPorVenda: Number(valor || 0)
   };
 
   renderVendedores();
-  alert("Comissão do vendedor salva com sucesso!");
+  alert("Comissão do vendedor salva e vinculada ao financeiro!");
 }
 
 async function excluirComissaoVendedor(nome){
@@ -646,11 +696,14 @@ async function excluirComissaoVendedor(nome){
   if (!confirmar) return;
 
   const id = slugify(nome);
+
   await deleteDoc(doc(db, "comissoes_vendedores", id));
+  await excluirLancamentoFinanceiroComissaoVendedor(nome);
+
   delete regrasComissaoCache[id];
 
   renderVendedores();
-  alert("Comissão excluída com sucesso!");
+  alert("Comissão excluída do cadastro e do financeiro!");
 }
 
 function gerarPDFComissao(nome){
@@ -785,15 +838,25 @@ async function adicionarProducao(){
   }
 
   const total = qtd * valor;
+  const dataLancamento = getHojeLocal();
 
-  await addDoc(collection(db, "comissoes_producao"), {
+  const ref = await addDoc(collection(db, "comissoes_producao"), {
     nome,
     quantidade: qtd,
     valorPorSofa: valor,
     total,
-    dataLancamento: getHojeLocal(),
+    dataLancamento,
     createdAt: new Date().toISOString()
   });
+
+  await criarLancamentoFinanceiroProducao(
+    nome,
+    qtd,
+    valor,
+    total,
+    dataLancamento,
+    `comissao_producao_${ref.id}`
+  );
 
   nomeProdutor.value = "";
   qtdProduzida.value = "";
@@ -808,6 +871,8 @@ async function removerProducao(id){
   if (!confirmar) return;
 
   await deleteDoc(doc(db, "comissoes_producao", id));
+  await deleteDoc(doc(db, "financeiro_lancamentos", `comissao_producao_${id}`));
+
   producaoCache = producaoCache.filter(item => item.id !== id);
   renderProducao();
 }
