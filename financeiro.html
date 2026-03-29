@@ -76,7 +76,7 @@ body::before{
 
 .filtros{
   display:grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap:12px;
   margin:16px 0 20px;
 }
@@ -91,6 +91,7 @@ body::before{
   outline:none;
   font-weight:800;
   backdrop-filter:blur(10px);
+  box-sizing:border-box;
 }
 
 .control option{
@@ -100,13 +101,13 @@ body::before{
 .kpis{
   display:grid;
   grid-template-columns: repeat(4, 1fr);
-  gap:18px;
+  gap:14px;
   margin-bottom:18px;
 }
 
-.card{
+.kpi{
   background: rgba(0,0,0,0.18);
-  border: 1px solid rgba(255,255,255,0.16);
+  border:1px solid rgba(255,255,255,0.16);
   border-radius:18px;
   padding:18px;
   backdrop-filter:blur(14px);
@@ -115,49 +116,121 @@ body::before{
 
 .kpi-label{
   font-size:14px;
-  font-weight:800;
-  opacity:.9;
+  font-weight:900;
   margin-bottom:8px;
+  opacity:.95;
 }
 
 .kpi-value{
-  font-size:30px;
+  font-size:22px;
   font-weight:900;
   color:#79ff9a;
 }
 
 .kpi-sub{
   margin-top:8px;
-  font-size:13px;
+  font-size:12px;
+  opacity:.8;
   font-weight:800;
-  opacity:.88;
 }
-
-.sub-pos{ color:#79ff9a; }
-.sub-neg{ color:#ff8a80; }
-.sub-neu{ color:#fff; }
 
 .grid{
   display:grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.1fr .9fr;
   gap:18px;
   margin-bottom:18px;
 }
 
+.grid-bottom{
+  display:grid;
+  grid-template-columns: .95fr 1.05fr;
+  gap:18px;
+}
+
+.card{
+  background: rgba(0,0,0,0.18);
+  border:1px solid rgba(255,255,255,0.16);
+  border-radius:18px;
+  padding:18px;
+  backdrop-filter:blur(14px);
+  box-shadow:0 18px 46px rgba(0,0,0,0.45);
+}
+
 .card h2{
   margin:0 0 14px;
-  font-size:22px;
+  font-size:24px;
   font-weight:900;
 }
 
-canvas{
-  width:100% !important;
-  height:300px !important;
-  max-height:300px;
+.card p.sub{
+  margin:0 0 16px;
+  opacity:.86;
+  font-weight:700;
 }
 
-.table-card{
-  overflow:hidden;
+.form-grid{
+  display:grid;
+  grid-template-columns: 1.1fr .9fr .8fr .8fr;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.form-grid-obs{
+  display:grid;
+  grid-template-columns: 1fr auto auto;
+  gap:12px;
+}
+
+.btn-primary{
+  border:none;
+  border-radius:14px;
+  background:linear-gradient(135deg,#0d63c9,#0b4da6);
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  padding:12px 16px;
+  box-shadow:0 10px 24px rgba(0,0,0,0.35);
+}
+
+.btn-secondary{
+  border:none;
+  border-radius:14px;
+  background:rgba(255,255,255,0.14);
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  padding:12px 16px;
+}
+
+.btn-primary:hover,
+.btn-secondary:hover{
+  transform:translateY(-1px);
+}
+
+.btn-danger{
+  border:none;
+  border-radius:10px;
+  background:#e53935;
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  padding:8px 12px;
+}
+
+.btn-edit{
+  border:none;
+  border-radius:10px;
+  background:#1565c0;
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  padding:8px 12px;
+  margin-right:8px;
+}
+
+.btn-danger:hover,
+.btn-edit:hover{
+  filter:brightness(1.05);
 }
 
 .table-wrap{
@@ -168,7 +241,7 @@ canvas{
 table{
   width:100%;
   border-collapse:collapse;
-  min-width:1200px;
+  min-width:1000px;
 }
 
 thead th{
@@ -197,131 +270,88 @@ tbody tr:hover{
   border-radius:999px;
   font-size:12px;
   font-weight:900;
-  background:rgba(255,255,255,0.14);
 }
 
-.badge.pix{ background:rgba(33,150,243,0.25); }
-.badge.dinheiro{ background:rgba(76,175,80,0.25); }
-.badge.prazo{ background:rgba(255,152,0,0.25); }
-.badge.cartao{ background:rgba(156,39,176,0.25); }
-.badge.outro{ background:rgba(255,255,255,0.18); }
+.badge.entrada{ background:rgba(76,175,80,0.24); }
+.badge.saida{ background:rgba(229,57,53,0.24); }
 
 .vazio{
+  padding:18px;
   text-align:center;
   opacity:.8;
-  padding:20px;
   font-weight:800;
 }
 
-.paginacao-tabela{
-  margin-top:16px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:12px;
-  flex-wrap:wrap;
+canvas{
+  width:100% !important;
+  height:280px !important;
+  max-height:280px;
 }
 
-.paginacao-tabela button{
-  padding:10px 16px;
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
-  font-weight:800;
-  background:rgba(255,255,255,0.14);
-  color:#fff;
+#evolucaoChart{
+  height:320px !important;
+  max-height:320px !important;
 }
 
-.paginacao-tabela button:disabled{
-  opacity:.45;
-  cursor:not-allowed;
-}
-
-.paginacao-info{
-  font-weight:800;
-  opacity:.9;
-}
-
-.ranking-list{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-
-.ranking-item{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:14px;
-  padding:14px 16px;
-  border-radius:14px;
-  background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.08);
-}
-
-.ranking-left{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-
-.ranking-pos{
-  width:34px;
-  height:34px;
-  border-radius:999px;
+.saldo-boxes{
   display:grid;
-  place-items:center;
+  grid-template-columns: repeat(3, 1fr);
+  gap:12px;
+  margin-bottom:16px;
+}
+
+.saldo-item{
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:14px;
+  padding:12px 14px;
+}
+
+.saldo-label{
+  font-size:13px;
   font-weight:900;
-  background:rgba(255,255,255,0.12);
+  opacity:.9;
+  margin-bottom:6px;
 }
 
-.ranking-name{
-  font-weight:900;
-  font-size:15px;
-}
-
-.ranking-meta{
-  font-size:12px;
-  opacity:.85;
-  margin-top:2px;
-}
-
-.ranking-value{
+.saldo-value{
+  font-size:18px;
   font-weight:900;
   color:#79ff9a;
-  white-space:nowrap;
 }
 
 @media (max-width: 1100px){
-  .filtros{ grid-template-columns: repeat(3, 1fr); }
+  .filtros{ grid-template-columns: repeat(2, 1fr); }
   .kpis{ grid-template-columns: repeat(2, 1fr); }
-  .grid{ grid-template-columns: 1fr; }
+  .grid, .grid-bottom{ grid-template-columns: 1fr; }
+  .form-grid{ grid-template-columns: 1fr 1fr; }
+  .saldo-boxes{ grid-template-columns:1fr; }
 }
 
 @media (max-width: 700px){
   .title{ font-size:32px; }
-  .filtros{ grid-template-columns: 1fr; }
-  .kpis{ grid-template-columns: 1fr; }
+  .filtros, .kpis, .form-grid, .form-grid-obs{ grid-template-columns:1fr; }
 }
 </style>
 </head>
+
 <body>
 <div class="container">
 
- <div class="topbar">
-  <h1 class="title">Financeiro</h1>
-  <div class="top-actions">
-    <button class="btn-pill" onclick="location.href='comissoes.html'">Comissões</button>
-    <button class="btn-pill" onclick="location.href='jader.html'">Voltar</button>
+  <div class="topbar">
+    <h1 class="title">Financeiro</h1>
+    <div class="top-actions">
+      <button class="btn-pill" onclick="location.href='comissoes.html'">Comissões</button>
+      <button class="btn-pill" onclick="location.href='jader.html'">Voltar</button>
+    </div>
   </div>
-</div>
-  
+
   <div class="filtros">
     <select id="filtroPeriodo" class="control">
-      <option value="personalizado">Período personalizado</option>
       <option value="mes">Este mês</option>
       <option value="semana">Esta semana</option>
       <option value="dia">Hoje</option>
+      <option value="personalizado">Período personalizado</option>
     </select>
 
     <input id="dataInicio" class="control" type="date">
@@ -343,92 +373,120 @@ tbody tr:hover{
       <option value="interior">Interior</option>
     </select>
 
-    <select id="filtroPagamento" class="control">
-      <option value="">Todos os pagamentos</option>
-      <option value="pix">PIX</option>
-      <option value="dinheiro">Dinheiro</option>
-      <option value="prazo">Prazo</option>
+    <select id="filtroCategoriaFinanceira" class="control">
+      <option value="">Todas as categorias</option>
     </select>
   </div>
 
   <div class="kpis">
-    <div class="card">
+    <div class="kpi">
       <div class="kpi-label">Total vendido</div>
       <div class="kpi-value" id="kpiTotalVendido">R$ 0,00</div>
-      <div class="kpi-sub" id="subTotalVendido">—</div>
+      <div class="kpi-sub">Vendas do período</div>
     </div>
 
-    <div class="card">
+    <div class="kpi">
       <div class="kpi-label">Quantidade de pedidos</div>
-      <div class="kpi-value" id="kpiQtdPedidos">0</div>
-      <div class="kpi-sub" id="subQtdPedidos">—</div>
+      <div class="kpi-value" id="kpiQuantidadePedidos">0</div>
+      <div class="kpi-sub">Pedidos no período</div>
     </div>
 
-    <div class="card">
+    <div class="kpi">
       <div class="kpi-label">Ticket médio</div>
       <div class="kpi-value" id="kpiTicketMedio">R$ 0,00</div>
-      <div class="kpi-sub" id="subTicketMedio">—</div>
+      <div class="kpi-sub">Média por pedido</div>
     </div>
 
-    <div class="card">
-      <div class="kpi-label">Média por vendedor</div>
-      <div class="kpi-value" id="kpiMediaVendedor">R$ 0,00</div>
-      <div class="kpi-sub" id="subMediaVendedor">—</div>
+    <div class="kpi">
+      <div class="kpi-label">Valor líquido</div>
+      <div class="kpi-value" id="kpiValorLiquido">R$ 0,00</div>
+      <div class="kpi-sub">Vendas + entradas - saídas</div>
     </div>
   </div>
 
   <div class="grid">
     <div class="card">
-      <h2>Faturamento por Vendedor</h2>
-      <canvas id="chartVendedores"></canvas>
+      <h2>Fluxo de Caixa</h2>
+      <p class="sub">Cadastre entradas e saídas financeiras do negócio.</p>
+
+      <div class="saldo-boxes">
+        <div class="saldo-item">
+          <div class="saldo-label">Entradas manuais</div>
+          <div class="saldo-value" id="totalEntradasManuais">R$ 0,00</div>
+        </div>
+        <div class="saldo-item">
+          <div class="saldo-label">Saídas</div>
+          <div class="saldo-value" id="totalSaidas">R$ 0,00</div>
+        </div>
+        <div class="saldo-item">
+          <div class="saldo-label">Saldo do caixa</div>
+          <div class="saldo-value" id="saldoCaixa">R$ 0,00</div>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <input id="finDescricao" class="control" type="text" placeholder="Descrição">
+        
+        <select id="finCategoria" class="control">
+          <option value="">Selecione a categoria</option>
+          <option value="Matéria-prima">Matéria-prima</option>
+          <option value="Transporte">Transporte</option>
+          <option value="Contas fixas">Contas fixas</option>
+          <option value="Salários">Salários</option>
+          <option value="Impostos">Impostos</option>
+          <option value="Marketing">Marketing</option>
+          <option value="Manutenção">Manutenção</option>
+          <option value="Outros">Outros</option>
+        </select>
+
+        <select id="finTipo" class="control">
+          <option value="saida">Saída</option>
+          <option value="entrada">Entrada</option>
+        </select>
+
+        <input id="finValor" class="control" type="number" step="0.01" placeholder="Valor">
+      </div>
+
+      <div class="form-grid-obs">
+        <input id="finObservacao" class="control" type="text" placeholder="Observação (opcional)">
+        <button id="btnAdicionarLancamento" class="btn-primary" type="button">Salvar lançamento</button>
+        <button id="btnCancelarEdicao" class="btn-secondary" type="button" style="display:none;">Cancelar edição</button>
+      </div>
     </div>
 
     <div class="card">
       <h2>Formas de Pagamento</h2>
-      <canvas id="chartPagamentos"></canvas>
+      <p class="sub">Distribuição dos gastos por categoria financeira.</p>
+      <canvas id="gastosCategoriaChart"></canvas>
     </div>
   </div>
 
-  <div class="grid">
+  <div class="grid-bottom">
     <div class="card">
       <h2>Evolução Diária</h2>
-      <canvas id="chartEvolucao"></canvas>
+      <p class="sub">Performance de vendas por dia no período.</p>
+      <canvas id="evolucaoChart"></canvas>
     </div>
 
     <div class="card">
-      <h2>Ranking de Vendedores</h2>
-      <div id="rankingVendedores" class="ranking-list"></div>
-    </div>
-  </div>
-
-  <div class="card table-card">
-    <h2>Lançamentos do Período</h2>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Pedido</th>
-            <th>Data Pedido</th>
-            <th>Entrega</th>
-            <th>Cliente</th>
-            <th>Cidade</th>
-            <th>Vendedor</th>
-            <th>Zona</th>
-            <th>Forma de pagamento</th>
-            <th>Observações</th>
-            <th>Valor</th>
-          </tr>
-        </thead>
-        <tbody id="tbodyFinanceiro"></tbody>
-      </table>
-    </div>
-
-    <div id="vazioFinanceiro" class="vazio" style="display:none;">Nenhum lançamento encontrado.</div>
-
-    <div class="paginacao-tabela">
-      <button id="btnTabelaAnterior" type="button">Anterior</button>
-      <span id="paginacaoTabelaInfo" class="paginacao-info">Página 1 de 1</span>
-      <button id="btnTabelaProxima" type="button">Próxima</button>
+      <h2>Lançamentos do Período</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Descrição</th>
+              <th>Categoria</th>
+              <th>Tipo</th>
+              <th>Valor</th>
+              <th>Observação</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyLancamentos"></tbody>
+        </table>
+      </div>
+      <div id="vazioLancamentos" class="vazio" style="display:none;">Nenhum lançamento encontrado no período.</div>
     </div>
   </div>
 
@@ -437,7 +495,15 @@ tbody tr:hover{
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  doc,
+  deleteDoc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBlB4NN_lTrWv4sJ1PKp2m0YjoVADnIeHk",
@@ -457,64 +523,38 @@ const dataInicio = document.getElementById("dataInicio");
 const dataFim = document.getElementById("dataFim");
 const filtroVendedor = document.getElementById("filtroVendedor");
 const filtroZona = document.getElementById("filtroZona");
-const filtroPagamento = document.getElementById("filtroPagamento");
+const filtroCategoriaFinanceira = document.getElementById("filtroCategoriaFinanceira");
 
-const tbodyFinanceiro = document.getElementById("tbodyFinanceiro");
-const vazioFinanceiro = document.getElementById("vazioFinanceiro");
-const btnTabelaAnterior = document.getElementById("btnTabelaAnterior");
-const btnTabelaProxima = document.getElementById("btnTabelaProxima");
-const paginacaoTabelaInfo = document.getElementById("paginacaoTabelaInfo");
-const rankingVendedores = document.getElementById("rankingVendedores");
+const finDescricao = document.getElementById("finDescricao");
+const finCategoria = document.getElementById("finCategoria");
+const finTipo = document.getElementById("finTipo");
+const finValor = document.getElementById("finValor");
+const finObservacao = document.getElementById("finObservacao");
+const btnAdicionarLancamento = document.getElementById("btnAdicionarLancamento");
+const btnCancelarEdicao = document.getElementById("btnCancelarEdicao");
+
+const tbodyLancamentos = document.getElementById("tbodyLancamentos");
+const vazioLancamentos = document.getElementById("vazioLancamentos");
 
 let vendasCache = [];
-let chartVend = null;
-let chartPg = null;
-let chartEvolucao = null;
-
-let listaFiltradaTabela = [];
-let paginaTabelaAtual = 1;
-const limiteTabela = 10;
+let lancamentosCache = [];
+let charts = [];
+let lancamentoEditandoId = null;
 
 function moedaBRL(v){
   return Number(v || 0).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
 }
 
-function calcularTotal(v){
-  const produto = Number(v.produto?.valor ?? 0);
-  const frete = Number(v.frete ?? 0);
-  const montagem = Number(v.montagem ?? 0);
-  const totalDoc = Number(v.total ?? v.valor ?? 0);
-
-  if (totalDoc > 0) return totalDoc;
-  return produto + frete + montagem;
-}
-
-function formatarPagamento(v){
-  const tipo = String(v.pagamento?.tipo || "").toLowerCase();
-  const parcelas = Number(v.pagamento?.parcelas || 0);
-
-  if (tipo === "pix") return "PIX à vista";
-  if (tipo === "dinheiro") return "Dinheiro";
-  if (tipo === "cartao") return parcelas ? `${parcelas}x cartão` : "Cartão";
-  if (tipo === "prazo") return parcelas ? `${parcelas}x prazo` : "Prazo";
-  return "-";
-}
-
-function classePagamento(v){
-  const tipo = String(v.pagamento?.tipo || "").toLowerCase();
-  if (tipo === "pix") return "pix";
-  if (tipo === "dinheiro") return "dinheiro";
-  if (tipo === "prazo") return "prazo";
-  if (tipo === "cartao") return "cartao";
-  return "outro";
-}
-
 function getHojeLocal(){
   const hoje = new Date();
-  const ano = hoje.getFullYear();
-  const mes = String(hoje.getMonth() + 1).padStart(2, "0");
-  const dia = String(hoje.getDate()).padStart(2, "0");
-  return `${ano}-${mes}-${dia}`;
+  return hoje.toISOString().slice(0,10);
+}
+
+function toYMD(dateObj){
+  const ano = dateObj.getFullYear();
+  const mes = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const dia = String(dateObj.getDate()).padStart(2, "0");
+  return ${ano}-${mes}-${dia};
 }
 
 function getInicioSemana(data = new Date()){
@@ -523,18 +563,6 @@ function getInicioSemana(data = new Date()){
   const diff = diaSemana === 0 ? -6 : 1 - diaSemana;
   d.setDate(d.getDate() + diff);
   return d;
-}
-
-function toYMD(dateObj){
-  const ano = dateObj.getFullYear();
-  const mes = String(dateObj.getMonth() + 1).padStart(2, "0");
-  const dia = String(dateObj.getDate()).padStart(2, "0");
-  return `${ano}-${mes}-${dia}`;
-}
-
-function parseYMD(str){
-  const [y,m,d] = String(str).split("-").map(Number);
-  return new Date(y, (m || 1) - 1, d || 1);
 }
 
 function aplicarPeriodoAutomatico(){
@@ -553,373 +581,349 @@ function aplicarPeriodoAutomatico(){
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     dataInicio.value = toYMD(inicioMes);
     dataFim.value = getHojeLocal();
-  } else {
-    dataInicio.value = "";
-    dataFim.value = "";
   }
 }
 
-function filtrarVendas(listaBase){
-  const vendedor = String(filtroVendedor.value || "").toLowerCase().trim();
-  const zona = filtroZona.value;
-  const pagamento = filtroPagamento.value;
+function calcularTotalVenda(v){
+  const totalDoc = Number(v.total ?? v.valor ?? 0);
+  if (totalDoc > 0) return totalDoc;
+
+  const produto = Number(v.produto?.valor ?? 0);
+  const frete = Number(v.frete ?? 0);
+  const montagem = Number(v.montagem ?? 0);
+  return produto + frete + montagem;
+}
+
+function filtrarVendas(){
   const inicio = dataInicio.value;
   const fim = dataFim.value;
+  const vendedor = String(filtroVendedor.value || "").toLowerCase().trim();
+  const zona = filtroZona.value;
 
-  return listaBase.filter(v => {
-    const vendedorNome = String(v.vendedorNome || "").toLowerCase();
-    const dataPedido = String(v.dataPedido || "");
+  return vendasCache.filter(v => {
+    const data = String(v.dataPedido || "");
+    const nomeVendedor = String(v.vendedorNome || "").toLowerCase();
     const zonaVenda = String(v.zona || "");
-    const pagamentoTipo = String(v.pagamento?.tipo || "").toLowerCase();
 
-    if (vendedor && !vendedorNome.includes(vendedor)) return false;
+    if (inicio && data < inicio) return false;
+    if (fim && data > fim) return false;
+    if (vendedor && !nomeVendedor.includes(vendedor)) return false;
     if (zona && zonaVenda !== zona) return false;
-    if (pagamento && pagamentoTipo !== pagamento) return false;
-    if (inicio && dataPedido < inicio) return false;
-    if (fim && dataPedido > fim) return false;
 
     return true;
   });
 }
 
-function getPeriodoAnterior(){
+function filtrarLancamentos(){
   const inicio = dataInicio.value;
   const fim = dataFim.value;
+  const categoria = filtroCategoriaFinanceira.value;
 
-  if (!inicio || !fim) return null;
+  return lancamentosCache.filter(l => {
+    const data = String(l.dataLancamento || "");
+    const cat = String(l.categoria || "");
 
-  const dtInicio = parseYMD(inicio);
-  const dtFim = parseYMD(fim);
+    if (inicio && data < inicio) return false;
+    if (fim && data > fim) return false;
+    if (categoria && cat !== categoria) return false;
 
-  const diffMs = dtFim - dtInicio;
-  const anteriorFim = new Date(dtInicio);
-  anteriorFim.setDate(anteriorFim.getDate() - 1);
-
-  const anteriorInicio = new Date(anteriorFim.getTime() - diffMs);
-
-  return {
-    inicio: toYMD(anteriorInicio),
-    fim: toYMD(anteriorFim)
-  };
-}
-
-function filtrarPeriodoEspecifico(listaBase, inicio, fim){
-  return listaBase.filter(v => {
-    const dataPedido = String(v.dataPedido || "");
-    if (inicio && dataPedido < inicio) return false;
-    if (fim && dataPedido > fim) return false;
     return true;
   });
 }
 
-function somaTotal(lista){
-  return lista.reduce((acc, v) => acc + calcularTotal(v), 0);
+  function preencherFiltroCategorias(){
+  const categorias = [...new Set(
+    lancamentosCache.map(l => String(l.categoria || "").trim()).filter(Boolean)
+  )].sort((a,b) => a.localeCompare(b, "pt-BR"));
+
+  const atual = filtroCategoriaFinanceira.value;
+
+  filtroCategoriaFinanceira.innerHTML =
+    <option value="">Todas as categorias</option> +
+    categorias.map(cat => <option value="${cat}">${cat}</option>).join("");
+
+  filtroCategoriaFinanceira.value = categorias.includes(atual) ? atual : "";
 }
 
-function setSubTexto(el, texto, tipo="neu"){
-  el.textContent = texto;
-  el.className = `kpi-sub sub-${tipo}`;
+function destroyCharts(){
+  charts.forEach(c => {
+    try { c.destroy(); } catch(e){}
+  });
+  charts = [];
 }
 
-function renderKpis(listaAtual){
-  const totalAtual = somaTotal(listaAtual);
-  const quantidadeAtual = listaAtual.length;
-  const ticketAtual = quantidadeAtual ? totalAtual / quantidadeAtual : 0;
-
-  const vendedoresUnicos = [...new Set(listaAtual.map(v => String(v.vendedorNome || "").trim()).filter(Boolean))];
-  const mediaVendedorAtual = vendedoresUnicos.length ? totalAtual / vendedoresUnicos.length : 0;
-
-  document.getElementById("kpiTotalVendido").textContent = moedaBRL(totalAtual);
-  document.getElementById("kpiQtdPedidos").textContent = quantidadeAtual;
-  document.getElementById("kpiTicketMedio").textContent = moedaBRL(ticketAtual);
-  document.getElementById("kpiMediaVendedor").textContent = moedaBRL(mediaVendedorAtual);
-
-  const periodoAnterior = getPeriodoAnterior();
-
-  if (!periodoAnterior){
-    setSubTexto(document.getElementById("subTotalVendido"), "Sem comparativo", "neu");
-    setSubTexto(document.getElementById("subQtdPedidos"), "Sem comparativo", "neu");
-    setSubTexto(document.getElementById("subTicketMedio"), "Sem comparativo", "neu");
-    setSubTexto(document.getElementById("subMediaVendedor"), "Sem comparativo", "neu");
-    return;
-  }
-
-  let listaAnterior = filtrarPeriodoEspecifico(vendasCache, periodoAnterior.inicio, periodoAnterior.fim);
-
-  const vendedor = String(filtroVendedor.value || "").toLowerCase().trim();
-  const zona = filtroZona.value;
-  const pagamento = filtroPagamento.value;
-
-  if (vendedor){
-    listaAnterior = listaAnterior.filter(v => String(v.vendedorNome || "").toLowerCase().includes(vendedor));
-  }
-  if (zona){
-    listaAnterior = listaAnterior.filter(v => String(v.zona || "") === zona);
-  }
-  if (pagamento){
-    listaAnterior = listaAnterior.filter(v => String(v.pagamento?.tipo || "").toLowerCase() === pagamento);
-  }
-
-  const totalAnterior = somaTotal(listaAnterior);
-  const qtdAnterior = listaAnterior.length;
-  const ticketAnterior = qtdAnterior ? totalAnterior / qtdAnterior : 0;
-  const vendedoresAnt = [...new Set(listaAnterior.map(v => String(v.vendedorNome || "").trim()).filter(Boolean))];
-  const mediaVendedorAnterior = vendedoresAnt.length ? totalAnterior / vendedoresAnt.length : 0;
-
-  function compPercentual(atual, anterior){
-    if (!anterior && !atual) return { texto:"0%", tipo:"neu" };
-    if (!anterior && atual) return { texto:"+100%", tipo:"pos" };
-    const pct = ((atual - anterior) / anterior) * 100;
-    const sinal = pct > 0 ? "+" : "";
-    return {
-      texto: `${sinal}${pct.toFixed(1)}% vs período anterior`,
-      tipo: pct > 0 ? "pos" : pct < 0 ? "neg" : "neu"
-    };
-  }
-
-  function compAbsoluto(atual, anterior, sufixo=""){
-    const diff = atual - anterior;
-    const sinal = diff > 0 ? "+" : "";
-    return {
-      texto: `${sinal}${diff}${sufixo} vs período anterior`,
-      tipo: diff > 0 ? "pos" : diff < 0 ? "neg" : "neu"
-    };
-  }
-
-  const totalComp = compPercentual(totalAtual, totalAnterior);
-  const qtdComp = compAbsoluto(quantidadeAtual, qtdAnterior, " pedidos");
-  const ticketComp = compPercentual(ticketAtual, ticketAnterior);
-  const mediaVendComp = compPercentual(mediaVendedorAtual, mediaVendedorAnterior);
-
-  setSubTexto(document.getElementById("subTotalVendido"), totalComp.texto, totalComp.tipo);
-  setSubTexto(document.getElementById("subQtdPedidos"), qtdComp.texto, qtdComp.tipo);
-  setSubTexto(document.getElementById("subTicketMedio"), ticketComp.texto, ticketComp.tipo);
-  setSubTexto(document.getElementById("subMediaVendedor"), mediaVendComp.texto, mediaVendComp.tipo);
+function applyChartDefaults(){
+  Chart.defaults.color = "rgba(255,255,255,0.85)";
+  Chart.defaults.font.family = "'Segoe UI', Arial, sans-serif";
+  Chart.defaults.plugins.legend.labels.usePointStyle = true;
+  Chart.defaults.plugins.legend.labels.boxWidth = 10;
 }
 
-function renderChartVendedores(lista){
-  const mapa = {};
+function renderKpis(){
+  const vendas = filtrarVendas();
+  const lancamentos = filtrarLancamentos();
 
-  lista.forEach(v => {
-    const nome = String(v.vendedorNome || "Sem vendedor");
-    mapa[nome] = (mapa[nome] || 0) + calcularTotal(v);
+  const totalVendido = vendas.reduce((acc, v) => acc + calcularTotalVenda(v), 0);
+  const quantidadePedidos = vendas.length;
+  const ticketMedio = quantidadePedidos ? totalVendido / quantidadePedidos : 0;
+
+  const totalEntradasManuais = lancamentos
+    .filter(l => l.tipo === "entrada")
+    .reduce((acc, l) => acc + Number(l.valor || 0), 0);
+
+  const totalSaidas = lancamentos
+    .filter(l => l.tipo === "saida")
+    .reduce((acc, l) => acc + Number(l.valor || 0), 0);
+
+  const valorLiquido = totalVendido + totalEntradasManuais - totalSaidas;
+  const saldoCaixa = totalEntradasManuais - totalSaidas;
+
+  document.getElementById("kpiTotalVendido").textContent = moedaBRL(totalVendido);
+  document.getElementById("kpiQuantidadePedidos").textContent = quantidadePedidos;
+  document.getElementById("kpiTicketMedio").textContent = moedaBRL(ticketMedio);
+  document.getElementById("kpiValorLiquido").textContent = moedaBRL(valorLiquido);
+
+  document.getElementById("totalEntradasManuais").textContent = moedaBRL(totalEntradasManuais);
+  document.getElementById("totalSaidas").textContent = moedaBRL(totalSaidas);
+  document.getElementById("saldoCaixa").textContent = moedaBRL(saldoCaixa);
+}
+
+function renderGastosCategoriaChart(){
+  const lancamentos = filtrarLancamentos().filter(l => l.tipo === "saida");
+
+  const porCategoria = {};
+  lancamentos.forEach(l => {
+    const categoria = l.categoria || "Sem categoria";
+    porCategoria[categoria] = (porCategoria[categoria] || 0) + Number(l.valor || 0);
   });
 
-  const labels = Object.keys(mapa);
-  const data = Object.values(mapa);
+  const labels = Object.keys(porCategoria);
+  const valores = Object.values(porCategoria);
 
-  if (chartVend) chartVend.destroy();
-
-  chartVend = new Chart(document.getElementById("chartVendedores"), {
-    type: 'bar',
+  const ctx = document.getElementById("gastosCategoriaChart");
+  charts.push(new Chart(ctx, {
+    type: "doughnut",
     data: {
       labels: labels.length ? labels : ["Sem dados"],
       datasets: [{
-        label: 'Total vendido',
-        data: data.length ? data : [0],
-        backgroundColor: 'rgba(33,150,243,0.85)',
+        data: valores.length ? valores : [1],
+        backgroundColor: [
+          "#2196f3", "#ff9800", "#4caf50", "#9c27b0",
+          "#00bcd4", "#ffc107", "#f44336", "#795548",
+          "#607d8b", "#e91e63"
+        ],
+        borderColor: "rgba(255,255,255,0.75)",
+        borderWidth: 2,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "68%",
+      plugins: {
+        legend: { position: "top" }
+      }
+    }
+  }));
+}
+
+function renderEvolucaoChart(){
+  const vendas = filtrarVendas();
+
+  const porDia = {};
+  vendas.forEach(v => {
+    const data = String(v.dataPedido || "");
+    if (!data) return;
+    porDia[data] = (porDia[data] || 0) + 1;
+  });
+
+  const labels = Object.keys(porDia).sort();
+  const valores = labels.map(l => porDia[l]);
+
+  const ctx = document.getElementById("evolucaoChart");
+  charts.push(new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels.length ? labels : ["Sem dados"],
+      datasets: [{
+        label: "Pedidos vendidos",
+        data: valores.length ? valores : [0],
+        backgroundColor: "rgba(33,150,243,0.85)",
         borderRadius: 10
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { display: false } },
-        y: { grid: { color: 'rgba(255,255,255,0.08)' } }
+        x: { grid: { display:false } },
+        y: { grid: { color:"rgba(255,255,255,0.08)" }, ticks: { precision:0 } }
+      },
+      plugins: {
+        legend: { display:false }
       }
     }
-  });
+  }));
 }
 
-function renderChartPagamentos(lista){
-  const mapa = {};
+function renderLancamentos(){
+  const lancamentos = filtrarLancamentos().sort((a,b) =>
+    String(b.createdAt || "").localeCompare(String(a.createdAt || ""))
+  );
 
-  lista.forEach(v => {
-    const tipo = String(v.pagamento?.tipo || "outro").toLowerCase();
-    mapa[tipo] = (mapa[tipo] || 0) + 1;
-  });
-
-  const labels = Object.keys(mapa).map(t => {
-    if (t === "pix") return "PIX";
-    if (t === "dinheiro") return "Dinheiro";
-    if (t === "prazo") return "Prazo";
-    if (t === "cartao") return "Cartão";
-    return "Outro";
-  });
-
-  const data = Object.values(mapa);
-
-  if (chartPg) chartPg.destroy();
-
-  chartPg = new Chart(document.getElementById("chartPagamentos"), {
-    type: 'doughnut',
-    data: {
-      labels: labels.length ? labels : ["Sem dados"],
-      datasets: [{
-        data: data.length ? data : [1],
-        backgroundColor: ['#2196f3', '#4caf50', '#ff9800', '#9c27b0', '#90a4ae'],
-        borderColor: 'rgba(255,255,255,0.75)',
-        borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '65%'
-    }
-  });
-}
-
-function renderChartEvolucao(lista){
-  const mapa = {};
-
-  lista.forEach(v => {
-    const data = String(v.dataPedido || "");
-    if (!data) return;
-    mapa[data] = (mapa[data] || 0) + calcularTotal(v);
-  });
-
-  const labels = Object.keys(mapa).sort();
-  const data = labels.map(l => mapa[l]);
-
-  if (chartEvolucao) chartEvolucao.destroy();
-
-  chartEvolucao = new Chart(document.getElementById("chartEvolucao"), {
-    type: 'line',
-    data: {
-      labels: labels.length ? labels : ["Sem dados"],
-      datasets: [{
-        label: 'Faturamento diário',
-        data: data.length ? data : [0],
-        borderColor: 'rgba(76,175,80,0.95)',
-        backgroundColor: 'rgba(76,175,80,0.18)',
-        fill: true,
-        tension: 0.25,
-        pointRadius: 4,
-        pointBackgroundColor: 'rgba(76,175,80,1)'
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { display: false } },
-        y: { grid: { color: 'rgba(255,255,255,0.08)' } }
-      }
-    }
-  });
-}
-
-function renderRanking(lista){
-  const mapa = {};
-
-  lista.forEach(v => {
-    const nome = String(v.vendedorNome || "Sem vendedor");
-    if (!mapa[nome]) mapa[nome] = { total:0, qtd:0 };
-    mapa[nome].total += calcularTotal(v);
-    mapa[nome].qtd += 1;
-  });
-
-  const ranking = Object.entries(mapa)
-    .map(([nome, info]) => ({
-      nome,
-      total: info.total,
-      qtd: info.qtd
-    }))
-    .sort((a,b) => b.total - a.total)
-    .slice(0, 3);
-
-  if (!ranking.length){
-    rankingVendedores.innerHTML = `<div class="vazio">Sem dados no período.</div>`;
+  if (!lancamentos.length){
+    tbodyLancamentos.innerHTML = "";
+    vazioLancamentos.style.display = "block";
     return;
   }
 
-  rankingVendedores.innerHTML = ranking.map((item, i) => `
-    <div class="ranking-item">
-      <div class="ranking-left">
-        <div class="ranking-pos">${i + 1}</div>
-        <div>
-          <div class="ranking-name">${item.nome}</div>
-          <div class="ranking-meta">${item.qtd} venda(s)</div>
-        </div>
-      </div>
-      <div class="ranking-value">${moedaBRL(item.total)}</div>
-    </div>
+  vazioLancamentos.style.display = "none";
+
+  tbodyLancamentos.innerHTML = lancamentos.map(l => `
+    <tr>
+      <td>${l.dataLancamento || "-"}</td>
+      <td>${l.descricao || "-"}</td>
+      <td>${l.categoria || "-"}</td>
+      <td><span class="badge ${l.tipo === "entrada" ? "entrada" : "saida"}">${l.tipo || "-"}</span></td>
+      <td>${moedaBRL(l.valor || 0)}</td>
+      <td>${l.observacao || "-"}</td>
+      <td>
+        <button class="btn-edit btn-editar-lancamento" type="button" data-id="${l.id}">Editar</button>
+        <button class="btn-danger btn-excluir-lancamento" type="button" data-id="${l.id}">Excluir</button>
+      </td>
+    </tr>
   `).join("");
+
+  document.querySelectorAll(".btn-excluir-lancamento").forEach(btn => {
+    btn.onclick = async () => {
+      const id = btn.getAttribute("data-id");
+      await excluirLancamento(id);
+    };
+  });
+
+  document.querySelectorAll(".btn-editar-lancamento").forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.getAttribute("data-id");
+      editarLancamento(id);
+    };
+  });
 }
 
-function renderTabelaPaginada(){
-  const totalItens = listaFiltradaTabela.length;
-  const totalPaginas = Math.max(1, Math.ceil(totalItens / limiteTabela));
+function limparFormulario(){
+  finDescricao.value = "";
+  finCategoria.value = "";
+  finTipo.value = "saida";
+  finValor.value = "";
+  finObservacao.value = "";
+  lancamentoEditandoId = null;
+  btnAdicionarLancamento.textContent = "Salvar lançamento";
+  btnCancelarEdicao.style.display = "none";
+}
 
-  if (paginaTabelaAtual > totalPaginas) paginaTabelaAtual = totalPaginas;
+function editarLancamento(id){
+  const lancamento = lancamentosCache.find(l => l.id === id);
+  if (!lancamento) return;
 
-  const inicio = (paginaTabelaAtual - 1) * limiteTabela;
-  const fim = inicio + limiteTabela;
-  const pagina = listaFiltradaTabela.slice(inicio, fim);
+  lancamentoEditandoId = id;
+  finDescricao.value = lancamento.descricao || "";
+  finCategoria.value = lancamento.categoria || "";
+  finTipo.value = lancamento.tipo || "saida";
+  finValor.value = lancamento.valor || "";
+  finObservacao.value = lancamento.observacao || "";
 
-  if (!totalItens){
-    tbodyFinanceiro.innerHTML = "";
-    vazioFinanceiro.style.display = "block";
-  } else {
-    vazioFinanceiro.style.display = "none";
-    tbodyFinanceiro.innerHTML = pagina.map(v => `
-      <tr>
-        <td>${v.pedido || "-"}</td>
-        <td>${v.dataPedido || "-"}</td>
-        <td>${v.dataEntrega || "-"}</td>
-        <td>${v.cliente?.nome || "-"}</td>
-        <td>${v.cliente?.cidade || "-"}</td>
-        <td>${v.vendedorNome || "-"}</td>
-        <td>${v.zona || "-"}</td>
-        <td><span class="badge ${classePagamento(v)}">${formatarPagamento(v)}</span></td>
-        <td>${v.observacoes || "-"}</td>
-        <td>${moedaBRL(calcularTotal(v))}</td>
-      </tr>
-    `).join("");
-  }
-
-  paginacaoTabelaInfo.textContent = `Página ${totalItens ? paginaTabelaAtual : 1} de ${totalPaginas}`;
-  btnTabelaAnterior.disabled = paginaTabelaAtual <= 1 || totalItens === 0;
-  btnTabelaProxima.disabled = paginaTabelaAtual >= totalPaginas || totalItens === 0;
+  btnAdicionarLancamento.textContent = "Atualizar lançamento";
+  btnCancelarEdicao.style.display = "inline-block";
 }
 
 function renderTudo(){
-  const lista = filtrarVendas(vendasCache);
-
-  renderKpis(lista);
-  renderChartVendedores(lista);
-  renderChartPagamentos(lista);
-  renderChartEvolucao(lista);
-  renderRanking(lista);
-
-  listaFiltradaTabela = lista;
-  paginaTabelaAtual = 1;
-  renderTabelaPaginada();
+  applyChartDefaults();
+  destroyCharts();
+  preencherFiltroCategorias();
+  renderKpis();
+  renderGastosCategoriaChart();
+  renderEvolucaoChart();
+  renderLancamentos();
 }
 
-async function carregarFinanceiro(){
-  const snapshot = await getDocs(collection(db, "vendas"));
+async function carregarVendas(){
+  const snap = await getDocs(collection(db, "vendas"));
   vendasCache = [];
+  snap.forEach(d => vendasCache.push({ id: d.id, ...d.data() }));
+}
 
-  snapshot.forEach(doc => {
-    vendasCache.push({ id: doc.id, ...doc.data() });
+async function carregarLancamentos(){
+  const snap = await getDocs(collection(db, "financeiro_lancamentos"));
+  lancamentosCache = [];
+  snap.forEach(d => lancamentosCache.push({ id: d.id, ...d.data() }));
+}
+
+async function salvarLancamento(){
+  const descricao = finDescricao.value.trim();
+  const categoria = finCategoria.value;
+  const tipo = finTipo.value;
+  const valor = Number(finValor.value || 0);
+  const observacao = finObservacao.value.trim();
+
+  if (!descricao || !categoria || !tipo || !valor){
+    alert("Preencha descrição, categoria, tipo e valor.");
+    return;
+  }
+
+  if (lancamentoEditandoId){
+    await updateDoc(doc(db, "financeiro_lancamentos", lancamentoEditandoId), {
+      descricao,
+      categoria,
+      tipo,
+      valor,
+      observacao
+    });
+
+    await carregarLancamentos();
+    limparFormulario();
+    renderTudo();
+    alert("Lançamento atualizado com sucesso!");
+    return;
+  }
+
+  await addDoc(collection(db, "financeiro_lancamentos"), {
+    descricao,
+    categoria,
+    tipo,
+    valor,
+    observacao,
+    dataLancamento: getHojeLocal(),
+    createdAt: new Date().toISOString()
   });
 
-  aplicarPeriodoAutomatico();
+  await carregarLancamentos();
+  limparFormulario();
   renderTudo();
+  alert("Lançamento adicionado com sucesso!");
+}
+
+async function excluirLancamento(id){
+  const confirmar = confirm("Deseja realmente excluir este lançamento?");
+  if (!confirmar) return;
+
+  await deleteDoc(doc(db, "financeiro_lancamentos", id));
+  lancamentosCache = lancamentosCache.filter(l => l.id !== id);
+
+  if (lancamentoEditandoId === id){
+    limparFormulario();
+  }
+
+  renderTudo();
+  alert("Lançamento excluído com sucesso!");
 }
 
 function registrarEventos(){
   filtroPeriodo.onchange = () => {
-    if (filtroPeriodo.value !== "personalizado"){
-      aplicarPeriodoAutomatico();
-    } else {
+    if (filtroPeriodo.value === "personalizado"){
       dataInicio.value = "";
       dataFim.value = "";
+    } else {
+      aplicarPeriodoAutomatico();
     }
     renderTudo();
   };
@@ -928,35 +932,27 @@ function registrarEventos(){
   dataFim.onchange = renderTudo;
   filtroVendedor.oninput = renderTudo;
   filtroZona.onchange = renderTudo;
-  filtroPagamento.onchange = renderTudo;
+  filtroCategoriaFinanceira.onchange = renderTudo;
 
-  btnTabelaAnterior.onclick = () => {
-    if (paginaTabelaAtual > 1){
-      paginaTabelaAtual--;
-      renderTabelaPaginada();
-    }
-  };
-
-  btnTabelaProxima.onclick = () => {
-    const totalPaginas = Math.max(1, Math.ceil(listaFiltradaTabela.length / limiteTabela));
-    if (paginaTabelaAtual < totalPaginas){
-      paginaTabelaAtual++;
-      renderTabelaPaginada();
-    }
-  };
+  btnAdicionarLancamento.onclick = salvarLancamento;
+  btnCancelarEdicao.onclick = limparFormulario;
 }
 
-Chart.defaults.color = "rgba(255,255,255,0.85)";
-Chart.defaults.font.family = "'Segoe UI', Arial, sans-serif";
-
-onAuthStateChanged(auth, user => {
-  if (!user) {
+onAuthStateChanged(auth, async user => {
+  if (!user){
     location.href = "login.html";
     return;
   }
 
   registrarEventos();
-  carregarFinanceiro();
+  aplicarPeriodoAutomatico();
+
+  await Promise.all([
+    carregarVendas(),
+    carregarLancamentos()
+  ]);
+
+  renderTudo();
 });
 </script>
 
