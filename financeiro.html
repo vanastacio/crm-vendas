@@ -554,9 +554,16 @@ function toYMD(dateObj){
   const ano = dateObj.getFullYear();
   const mes = String(dateObj.getMonth() + 1).padStart(2, "0");
   const dia = String(dateObj.getDate()).padStart(2, "0");
-  return ${ano}-${mes}-${dia};
+  return `${ano}-${mes}-${dia}`;
 }
 
+function formatarDataBR(data){
+  if (!data)return "-";
+  const [ano, mes, dia] =
+    string(data).split("-");
+  if (!ano || !mes || !dia) return data;
+  return `${ano}-${mes}-${dia}`;
+  
 function getInicioSemana(data = new Date()){
   const d = new Date(data);
   const diaSemana = d.getDay();
