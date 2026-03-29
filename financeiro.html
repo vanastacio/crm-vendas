@@ -556,13 +556,6 @@ function toYMD(dateObj){
   const dia = String(dateObj.getDate()).padStart(2, "0");
   return `${ano}-${mes}-${dia}`;
 }
-
-function formatarDataBR(data){
-  if (!data)return "-";
-  const [ano, mes, dia] =
-    string(data).split("-");
-  if (!ano || !mes || !dia) return data;
-  return `${ano}-${mes}-${dia}`;
   
 function getInicioSemana(data = new Date()){
   const d = new Date(data);
@@ -646,8 +639,8 @@ function filtrarLancamentos(){
   const atual = filtroCategoriaFinanceira.value;
 
   filtroCategoriaFinanceira.innerHTML =
-    <option value="">Todas as categorias</option> +
-    categorias.map(cat => <option value="${cat}">${cat}</option>).join("");
+    `<option value="">Todas as categorias</option>` +
+    categorias.map(cat => `<option value="${cat}">${cat}</option>`).join("");
 
   filtroCategoriaFinanceira.value = categorias.includes(atual) ? atual : "";
 }
