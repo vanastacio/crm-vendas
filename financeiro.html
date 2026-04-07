@@ -407,7 +407,7 @@ canvas{
     <div class="kpi">
       <div class="kpi-label">Valor líquido</div>
       <div class="kpi-value" id="kpiValorLiquido">R$ 0,00</div>
-      <div class="kpi-sub">Vendas + entradas - saídas</div>
+      <div class="kpi-sub">Vendas - custo dos sofás + entradas - saídas</div>
     </div>
   </div>
 
@@ -546,6 +546,8 @@ let lancamentosCache = [];
 let charts = [];
 let lancamentoEditandoId = null;
 
+  const CUSTO_POR_SOFA = 1200;
+
 function moedaBRL(v){
   return Number(v || 0).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
 }
@@ -672,6 +674,8 @@ function renderKpis(){
   const quantidadePedidos = vendas.length;
   const ticketMedio = quantidadePedidos ? totalVendido / quantidadePedidos : 0;
 
+  const custoTotalSofas = quantidadePedidos * CUSTO_POR_SOFA;
+
   const totalEntradasManuais = lancamentos
     .filter(l => l.tipo === "entrada")
     .reduce((acc, l) => acc + Number(l.valor || 0), 0);
@@ -680,7 +684,7 @@ function renderKpis(){
     .filter(l => l.tipo === "saida")
     .reduce((acc, l) => acc + Number(l.valor || 0), 0);
 
-  const valorLiquido = totalVendido + totalEntradasManuais - totalSaidas;
+  const valorLiquido = totalVendido - custoTotalSofas + totalEntradasManuais - totalSaidas;
   const saldoCaixa = totalEntradasManuais - totalSaidas;
 
   document.getElementById("kpiTotalVendido").textContent = moedaBRL(totalVendido);
