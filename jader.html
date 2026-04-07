@@ -351,7 +351,7 @@ canvas{
       Entregas
     </button>
 
-    <button onclick="location.href='financeiro.html'">
+    <button onclick="acessarFinanceiro()">
   <span class="icon" aria-hidden="true">
     <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3V3Zm2 2v14h14V5H5Zm2 10h2v2H7v-2Zm0-4h2v3H7v-3Zm4 2h2v4h-2v-4Zm4-6h2v10h-2V7Z"/></svg>
   </span>
@@ -598,6 +598,21 @@ function renderDashboard(mesFiltro) {
       plugins:{ legend:{ display:false } }
     }
   }));
+}
+
+  function acessarFinanceiro() {
+  const senhaCorreta = "jd2026"; // TROQUE AQUI pela senha que o Jader quiser
+
+  const senhaDigitada = prompt("Digite a senha para acessar o Financeiro:");
+
+  if (senhaDigitada === null) return;
+
+  if (senhaDigitada === senhaCorreta) {
+    sessionStorage.setItem("financeiroLiberado", "sim");
+    location.href = "financeiro.html";
+  } else {
+    alert("Senha incorreta!");
+  }
 }
 
 async function carregarDashboard() {
