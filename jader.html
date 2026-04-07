@@ -600,8 +600,8 @@ function renderDashboard(mesFiltro) {
   }));
 }
 
-  function acessarFinanceiro() {
-  const senhaCorreta = "jd2026"; // TROQUE AQUI pela senha que o Jader quiser
+ window.acessarFinanceiro = function () {
+  const senhaCorreta = "1234"; // troque pela senha que quiser
 
   const senhaDigitada = prompt("Digite a senha para acessar o Financeiro:");
 
@@ -613,7 +613,7 @@ function renderDashboard(mesFiltro) {
   } else {
     alert("Senha incorreta!");
   }
-}
+}; 
 
 async function carregarDashboard() {
   const snapshot = await getDocs(collection(db, "vendas"));
