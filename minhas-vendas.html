@@ -36,6 +36,38 @@ h1 {
   font-weight: bold;
 }
 
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.filtros input,
+.filtros select,
+.filtros button {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  font-size: 14px;
+}
+
+.filtros input,
+.filtros select {
+  min-width: 180px;
+}
+
+#btnFiltrar {
+  background: #1976d2;
+  color: #fff;
+}
+
+#btnLimpar {
+  background: #b0bec5;
+  color: #222;
+}
+
 .card {
   background: rgba(255,255,255,0.95);
   color: #333;
@@ -67,6 +99,33 @@ button {
 .btn-voltar:hover {
   background: #125aa0;
 }
+
+.paginacao {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.paginacao button {
+  background: #ffffff;
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .filtros {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filtros input,
+  .filtros select,
+  .filtros button {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
 </style>
 </head>
 
@@ -74,41 +133,48 @@ button {
 
 <div class="container">
 
-<h1>Minhas Vendas</h1>
+  <h1>Minhas Vendas</h1>
 
-<div class="filtros">
-  <input type="date" id="filtroData">
-  <input type="text" id="filtroCliente" placeholder="Nome do cliente">
-  <input type="text" id="filtroPedido" placeholder="Número do pedido">
-  <button id="btnFiltrar">Filtrar</button>
-  <button id="btnLimpar">Limpar Filtros</button>
-</div>
+  <div class="filtros">
+    <select id="filtroPeriodo">
+      <option value="dia">Hoje</option>
+      <option value="semana">Esta semana</option>
+      <option value="mes">Este mês</option>
+      <option value="personalizado">Período personalizado</option>
+    </select>
 
-<div id="listaVendas"></div>
+    <input type="date" id="dataInicio">
+    <input type="date" id="dataFim">
+    <input type="text" id="filtroCliente" placeholder="Nome do cliente">
+    <input type="text" id="filtroPedido" placeholder="Número do pedido">
+    <button id="btnFiltrar">Filtrar</button>
+    <button id="btnLimpar">Limpar Filtros</button>
+  </div>
 
-<div class="paginacao">
-  <button id="btnAnterior">Anterior</button>
-  <button id="btnProxima">Próxima</button>
-</div>
+  <div id="listaVendas"></div>
 
-<button class="btn-voltar" onclick="location.href='index.html'">
-Voltar
-</button>
+  <div class="paginacao">
+    <button id="btnAnterior">Anterior</button>
+    <button id="btnProxima">Próxima</button>
+  </div>
+
+  <button class="btn-voltar" onclick="location.href='index.html'">
+    Voltar
+  </button>
 
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { 
-  getFirestore, 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  doc, 
-  deleteDoc,
-  orderBy
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -129,37 +195,94 @@ let vendasFiltradas = [];
 let paginaAtual = 1;
 const itensPorPagina = 5;
 
-onAuthStateChanged(auth, async (user) => {
+function formatarDataLocal(date) {
+  const ano = date.getFullYear();
+  const mes = String(date.getMonth() + 1).padStart(2, "0");
+  const dia = String(date.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
 
-  if (!user) {
-    location.href = "login.html";
-    return;
+function inicioDaSemana(data = new Date()) {
+  const d = new Date(data);
+  const dia = d.getDay();
+  const diff = dia === 0 ? -6 : 1 - dia;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function aplicarPeriodoAutomatico() {
+  const periodo = document.getElementById("filtroPeriodo").value;
+  const dataInicio = document.getElementById("dataInicio");
+  const dataFim = document.getElementById("dataFim");
+  const hoje = new Date();
+
+  if (periodo === "dia") {
+    const hojeFormatado = formatarDataLocal(hoje);
+    dataInicio.value = hojeFormatado;
+    dataFim.value = hojeFormatado;
+    dataInicio.disabled = true;
+    dataFim.disabled = true;
+  } else if (periodo === "semana") {
+    dataInicio.value = formatarDataLocal(inicioDaSemana(hoje));
+    dataFim.value = formatarDataLocal(hoje);
+    dataInicio.disabled = true;
+    dataFim.disabled = true;
+  } else if (periodo === "mes") {
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    dataInicio.value = formatarDataLocal(inicioMes);
+    dataFim.value = formatarDataLocal(hoje);
+    dataInicio.disabled = true;
+    dataFim.disabled = true;
+  } else {
+    dataInicio.disabled = false;
+    dataFim.disabled = false;
+    dataInicio.value = "";
+    dataFim.value = "";
   }
+}
 
-  const q = query(
-    collection(db, "vendas"),
-    where("vendedorEmail", "==", user.email),
-  );
+function aplicarFiltros() {
+  const dataInicio = document.getElementById("dataInicio").value;
+  const dataFim = document.getElementById("dataFim").value;
+  const cliente = document.getElementById("filtroCliente").value.toLowerCase().trim();
+  const pedido = document.getElementById("filtroPedido").value.toLowerCase().trim();
 
-  const snapshot = await getDocs(q);
+  vendasFiltradas = todasVendas.filter(venda => {
+    const nomeCliente = venda.cliente?.nome?.toLowerCase() || "";
+    const numeroPedido = String(venda.pedido || "").toLowerCase();
+    const dataVenda = String(venda.dataPedido || "");
 
-  snapshot.forEach(docSnap => {
-    todasVendas.push({
-      id: docSnap.id,
-      ...docSnap.data()
-    });
+    const matchCliente = !cliente || nomeCliente.includes(cliente);
+    const matchPedido = !pedido || numeroPedido.includes(pedido);
+
+    let matchPeriodo = true;
+
+    if (dataInicio && dataVenda < dataInicio) {
+      matchPeriodo = false;
+    }
+
+    if (dataFim && dataVenda > dataFim) {
+      matchPeriodo = false;
+    }
+
+    return matchCliente && matchPedido && matchPeriodo;
   });
 
-  todasVendas.sort((a, b) => {
-    return new Date(b.dataPedido) - new Date(a.dataPedido);  
-  });
-
-  vendasFiltradas = [...todasVendas];
+  paginaAtual = 1;
   renderizarPagina();
-});
+}
+
+function limparFiltros() {
+  document.getElementById("filtroPeriodo").value = "dia";
+  document.getElementById("filtroCliente").value = "";
+  document.getElementById("filtroPedido").value = "";
+  aplicarPeriodoAutomatico();
+  vendasFiltradas = [...todasVendas];
+  paginaAtual = 1;
+  renderizarPagina();
+}
 
 function renderizarPagina() {
-
   const lista = document.getElementById("listaVendas");
   lista.innerHTML = "";
 
@@ -173,18 +296,17 @@ function renderizarPagina() {
   }
 
   pagina.forEach(venda => {
-
     const div = document.createElement("div");
     div.className = "card";
 
     div.innerHTML = `
       <strong>Pedido:</strong> ${venda.pedido || "-"}<br>
       <strong>Cliente:</strong> ${venda.cliente?.nome || "-"}<br>
-      <strong>Total:</strong> R$ ${venda.total?.toFixed(2) || "0.00"}<br>
-      <strong class="status">Status:</strong> ${venda.status === "pendente" ? "ativa" : venda.status}
+      <strong>Total:</strong> R$ ${Number(venda.total || 0).toFixed(2)}<br>
+      <strong>Data:</strong> ${venda.dataPedido || "-"}<br>
+      <strong class="status">Status:</strong> ${venda.status === "pendente" ? "ativa" : venda.status || "-"}
     `;
 
-    /* EDITAR */
     const btnEditar = document.createElement("button");
     btnEditar.textContent = "Editar";
     btnEditar.style.background = "#5bc0de";
@@ -196,7 +318,6 @@ function renderizarPagina() {
 
     div.appendChild(btnEditar);
 
-    /* EXCLUIR */
     const btnExcluir = document.createElement("button");
     btnExcluir.textContent = "Excluir";
     btnExcluir.style.background = "#d9534f";
@@ -204,7 +325,6 @@ function renderizarPagina() {
 
     btnExcluir.onclick = async () => {
       const confirmar = confirm("Tem certeza que deseja excluir esta venda?");
-
       if (!confirmar) return;
 
       await deleteDoc(doc(db, "vendas", venda.id));
@@ -219,41 +339,39 @@ function renderizarPagina() {
   });
 }
 
-/* filtros e paginação mantidos exatamente iguais */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    location.href = "login.html";
+    return;
+  }
 
-document.getElementById("btnFiltrar").onclick = () => {
+  const q = query(
+    collection(db, "vendas"),
+    where("vendedorEmail", "==", user.email)
+  );
 
-  const data = document.getElementById("filtroData").value;
-  const cliente = document.getElementById("filtroCliente").value.toLowerCase();
-  const pedido = document.getElementById("filtroPedido").value.toLowerCase();
+  const snapshot = await getDocs(q);
 
-  vendasFiltradas = todasVendas.filter(venda => {
-
-    const matchCliente = venda.cliente?.nome?.toLowerCase().includes(cliente);
-    const matchPedido = venda.pedido?.toLowerCase().includes(pedido);
-
-    let matchData = true;
-
-    if (data && venda.dataPedido) {
-      matchData = venda.dataPedido === data;
-    }
-
-    return matchCliente && matchPedido && matchData;
+  todasVendas = [];
+  snapshot.forEach(docSnap => {
+    todasVendas.push({
+      id: docSnap.id,
+      ...docSnap.data()
+    });
   });
 
-  paginaAtual = 1;
-  renderizarPagina();
-};
+  todasVendas.sort((a, b) => {
+    return new Date(b.dataPedido) - new Date(a.dataPedido);
+  });
 
-document.getElementById("btnLimpar").onclick = () => {
-  document.getElementById("filtroData").value = "";
-  document.getElementById("filtroCliente").value = "";
-  document.getElementById("filtroPedido").value = "";
-
+  aplicarPeriodoAutomatico();
   vendasFiltradas = [...todasVendas];
-  paginaAtual = 1;
   renderizarPagina();
-};
+});
+
+document.getElementById("filtroPeriodo").addEventListener("change", aplicarPeriodoAutomatico);
+document.getElementById("btnFiltrar").onclick = aplicarFiltros;
+document.getElementById("btnLimpar").onclick = limparFiltros;
 
 document.getElementById("btnAnterior").onclick = () => {
   if (paginaAtual > 1) {
